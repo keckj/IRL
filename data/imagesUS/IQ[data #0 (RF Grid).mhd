@@ -1,0 +1,15 @@
+ObjectType				= Image
+NDims					= 3
+BinaryData				= True
+BinaryDataByteOrderMSB	= False
+CompressedData			= False
+TransformMatrix		= -0.096640 -0.995014 -0.024666 -0.984976 0.099170 -0.141375 0.143117 0.010633 -0.989649
+Offset					= -155.936996 66.578262 -11.602264
+AnatomicalOrientation	= LAI
+ElementSpacing			= 0.205000 0.018065 1.0
+DimSize				= 64 1296 1
+ElementType			= MET_FLOAT
+SamplingFreqHz			= 40000000
+ImagingFreqHz			= 13000000
+DelayUs				= 0.000000
+ElementDataFile		= IQ[data #0 (RF Grid).raw
