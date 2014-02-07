@@ -2,6 +2,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
 
 #define _USE_MATH_DEFINES 
 #define ONE_DEG_IN_RAD 0.0174532925
@@ -20,10 +23,11 @@
 #define USE_ROW_MAJOR GL_TRUE
 
 using namespace std;
+using namespace cv;
 
 int g_gl_width;
 int g_gl_height;
-bool resize = false;
+bool resize2 = false;
 
 void glfw_error_callback (int error, const char* description) {
 	clog << "\nGLFW Error\t" << error << " : " << "\n\t" << description << "\n"; 
@@ -31,9 +35,9 @@ void glfw_error_callback (int error, const char* description) {
 
 
 void glfw_window_size_callback (GLFWwindow* window, int width, int height) {
-  g_gl_width = width;
-  g_gl_height = height;
-  resize = true;
+	g_gl_width = width;
+	g_gl_height = height;
+	resize2 = true;
 }
 
 double _update_fps_counter (GLFWwindow* window) {
@@ -57,13 +61,48 @@ double _update_fps_counter (GLFWwindow* window) {
 int main( int argc, const char* argv[] )
 {
 	initLogs();
-	
+
 	LocalizedUSImage::initialize();
-	LocalizedUSImage img("data/imagesUS/IQ[data #0 (RF Grid).mhd");
+	LocalizedUSImage img("data/processedImages/IQ[data #123 (RF Grid).mhd");
+
 	Mat m(img.getHeight(), img.getWidth(), CV_32F, img.getImageData());
-	cout << img;
-	Image::displayImage(m);
-	
+
+	double min, max;
+	minMaxIdx(m, &min, &max);
+	cout << "\nvals \t" << min << "\t" << max << endl;
+	Mat hist;
+	int hist_size = 64;
+	float range[] = {(float) min, (float) max};
+	const float *hist_range = {range};
+	calcHist(&m, 1, 0, Mat(), hist, 1, &hist_size, &hist_range, true, false);
+
+	int hist_w = 512; int hist_h = 400;
+	int bin_w = cvRound( (double) hist_w/hist_size );
+	Mat histImage( hist_h, hist_w, CV_8UC1, Scalar( 0,0,0) );
+	normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+
+	for( int i = 1; i < hist_size; i++ )
+	{
+		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
+				Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
+				Scalar( 255, 0, 0), 2, 8, 0  );
+	}
+
+	/// Display
+	//namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
+	//imshow("calcHist Demo", histImage );
+
+	//cout << img;
+	Mat m2,m3;
+	m.convertTo(m2, CV_8UC1);
+	m.convertTo(m3, CV_8UC1);
+	GaussianBlur(m2, m2, Size(9,9), 5.0);
+	int lowThreshold = 30;
+	int kernel_size = 3;
+	Canny(m2, m2, lowThreshold, lowThreshold*3, kernel_size);
+	m2.copyTo(m3, m2);
+	Image::displayImage(m3);
+
 	log_console.info("END OF MAIN PROGRAMM");
 
 	return 0;
@@ -74,7 +113,7 @@ int main( int argc, const char* argv[] )
 	//Image img;	
 	//img.loadImageFolder("img/");
 	//img.computeGradientVectorFlow();
-	
+
 
 	glfwSetErrorCallback (glfw_error_callback);
 
@@ -98,10 +137,10 @@ int main( int argc, const char* argv[] )
 	Window *wd = new Window(vmode->width, vmode->height ,"test");
 	g_gl_width = vmode->width;
 	g_gl_height = vmode->height;
-	resize = true;
+	resize2 = true;
 
 	glfwSetWindowSizeCallback(wd->getWindow(), glfw_window_size_callback);
-	
+
 	//-- camera --
 	float camSpeed = 1.0f;
 	float camYawSpeed = 1.0f;
@@ -111,7 +150,7 @@ int main( int argc, const char* argv[] )
 	float initialRotationData[3] = {0.0f, 0.0f, 0.0f};
 
 	Rotation initialRotation(INTRINSIC_ROTATION, EULER_ORIENTATION, ORDER_ZYZ, initialRotationData);
-	
+
 	Camera camera(0.1f, 100.0f, 67.0f * ONE_DEG_IN_RAD, (float) g_gl_width / (float) g_gl_height, initialPos, initialRotation, ALL_AXES); 
 	// -----------
 
@@ -124,7 +163,7 @@ int main( int argc, const char* argv[] )
 		0.0f, 0.0f, 0.0f,
 		1.0f, 0.0f, 0.0f,
 		1.0f, 0.0f, 1.0f,
-		
+
 		0.0f, 1.0f, 0.0f,
 		0.0f, 1.0f, 1.0f,
 		1.0f, 1.0f, 1.0f,
@@ -138,7 +177,7 @@ int main( int argc, const char* argv[] )
 		0.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f,
 		0.0f, 1.0f, 1.0f,
-		
+
 		1.0f, 0.0f, 0.0f,
 		1.0f, 1.0f, 0.0f,
 		1.0f, 1.0f, 1.0f,
@@ -174,7 +213,7 @@ int main( int argc, const char* argv[] )
 		1.0f, 0.0f, 0.0f,
 		1.0f, 0.0f, 0.0f,
 		1.0f, 0.0f, 0.0f,
-		
+
 		0.0f, 1.0f, 0.0f,
 		0.0f, 1.0f, 0.0f,
 		0.0f, 1.0f, 0.0f,
@@ -212,13 +251,13 @@ int main( int argc, const char* argv[] )
 
 	glBindBuffer (GL_ARRAY_BUFFER, triangle->getColorBufferObject());
 	glVertexAttribPointer (1, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*) NULL);
-	
+
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 
 	Shader *vs = new Shader("shaders/vertex_shader.glsl", GL_VERTEX_SHADER);
 	Shader *fs = new Shader("shaders/fragment_shader.glsl", GL_FRAGMENT_SHADER);
-	
+
 	//GL_LINK_STATUS && glGetProgramInfoLog
 	unsigned int shader_programme = glCreateProgram ();
 	glAttachShader (shader_programme, fs->getShader());
@@ -242,33 +281,33 @@ int main( int argc, const char* argv[] )
 	glUniformMatrix4fv (camera_proj_mat_location, 1, USE_ROW_MAJOR, camera.getProjectionMatrix());
 
 	float model_matrix[16] = { 1.0f, 0.0f, 0.0f, -0.5f,
-				0.0f, 1.0f, 0.0f, -0.5f,
-				0.0, 0.0f, 1.0f, -0.5f,
-				0.0f, 0.0f, 0.0f, 1.0f};
+		0.0f, 1.0f, 0.0f, -0.5f,
+		0.0, 0.0f, 1.0f, -0.5f,
+		0.0f, 0.0f, 0.0f, 1.0f};
 	glUniformMatrix4fv (model_mat_location, 1, USE_ROW_MAJOR, model_matrix);
-	
+
 	double elapsed_seconds;
 	while (!glfwWindowShouldClose(wd->getWindow())) {
 		elapsed_seconds = _update_fps_counter (wd->getWindow());
 
 		// wipe the drawing surface clear
 		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+
 		glViewport (0, 0, g_gl_width, g_gl_height);
 
 		glUseProgram (shader_programme);
-		
+
 		glBindVertexArray (vao);
 
 		// draw points 0-3 from the currently bound VAO with current in-use shader
 		glDrawArrays (GL_TRIANGLES, 0, 36*3);
-		
+
 		// put the stuff we've been drawing onto the display
 		glfwSwapBuffers (wd->getWindow());
 
 		// update other events like input handling 
 		glfwPollEvents ();
-	
+
 		if (GLFW_PRESS == glfwGetKey(wd->getWindow(), GLFW_KEY_ENTER)) {
 			glfwSetWindowShouldClose (wd->getWindow(), 1);
 		}
@@ -288,7 +327,7 @@ int main( int argc, const char* argv[] )
 			camera.rotate(0, 0, camYawSpeed * elapsed_seconds);
 			cam_moved = true;
 		}
-		
+
 		if (glfwGetKey (wd->getWindow(), GLFW_KEY_LEFT)) {
 			camera.translate(-camSpeed * elapsed_seconds, 0, 0);
 			cam_moved = true;
@@ -319,11 +358,11 @@ int main( int argc, const char* argv[] )
 			glUniformMatrix4fv (camera_view_mat_location, 1, USE_ROW_MAJOR, camera.getViewMatrix());
 			//cout << "\n\n " << printMat4(camera.getViewMatrix());
 		}
-		
-		if(resize) {
+
+		if(resize2) {
 			camera.setAspectRatio((float) g_gl_width / (float) g_gl_height);
 			glUniformMatrix4fv (camera_proj_mat_location, 1, USE_ROW_MAJOR, camera.getProjectionMatrix());
-			resize = false;
+			resize2 = false;
 		}
 
 	}

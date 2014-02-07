@@ -71,7 +71,7 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & mhdFile) {
 
 	infile.open(mhdFile, ifstream::in);
 
-	if(infile.bad()) {
+	if(infile.bad() || infile.fail()) {
 		log_console.errorStream() << "Error while loading mhd file" << mhdFile << " !";
 		throw std::logic_error("Error while loading mhd file !");
 	}
@@ -179,6 +179,7 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & mhdFile) {
 			}
 
 			dataFile = buffer.str();
+			dataFile = string("data/processedImages/") + dataFile;
 		}
 	}
 
@@ -187,23 +188,33 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & mhdFile) {
 	log_console.infoStream() << "Finished to read > " << mhdFile;
 
 	//create data array
-	imageData = new float[width*height];
 
-	log_console.infoStream() << "Opening corresponding raw data file > " << dataFile;
+	log_console.infoStream() << "Opening corresponding raw data file >" << dataFile<<"<";
 
 	infile.clear(); //clear flags (eof)
-	infile.open(dataFile, ifstream::in); //open raw data file
 
-	if(infile.bad()) {
+	infile.open(dataFile, ios::in|ios::binary); //open raw data file
+
+	if(infile.bad() || infile.fail()) {
 		log_console.errorStream() << "Error while loading raw data file" << dataFile << " !";
 		throw std::logic_error("Error while loading raw data file !");
 	}
 
-	for (int i = 0; i < width*height; i++) {
-		infile >> imageData[i];
-	}
+	unsigned long dataCharSize = width*height*sizeof(float);
+	char *dataBuffer = (char*) calloc(dataCharSize, 1);
+
+	infile.seekg(0, ios::beg);
+	infile.read(dataBuffer, dataCharSize);
+
+	imageData = (float*) dataBuffer;
+
+	log_console.debugStream() << "Size of file : " << dataCharSize;
+	log_console.debugStream() << "Size of char : " << sizeof(char);
+	log_console.debugStream() << "Size of float : " << sizeof(float);
 	
 	log_console.infoStream() << "Finished to read data from > " << dataFile;
+
+	infile.close();
 }
 
 ostream& operator<<(ostream& os, const LocalizedUSImage& obj) {
