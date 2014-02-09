@@ -23,23 +23,8 @@ int main(int argc, char** argv)
 	//window.setWindowTitle("Simple example");
 	//window.show();
 
-	//BezierCurve base, generatrice;
-
-	//generatrice.addPoint(0.0, 0.0, 0.0);
-	//generatrice.addPoint(1.0, 0.0, 1.0);
-	//generatrice.addPoint(1.0, 1.0, 2.0);
-	//generatrice.addPoint(-1.0, 1.0, 3.0);
-	//generatrice.addPoint(-1.0, 0.0, 4.0);
-	//generatrice.addPoint(-1.0, -1.0, 5.0);
-
-	//base.addPoint(0.5, 0.5, 0.0);
-	//base.addPoint(-0.5, 0.5, 0.0);
-	//base.addPoint(-0.5, -0.5, 0.0);
-	//base.addPoint(0.5, -0.5, 0.0);
-	//base.addPoint(0.5, 0.5, 0.0);
-
 	Viewer viewer;
-	viewer.addRenderable(new VoxelRenderer(32, 4.0, 2.0, 1.0, false));
+	viewer.addRenderable(new VoxelRenderer(1, 0.01, 0.01, 0.01, false, 127));
 	viewer.setWindowTitle("viewer");
 	viewer.show();
 	

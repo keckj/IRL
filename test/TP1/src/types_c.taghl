@@ -1,6 +1,9 @@
-syn keyword CTagsMember toogleWireframe toogleLight coupes value nCoupes renderableList nFaces active base_1 base_2 pi pts hauteur rayon
+syn keyword CTagsMember toogleWireframe coupes value_ toogleLight threshold refcount_ pts children rayon size cube_w cube_h root_ pi cube_d hauteur renderableList aggregateSize_ drawGrid size_ data_ strides_ nFaces active emptyValue_ offset_ tree value nCoupes base_1 base_2 sizes_
 syn keyword CTagsGlobalVariable indices vertices normals allNormals allVertices
-syn keyword CTagsFunction getCoords keyPressEvent animate BinomCoefficient helpString verify drawArrays drawImmediate init BezierCurve main addRenderable addPoint draw Extrusion drawElements mouseMoveEvent Cylinder Viewer
-syn keyword CTagsDefinedName _VIEWER_ _CUBE_ _I_PARAMETRIC_CURVE_ _I_BEZIER_CURVE_ _VOXEL_ _EXTRUSION_ _CYLINDER_ _I_PARAMETRIC_CLOSED_CURVE_ _RENDERABLE_
-syn keyword CTagsClass Voxel Cylinder Cube Extrusion Viewer Renderable IParametricCurve IParametricClosedCurve BezierCurve
+syn keyword CTagsEnumeratorName NodeType Side
+syn keyword CTagsEnumerationValue RIGHT LeafNode AggregateNode BACK UP DOWN FRONT BranchNode LEFT
+syn keyword CTagsFunction VoxelRenderer getCoords keyPressEvent drawNaive at animate TinyVector BinomCoefficient drawWireFrame drawVoxel helpString verify drawArrays drawImmediate Array2D drawSurface init swap BezierCurve main addRenderable norm addPoint draw Extrusion drawElements M N y drawQuad mouseMoveEvent dataIndex subarray data Cylinder prod sizes Viewer Point3D cumprod SharedData isVisible x Array z sum
+syn keyword CTagsType OpResult
+syn keyword CTagsDefinedName _VIEWER_ _CUBE_ SHAREDDATA_H _I_PARAMETRIC_CURVE_ _I_BEZIER_CURVE_ ARRAY_H TINYVECTOR_H POINT3D_H ARRAY2D_H _EXTRUSION_ _CYLINDER_ _I_PARAMETRIC_CLOSED_CURVE_ _VOXEL_ _RENDERABLE_ _VOXEL_RENDERER_ OCTREE_H NUMTRAITS_H
+syn keyword CTagsClass Node Voxel Cylinder Cube Extrusion IParametricClosedCurve Viewer BinaryNumericTraits Renderable Array2D IParametricCurve VoxelRenderer Octree SharedData Branch Aggregate BezierCurve Array Point3D TinyVector Leaf
 

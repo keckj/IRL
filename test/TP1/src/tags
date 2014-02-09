@@ -4,19 +4,69 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ARRAY2D_H	array2d.h	19;"	d
+ARRAY_H	array.h	19;"	d
+AggregateNode	octree.h	/^    enum NodeType { BranchNode, AggregateNode, LeafNode };$/;"	e	enum:Octree::NodeType
+Aggregate	octree.h	/^    class Aggregate : public Node$/;"	c	class:Octree
+Array2D	array2d.h	/^class Array2D : public Array<T,2>$/;"	c
+Array2D	array2d.h	/^Array2D<T>::Array2D( const Array<T,2>& array )$/;"	f	class:Array2D
+Array2D	array2d.h	/^Array2D<T>::Array2D( int m, int n )$/;"	f	class:Array2D
+Array2D	array2d.h	/^Array2D<T>::Array2D()$/;"	f	class:Array2D
+Array	array.h	/^class Array$/;"	c
+Array	array.h	/^Array<T,N>::Array( const TinyVector<int,N>& sizes )$/;"	f	class:Array
+Array	array.h	/^Array<T,N>::Array()$/;"	f	class:Array
+BACK	voxelRenderer.hpp	/^		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		$/;"	e	enum:VoxelRenderer::Side
 BezierCurve	bezierCurve.h	/^class BezierCurve : public IParametricCurve$/;"	c
 BezierCurve	bezierCurve.cpp	/^BezierCurve::BezierCurve() : pts() {$/;"	f	class:BezierCurve
+BinaryNumericTraits	numtraits.h	/^class BinaryNumericTraits$/;"	c
+BinaryNumericTraits	numtraits.h	/^class BinaryNumericTraits<double, int>$/;"	c
+BinaryNumericTraits	numtraits.h	/^class BinaryNumericTraits<int, double>$/;"	c
 BinomCoefficient	bezierCurve.cpp	/^long BezierCurve::BinomCoefficient(long n, long k) {$/;"	f	class:BezierCurve
+BranchNode	octree.h	/^    enum NodeType { BranchNode, AggregateNode, LeafNode };$/;"	e	enum:Octree::NodeType
+Branch	octree.h	/^    class Branch : public Node$/;"	c	class:Octree
 Cube	cube.h	/^class Cube : public Renderable$/;"	c
 Cylinder	cylinder.h	/^class Cylinder : public Renderable$/;"	c
 Cylinder	cylinder.cpp	/^Cylinder::Cylinder(int nFaces, double hauteur, double rayon) {$/;"	f	class:Cylinder
+DOWN	voxelRenderer.hpp	/^		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		$/;"	e	enum:VoxelRenderer::Side
 Extrusion	extrusion.h	/^class Extrusion : public Renderable$/;"	c
 Extrusion	extrusion.cpp	/^	Extrusion::Extrusion(int nFaces, int nCoupes, BezierCurve const &base, BezierCurve const &generatrice) $/;"	f	class:Extrusion
+FRONT	voxelRenderer.hpp	/^		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		$/;"	e	enum:VoxelRenderer::Side
 IParametricClosedCurve	parametricClosedCurve.h	/^class IParametricClosedCurve : public IParametricCurve {$/;"	c
 IParametricCurve	parametricCurve.h	/^class IParametricCurve$/;"	c
+LEFT	voxelRenderer.hpp	/^		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		$/;"	e	enum:VoxelRenderer::Side
+LeafNode	octree.h	/^    enum NodeType { BranchNode, AggregateNode, LeafNode };$/;"	e	enum:Octree::NodeType
+Leaf	octree.h	/^    class Leaf : public Node$/;"	c	class:Octree
+M	array2d.h	/^int Array2D<T>::M() const$/;"	f	class:Array2D
+NUMTRAITS_H	numtraits.h	19;"	d
+N	array2d.h	/^int Array2D<T>::N() const$/;"	f	class:Array2D
+NodeType	octree.h	/^    enum NodeType { BranchNode, AggregateNode, LeafNode };$/;"	g	class:Octree
+Node	octree.h	/^    class Node$/;"	c	class:Octree
+OCTREE_H	octree.h	19;"	d
+Octree	octree.h	/^class Octree$/;"	c
+OpResult	numtraits.h	/^    typedef T1 OpResult;$/;"	t	class:BinaryNumericTraits
+OpResult	numtraits.h	/^    typedef double OpResult;$/;"	t	class:BinaryNumericTraits
+POINT3D_H	point3d.h	19;"	d
+Point3D	point3d.h	/^class Point3D : public TinyVector<T,3>$/;"	c
+Point3D	point3d.h	/^    Point3D( T x, T y, T z )$/;"	f	class:Point3D
+Point3D	point3d.h	/^    Point3D( const TinyVector<T,3>& v )$/;"	f	class:Point3D
+Point3D	point3d.h	/^    Point3D() {}$/;"	f	class:Point3D
+RIGHT	voxelRenderer.hpp	/^		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		$/;"	e	enum:VoxelRenderer::Side
 Renderable	renderable.h	/^class Renderable$/;"	c
+SHAREDDATA_H	shareddata.h	19;"	d
+SharedData	shareddata.h	/^class SharedData$/;"	c
+SharedData	shareddata.h	/^SharedData<T>::SharedData( T* data )$/;"	f	class:SharedData
+SharedData	shareddata.h	/^SharedData<T>::SharedData( const SharedData<T>& sharedData )$/;"	f	class:SharedData
+Side	voxelRenderer.hpp	/^		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		$/;"	g	class:VoxelRenderer
+TINYVECTOR_H	tinyvector.h	19;"	d
+TinyVector	tinyvector.h	/^class TinyVector$/;"	c
+TinyVector	tinyvector.h	/^TinyVector<T,N>::TinyVector( const T& value )$/;"	f	class:TinyVector
+TinyVector	tinyvector.h	/^TinyVector<T,N>::TinyVector( const TinyVector<T2,N>& v )$/;"	f	class:TinyVector
+TinyVector	tinyvector.h	/^TinyVector<T,N>::TinyVector()$/;"	f	class:TinyVector
+UP	voxelRenderer.hpp	/^		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		$/;"	e	enum:VoxelRenderer::Side
 Viewer	viewer.h	/^class Viewer : public QGLViewer$/;"	c
 Viewer	viewer.cpp	/^Viewer::Viewer() {$/;"	f	class:Viewer
+VoxelRenderer	voxelRenderer.hpp	/^class VoxelRenderer : public Renderable$/;"	c
+VoxelRenderer	voxelRenderer.cpp	/^	VoxelRenderer::VoxelRenderer(int size, float cube_w, float cube_h, float cube_d, bool drawGrid, unsigned char threshold) $/;"	f	class:VoxelRenderer
 Voxel	voxel.hpp	/^class Voxel$/;"	c
 _CUBE_	cube.h	2;"	d
 _CYLINDER_	cylinder.h	3;"	d
@@ -26,32 +76,58 @@ _I_PARAMETRIC_CLOSED_CURVE_	parametricClosedCurve.h	3;"	d
 _I_PARAMETRIC_CURVE_	parametricCurve.h	3;"	d
 _RENDERABLE_	renderable.h	2;"	d
 _VIEWER_	viewer.h	11;"	d
+_VOXEL_RENDERER_	voxelRenderer.hpp	3;"	d
 _VOXEL_	voxel.hpp	4;"	d
 active	voxel.hpp	/^		bool active;$/;"	m	class:Voxel
 addPoint	bezierCurve.cpp	/^void BezierCurve::addPoint(GLfloat x, GLfloat y, GLfloat z) {$/;"	f	class:BezierCurve
 addRenderable	viewer.cpp	/^void Viewer::addRenderable(Renderable *r)$/;"	f	class:Viewer
+aggregateSize_	octree.h	/^    static const int aggregateSize_ = AS;$/;"	m	class:Octree
 allNormals	cube.cpp	/^static GLfloat allNormals[] = { $/;"	v	file:
 allVertices	cube.cpp	/^static GLfloat allVertices[] = { $/;"	v	file:
 animate	renderable.h	/^		virtual void animate() {};$/;"	f	class:Renderable
 animate	viewer.cpp	/^void Viewer::animate()$/;"	f	class:Viewer
+at	array.h	/^const T& Array<T,N>::at( const TinyVector<int,N>& indices ) const$/;"	f	class:Array
+at	array2d.h	/^const T& Array2D<T>::at( int i, int j ) const$/;"	f	class:Array2D
+at	tinyvector.h	/^    const T& at( int i ) const { return data_[i]; }$/;"	f	class:TinyVector
 base_1	cylinder.h	/^                GLfloat **base_1;$/;"	m	class:Cylinder
 base_2	cylinder.h	/^                GLfloat **base_2;$/;"	m	class:Cylinder
+children	octree.h	/^        Node* children[2][2][2];$/;"	m	class:Octree::Branch
 coupes	extrusion.h	/^		GLfloat ***coupes;$/;"	m	class:Extrusion
+cube_d	voxelRenderer.hpp	/^		float cube_w, cube_h, cube_d;$/;"	m	class:VoxelRenderer
+cube_h	voxelRenderer.hpp	/^		float cube_w, cube_h, cube_d;$/;"	m	class:VoxelRenderer
+cube_w	voxelRenderer.hpp	/^		float cube_w, cube_h, cube_d;$/;"	m	class:VoxelRenderer
+cumprod	tinyvector.h	/^TinyVector<T,N> cumprod( const TinyVector<T,N>& v )$/;"	f
+dataIndex	array.h	/^int Array<T,N>::dataIndex( const TinyVector<int,N>& indices ) const$/;"	f	class:Array
+data_	array.h	/^    SharedData<T> data_;$/;"	m	class:Array
+data_	shareddata.h	/^    T* data_;$/;"	m	class:SharedData
+data_	tinyvector.h	/^    T data_[N];$/;"	m	class:TinyVector
+data	tinyvector.h	/^    T* data() { return data_; }$/;"	f	class:TinyVector
+data	tinyvector.h	/^    const T* data() const { return data_; }$/;"	f	class:TinyVector
 drawArrays	cube.cpp	/^void Cube::drawArrays()$/;"	f	class:Cube
 drawElements	cube.cpp	/^void Cube::drawElements()$/;"	f	class:Cube
+drawGrid	voxelRenderer.hpp	/^		bool drawGrid;$/;"	m	class:VoxelRenderer
 drawImmediate	cube.cpp	/^void Cube::drawImmediate()$/;"	f	class:Cube
 drawImmediate	cylinder.cpp	/^void Cylinder::drawImmediate() {$/;"	f	class:Cylinder
 drawImmediate	extrusion.cpp	/^void Extrusion::drawImmediate() {$/;"	f	class:Extrusion
+drawNaive	voxelRenderer.cpp	/^void VoxelRenderer::drawNaive() {$/;"	f	class:VoxelRenderer
+drawQuad	voxelRenderer.cpp	/^void inline VoxelRenderer::drawQuad(Side side, int x, int y, int z) {$/;"	f	class:VoxelRenderer
+drawSurface	voxelRenderer.cpp	/^void VoxelRenderer::drawSurface() {$/;"	f	class:VoxelRenderer
+drawVoxel	voxelRenderer.cpp	/^void VoxelRenderer::drawVoxel(unsigned char voxel, const int x, const int y, const int z) {$/;"	f	class:VoxelRenderer
+drawVoxel	voxelRenderer.cpp	/^void inline VoxelRenderer::drawVoxel($/;"	f	class:VoxelRenderer
+drawWireFrame	voxelRenderer.cpp	/^void VoxelRenderer::drawWireFrame() {$/;"	f	class:VoxelRenderer
 draw	cube.cpp	/^void Cube::draw()$/;"	f	class:Cube
 draw	cylinder.cpp	/^void Cylinder::draw() {$/;"	f	class:Cylinder
 draw	extrusion.cpp	/^void Extrusion::draw() {$/;"	f	class:Extrusion
 draw	viewer.cpp	/^void Viewer::draw()$/;"	f	class:Viewer
+draw	voxelRenderer.cpp	/^void VoxelRenderer::draw() {$/;"	f	class:VoxelRenderer
+emptyValue_	octree.h	/^    T emptyValue_;$/;"	m	class:Octree
 getCoords	bezierCurve.cpp	/^GLfloat *BezierCurve::getCoords(double t) const {$/;"	f	class:BezierCurve
 hauteur	cylinder.h	/^                double hauteur, rayon;$/;"	m	class:Cylinder
 helpString	viewer.cpp	/^QString Viewer::helpString() const$/;"	f	class:Viewer
 indices	cube.cpp	/^static GLubyte indices[6][4] = {$/;"	v	file:
 init	renderable.h	/^		virtual void init(Viewer&) {};$/;"	f	class:Renderable
 init	viewer.cpp	/^void Viewer::init()$/;"	f	class:Viewer
+isVisible	voxelRenderer.cpp	/^bool inline VoxelRenderer::isVisible(unsigned char voxel) {$/;"	f	class:VoxelRenderer
 keyPressEvent	renderable.h	/^		virtual void keyPressEvent(QKeyEvent*, Viewer&) {};$/;"	f	class:Renderable
 keyPressEvent	viewer.cpp	/^void Viewer::keyPressEvent(QKeyEvent *e)$/;"	f	class:Viewer
 main	main.cpp	/^int main(int argc, char** argv)$/;"	f
@@ -61,18 +137,65 @@ nCoupes	extrusion.h	/^		int nFaces, nCoupes;$/;"	m	class:Extrusion
 nFaces	cylinder.h	/^                int nFaces;$/;"	m	class:Cylinder
 nFaces	extrusion.h	/^		int nFaces, nCoupes;$/;"	m	class:Extrusion
 normals	cube.cpp	/^static GLfloat normals[6][3] = {$/;"	v	file:
+norm	tinyvector.h	/^T norm( const TinyVector<T,N>& v )$/;"	f
+offset_	array.h	/^    int offset_;$/;"	m	class:Array
+operator ()	array.h	/^T& Array<T,N>::operator() ( const TinyVector<int,N>& indices )$/;"	f	class:Array
+operator ()	array.h	/^const T& Array<T,N>::operator() ( const TinyVector<int,N>& indices ) const$/;"	f	class:Array
+operator ()	array2d.h	/^T& Array2D<T>::operator() ( int i, int j )$/;"	f	class:Array2D
+operator ()	array2d.h	/^const T& Array2D<T>::operator() ( int i, int j ) const$/;"	f	class:Array2D
+operator ()	tinyvector.h	/^    T& operator() ( int i ) { return data_[i]; }$/;"	f	class:TinyVector
+operator ()	tinyvector.h	/^    const T& operator() ( int i ) const { return at(i); }$/;"	f	class:TinyVector
+operator *=	tinyvector.h	/^    void operator*= ( const T& x )$/;"	f	class:TinyVector
+operator *=	tinyvector.h	/^    void operator*= ( const TinyVector<T,N>& v )$/;"	f	class:TinyVector
+operator *	tinyvector.h	/^TinyVector< typename BinaryNumericTraits<T1,T2>::OpResult, N > operator* ($/;"	f
+operator *	tinyvector.h	/^TinyVector<T,N> operator* ( const T& x, TinyVector<T,N> v1 )$/;"	f
+operator +=	tinyvector.h	/^    void operator+= ( const TinyVector<T,N>& v )$/;"	f	class:TinyVector
+operator +	tinyvector.h	/^TinyVector< typename BinaryNumericTraits<T1,T2>::OpResult, N > operator+ ($/;"	f
+operator -=	tinyvector.h	/^    void operator-= ( const TinyVector<T,N>& v )$/;"	f	class:TinyVector
+operator -	tinyvector.h	/^TinyVector< typename BinaryNumericTraits<T1,T2>::OpResult, N > operator- ($/;"	f
+operator /=	tinyvector.h	/^    void operator\/= ( const T& x )$/;"	f	class:TinyVector
+operator /	tinyvector.h	/^TinyVector< typename BinaryNumericTraits<T1,T2>::OpResult, N > operator\/ ($/;"	f
+operator =	shareddata.h	/^SharedData<T>& SharedData<T>::operator= ( SharedData<T> sharedData )$/;"	f	class:SharedData
+operator =	tinyvector.h	/^TinyVector<T,N>& TinyVector<T,N>::operator= ( const TinyVector<T2,N>& v )$/;"	f	class:TinyVector
+operator []	shareddata.h	/^T& SharedData<T>::operator[] ( int i ) const$/;"	f	class:SharedData
 pi	cylinder.h	/^                static const float pi = 3.1415;$/;"	m	class:Cylinder
+prod	tinyvector.h	/^T prod( const TinyVector<T,N>& v )$/;"	f
 pts	bezierCurve.h	/^		list<GLfloat*> pts;$/;"	m	class:BezierCurve
 rayon	cylinder.h	/^                double hauteur, rayon;$/;"	m	class:Cylinder
+refcount_	shareddata.h	/^    int* refcount_;$/;"	m	class:SharedData
 renderableList	viewer.h	/^		list<Renderable *> renderableList;$/;"	m	class:Viewer
+root_	octree.h	/^    Node* root_;$/;"	m	class:Octree
+size_	octree.h	/^    int size_;$/;"	m	class:Octree
+size	voxelRenderer.hpp	/^		int size;$/;"	m	class:VoxelRenderer
+sizes_	array.h	/^    TinyVector<int,N> sizes_;$/;"	m	class:Array
+sizes	array.h	/^const TinyVector<int,N>& Array<T,N>::sizes() const$/;"	f	class:Array
+strides_	array.h	/^    TinyVector<int,N> strides_;$/;"	m	class:Array
+subarray	array.h	/^Array<T,N> Array<T,N>::subarray( const TinyVector<int,N>& begin,$/;"	f	class:Array
+subarray	array2d.h	/^Array2D<T> Array2D<T>::subarray( int iBegin, int jBegin, int iEnd, int jEnd )$/;"	f	class:Array2D
+sum	tinyvector.h	/^T sum( const TinyVector<T,N>& v )$/;"	f
+swap	shareddata.h	/^void SharedData<T>::swap( SharedData<T>& sharedData )$/;"	f	class:SharedData
+threshold	voxelRenderer.hpp	/^		unsigned char threshold;$/;"	m	class:VoxelRenderer
 toogleLight	viewer.h	/^		bool toogleLight;$/;"	m	class:Viewer
 toogleWireframe	viewer.h	/^		bool toogleWireframe;$/;"	m	class:Viewer
+tree	voxelRenderer.hpp	/^		Octree<unsigned char> tree;$/;"	m	class:VoxelRenderer
+value_	octree.h	/^        T value_;$/;"	m	class:Octree::Leaf
+value_	octree.h	/^        T value_[AS][AS][AS];$/;"	m	class:Octree::Aggregate
 value	voxel.hpp	/^		T value;$/;"	m	class:Voxel
 verify	parametricClosedCurve.h	/^		virtual void verify() const {$/;"	f	class:IParametricClosedCurve
 verify	parametricCurve.h	/^		virtual void verify() const {};$/;"	f	class:IParametricCurve
 vertices	cube.cpp	/^static GLfloat vertices[] = { $/;"	v	file:
+x	point3d.h	/^    T& x() { return (*this)(0); }$/;"	f	class:Point3D
+x	point3d.h	/^    const T& x() const { return this->at(0); }$/;"	f	class:Point3D
+y	point3d.h	/^    T& y() { return (*this)(1); }$/;"	f	class:Point3D
+y	point3d.h	/^    const T& y() const { return this->at(1); }$/;"	f	class:Point3D
+z	point3d.h	/^    T& z() { return (*this)(2); }$/;"	f	class:Point3D
+z	point3d.h	/^    const T& z() const { return this->at(2); }$/;"	f	class:Point3D
+~Aggregate	octree.h	/^        ~Aggregate() {};$/;"	f	class:Octree::Aggregate
 ~BezierCurve	bezierCurve.cpp	/^BezierCurve::~BezierCurve() {$/;"	f	class:BezierCurve
 ~IParametricCurve	parametricCurve.h	/^		virtual ~IParametricCurve() {};$/;"	f	class:IParametricCurve
+~Leaf	octree.h	/^        ~Leaf() {};$/;"	f	class:Octree::Leaf
+~Node	octree.h	/^        ~Node() {};$/;"	f	class:Octree::Node
 ~Renderable	renderable.h	/^		virtual ~Renderable() {};$/;"	f	class:Renderable
+~SharedData	shareddata.h	/^SharedData<T>::~SharedData()$/;"	f	class:SharedData
 ~Viewer	viewer.cpp	/^Viewer::~Viewer()$/;"	f	class:Viewer
 ~Voxel	voxel.hpp	/^		virtual ~Voxel() {};$/;"	f	class:Voxel
