@@ -1,0 +1,6 @@
+syn keyword CTagsMember toogleWireframe toogleLight coupes value nCoupes renderableList nFaces active base_1 base_2 pi pts hauteur rayon
+syn keyword CTagsGlobalVariable indices vertices normals allNormals allVertices
+syn keyword CTagsFunction getCoords keyPressEvent animate BinomCoefficient helpString verify drawArrays drawImmediate init BezierCurve main addRenderable addPoint draw Extrusion drawElements mouseMoveEvent Cylinder Viewer
+syn keyword CTagsDefinedName _VIEWER_ _CUBE_ _I_PARAMETRIC_CURVE_ _I_BEZIER_CURVE_ _VOXEL_ _EXTRUSION_ _CYLINDER_ _I_PARAMETRIC_CLOSED_CURVE_ _RENDERABLE_
+syn keyword CTagsClass Voxel Cylinder Cube Extrusion Viewer Renderable IParametricCurve IParametricClosedCurve BezierCurve
+

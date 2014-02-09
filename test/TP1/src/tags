@@ -1,0 +1,78 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BezierCurve	bezierCurve.h	/^class BezierCurve : public IParametricCurve$/;"	c
+BezierCurve	bezierCurve.cpp	/^BezierCurve::BezierCurve() : pts() {$/;"	f	class:BezierCurve
+BinomCoefficient	bezierCurve.cpp	/^long BezierCurve::BinomCoefficient(long n, long k) {$/;"	f	class:BezierCurve
+Cube	cube.h	/^class Cube : public Renderable$/;"	c
+Cylinder	cylinder.h	/^class Cylinder : public Renderable$/;"	c
+Cylinder	cylinder.cpp	/^Cylinder::Cylinder(int nFaces, double hauteur, double rayon) {$/;"	f	class:Cylinder
+Extrusion	extrusion.h	/^class Extrusion : public Renderable$/;"	c
+Extrusion	extrusion.cpp	/^	Extrusion::Extrusion(int nFaces, int nCoupes, BezierCurve const &base, BezierCurve const &generatrice) $/;"	f	class:Extrusion
+IParametricClosedCurve	parametricClosedCurve.h	/^class IParametricClosedCurve : public IParametricCurve {$/;"	c
+IParametricCurve	parametricCurve.h	/^class IParametricCurve$/;"	c
+Renderable	renderable.h	/^class Renderable$/;"	c
+Viewer	viewer.h	/^class Viewer : public QGLViewer$/;"	c
+Viewer	viewer.cpp	/^Viewer::Viewer() {$/;"	f	class:Viewer
+Voxel	voxel.hpp	/^class Voxel$/;"	c
+_CUBE_	cube.h	2;"	d
+_CYLINDER_	cylinder.h	3;"	d
+_EXTRUSION_	extrusion.h	4;"	d
+_I_BEZIER_CURVE_	bezierCurve.h	3;"	d
+_I_PARAMETRIC_CLOSED_CURVE_	parametricClosedCurve.h	3;"	d
+_I_PARAMETRIC_CURVE_	parametricCurve.h	3;"	d
+_RENDERABLE_	renderable.h	2;"	d
+_VIEWER_	viewer.h	11;"	d
+_VOXEL_	voxel.hpp	4;"	d
+active	voxel.hpp	/^		bool active;$/;"	m	class:Voxel
+addPoint	bezierCurve.cpp	/^void BezierCurve::addPoint(GLfloat x, GLfloat y, GLfloat z) {$/;"	f	class:BezierCurve
+addRenderable	viewer.cpp	/^void Viewer::addRenderable(Renderable *r)$/;"	f	class:Viewer
+allNormals	cube.cpp	/^static GLfloat allNormals[] = { $/;"	v	file:
+allVertices	cube.cpp	/^static GLfloat allVertices[] = { $/;"	v	file:
+animate	renderable.h	/^		virtual void animate() {};$/;"	f	class:Renderable
+animate	viewer.cpp	/^void Viewer::animate()$/;"	f	class:Viewer
+base_1	cylinder.h	/^                GLfloat **base_1;$/;"	m	class:Cylinder
+base_2	cylinder.h	/^                GLfloat **base_2;$/;"	m	class:Cylinder
+coupes	extrusion.h	/^		GLfloat ***coupes;$/;"	m	class:Extrusion
+drawArrays	cube.cpp	/^void Cube::drawArrays()$/;"	f	class:Cube
+drawElements	cube.cpp	/^void Cube::drawElements()$/;"	f	class:Cube
+drawImmediate	cube.cpp	/^void Cube::drawImmediate()$/;"	f	class:Cube
+drawImmediate	cylinder.cpp	/^void Cylinder::drawImmediate() {$/;"	f	class:Cylinder
+drawImmediate	extrusion.cpp	/^void Extrusion::drawImmediate() {$/;"	f	class:Extrusion
+draw	cube.cpp	/^void Cube::draw()$/;"	f	class:Cube
+draw	cylinder.cpp	/^void Cylinder::draw() {$/;"	f	class:Cylinder
+draw	extrusion.cpp	/^void Extrusion::draw() {$/;"	f	class:Extrusion
+draw	viewer.cpp	/^void Viewer::draw()$/;"	f	class:Viewer
+getCoords	bezierCurve.cpp	/^GLfloat *BezierCurve::getCoords(double t) const {$/;"	f	class:BezierCurve
+hauteur	cylinder.h	/^                double hauteur, rayon;$/;"	m	class:Cylinder
+helpString	viewer.cpp	/^QString Viewer::helpString() const$/;"	f	class:Viewer
+indices	cube.cpp	/^static GLubyte indices[6][4] = {$/;"	v	file:
+init	renderable.h	/^		virtual void init(Viewer&) {};$/;"	f	class:Renderable
+init	viewer.cpp	/^void Viewer::init()$/;"	f	class:Viewer
+keyPressEvent	renderable.h	/^		virtual void keyPressEvent(QKeyEvent*, Viewer&) {};$/;"	f	class:Renderable
+keyPressEvent	viewer.cpp	/^void Viewer::keyPressEvent(QKeyEvent *e)$/;"	f	class:Viewer
+main	main.cpp	/^int main(int argc, char** argv)$/;"	f
+mouseMoveEvent	renderable.h	/^		virtual void mouseMoveEvent(QMouseEvent*, Viewer&) {};$/;"	f	class:Renderable
+mouseMoveEvent	viewer.cpp	/^void Viewer::mouseMoveEvent(QMouseEvent *e)$/;"	f	class:Viewer
+nCoupes	extrusion.h	/^		int nFaces, nCoupes;$/;"	m	class:Extrusion
+nFaces	cylinder.h	/^                int nFaces;$/;"	m	class:Cylinder
+nFaces	extrusion.h	/^		int nFaces, nCoupes;$/;"	m	class:Extrusion
+normals	cube.cpp	/^static GLfloat normals[6][3] = {$/;"	v	file:
+pi	cylinder.h	/^                static const float pi = 3.1415;$/;"	m	class:Cylinder
+pts	bezierCurve.h	/^		list<GLfloat*> pts;$/;"	m	class:BezierCurve
+rayon	cylinder.h	/^                double hauteur, rayon;$/;"	m	class:Cylinder
+renderableList	viewer.h	/^		list<Renderable *> renderableList;$/;"	m	class:Viewer
+toogleLight	viewer.h	/^		bool toogleLight;$/;"	m	class:Viewer
+toogleWireframe	viewer.h	/^		bool toogleWireframe;$/;"	m	class:Viewer
+value	voxel.hpp	/^		T value;$/;"	m	class:Voxel
+verify	parametricClosedCurve.h	/^		virtual void verify() const {$/;"	f	class:IParametricClosedCurve
+verify	parametricCurve.h	/^		virtual void verify() const {};$/;"	f	class:IParametricCurve
+vertices	cube.cpp	/^static GLfloat vertices[] = { $/;"	v	file:
+~BezierCurve	bezierCurve.cpp	/^BezierCurve::~BezierCurve() {$/;"	f	class:BezierCurve
+~IParametricCurve	parametricCurve.h	/^		virtual ~IParametricCurve() {};$/;"	f	class:IParametricCurve
+~Renderable	renderable.h	/^		virtual ~Renderable() {};$/;"	f	class:Renderable
+~Viewer	viewer.cpp	/^Viewer::~Viewer()$/;"	f	class:Viewer
+~Voxel	voxel.hpp	/^		virtual ~Voxel() {};$/;"	f	class:Voxel

@@ -1,0 +1,32 @@
+
+
+#ifndef _VOXEL_
+#define _VOXEL_
+
+#include "renderable.h"
+
+//Voxel contenant un valeur de type T.
+//T doit être copiable (attention aux références).
+
+template<typename T>
+class Voxel : public Renderable
+{
+	public:
+		Voxel(T value = 0, bool active = false);
+		Voxel(Voxel other);
+		virtual ~Voxel() {};
+
+		virtual Voxel& operator=(const Voxel& source);
+
+	protected:
+		T value;
+		bool active;
+
+	public:
+		T getValue();
+		bool isActive();
+		setActive(bool active);
+};
+
+#endif
+
