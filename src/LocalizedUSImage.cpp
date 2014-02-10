@@ -8,13 +8,13 @@ float* LocalizedUSImage::elementSpacing = new float[3];
 long LocalizedUSImage::samplingFrequency = 0;
 long LocalizedUSImage::imagingFrequency = 0;
 
-LocalizedUSImage::LocalizedUSImage(string const &mhdFile, bool rawMajor) : 
+LocalizedUSImage::LocalizedUSImage(string const & dataFolder, string const & mhdFile, bool rawMajor) : 
 	rawMajor(rawMajor), imageData(0)
 {
 	rotationMatrix = new float[9];
 	offset = new float[3];
 
-	parseMhdFileAndLoadRawData(mhdFile);
+	parseMhdFileAndLoadRawData(dataFolder, mhdFile);
 }
 
 LocalizedUSImage::~LocalizedUSImage() {
@@ -64,12 +64,12 @@ void LocalizedUSImage::initialize() {
 	LocalizedUSImage::elementSpacing[2] = 0.0f;
 }
 
-void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & mhdFile) {
+void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & dataFolder, string const & mhdFile) {
 
 	log_console.infoStream() << "Opening mhd file > " << mhdFile;
 	ifstream infile;
 
-	infile.open(mhdFile, ifstream::in);
+	infile.open(dataFolder + mhdFile, ifstream::in);
 
 	if(infile.bad() || infile.fail()) {
 		log_console.errorStream() << "Error while loading mhd file" << mhdFile << " !";
@@ -111,6 +111,11 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & mhdFile) {
 				for (int i = 0; i < 3; i++) {
 					lineStream >> LocalizedUSImage::elementSpacing[i];
 				}
+				
+				log_console.infoStream() << "Set global element spacing to " 
+					<< elementSpacing[0] << "\t" 
+					<< elementSpacing[1] << "\t"
+					<< elementSpacing[2] << ".";
 			}
 			else { //at least 2nd img
 				//verify element spacing
@@ -179,13 +184,13 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & mhdFile) {
 			}
 
 			dataFile = buffer.str();
-			dataFile = string("data/processedImages/") + dataFile;
+			dataFile = dataFolder + dataFile;
 		}
 	}
 
 	infile.close();
 
-	log_console.infoStream() << "Finished to read > " << mhdFile;
+	//log_console.infoStream() << "Finished to read > " << mhdFile;
 
 	//create data array
 
@@ -208,10 +213,6 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & mhdFile) {
 
 	imageData = (float*) dataBuffer;
 
-	log_console.debugStream() << "Size of file : " << dataCharSize;
-	log_console.debugStream() << "Size of char : " << sizeof(char);
-	log_console.debugStream() << "Size of float : " << sizeof(float);
-	
 	log_console.infoStream() << "Finished to read data from > " << dataFile;
 
 	infile.close();

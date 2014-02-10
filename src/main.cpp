@@ -62,8 +62,12 @@ int main( int argc, const char* argv[] )
 {
 	initLogs();
 
+	Image im;
+	im.loadLocalizedUSImages("data/imagesUS/");
+	return 0;
+
 	LocalizedUSImage::initialize();
-	LocalizedUSImage img("data/processedImages/IQ[data #123 (RF Grid).mhd");
+	LocalizedUSImage img("data/processedImages/" , "IQ[data #123 (RF Grid).mhd");
 
 	Mat m(img.getHeight(), img.getWidth(), CV_32F, img.getImageData());
 
@@ -71,7 +75,7 @@ int main( int argc, const char* argv[] )
 	minMaxIdx(m, &min, &max);
 	cout << "\nvals \t" << min << "\t" << max << endl;
 	Mat hist;
-	int hist_size = 64;
+	int hist_size = 128;
 	float range[] = {(float) min, (float) max};
 	const float *hist_range = {range};
 	calcHist(&m, 1, 0, Mat(), hist, 1, &hist_size, &hist_range, true, false);
@@ -89,8 +93,8 @@ int main( int argc, const char* argv[] )
 	}
 
 	/// Display
-	//namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
-	//imshow("calcHist Demo", histImage );
+	namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
+	imshow("calcHist Demo", histImage );
 
 	//cout << img;
 	Mat m2,m3;

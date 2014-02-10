@@ -2,6 +2,7 @@
 
 #include "image.hpp"
 #include "log.hpp"
+#include "LocalizedUSImage.hpp"
 
 #include <stdio.h>
 #include <assert.h>
@@ -112,5 +113,36 @@ void Image::displayImage(Mat &m) {
 	namedWindow( "Display window", CV_WINDOW_AUTOSIZE );
 	imshow( "Display window", m); 
 	waitKey(0);
+
+}
+
+void Image::loadLocalizedUSImages(string const & folderName) {
+		
+		DIR *dir;
+		struct dirent *ent;
+		unsigned int counter = 0;
+		
+		dir = opendir(folderName.c_str());
+
+		log_console.infoStream() << "Loading data from folder " << folderName << " .";
+
+		if (dir == NULL) {
+			log_console.errorStream() << "Impossible to open folder " <<  folderName << " !";
+			throw std::logic_error("Impossible to open data folder.");
+		}
+	
+	
+		/* On initialise le loader */
+		LocalizedUSImage::initialize();
+
+		/* On cherche les *.mhd */
+		while((ent = readdir(dir)) != NULL) {
+			if(ent->d_type == DT_REG && (strstr(ent->d_name, ".mhd") != NULL)) {
+				LocalizedUSImage img(folderName, string(ent->d_name));
+				counter++;
+			}
+		}
+
+		log_console.infoStream() << "Loaded data from " << counter << " files.";
 
 }

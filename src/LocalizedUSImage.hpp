@@ -8,7 +8,7 @@ using namespace std;
 class LocalizedUSImage {
 
 	public:
-		LocalizedUSImage(string const &mhdFile, bool rawMajor = false);
+		LocalizedUSImage(string const & dataFolder, string const & mhdFile, bool rawMajor = false);
 		~LocalizedUSImage();
 
 		int getWidth() const;
@@ -38,7 +38,7 @@ class LocalizedUSImage {
 		static long samplingFrequency;
 		static long imagingFrequency;
 
-		void parseMhdFileAndLoadRawData(string const & mhdFile);
+		void parseMhdFileAndLoadRawData(string const & dataFolder, string const & mhdFile);
 };
 
 ostream& operator<<(ostream& os, const LocalizedUSImage& obj);

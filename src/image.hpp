@@ -16,6 +16,8 @@ class Image {
 		int loadImageFolder(const char *location);
 		int loadImage(const char *name);
 
+		void loadLocalizedUSImages(string const & folderName);
+
 		void computeImageFiltering();
 		void computeGradientVectorFlow();
 		
