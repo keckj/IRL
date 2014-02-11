@@ -63,7 +63,8 @@ int main( int argc, const char* argv[] )
 	initLogs();
 
 	Image im;
-	im.loadLocalizedUSImages("data/imagesUS/");
+	//im.loadLocalizedUSImages("data/imagesUS/");
+	im.loadLocalizedUSImages("data/processedImages/");
 	return 0;
 
 	LocalizedUSImage::initialize();

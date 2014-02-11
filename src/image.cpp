@@ -7,8 +7,9 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <dirent.h>
 #include <opencv/cv.h>
 
@@ -136,13 +137,79 @@ void Image::loadLocalizedUSImages(string const & folderName) {
 		LocalizedUSImage::initialize();
 
 		/* On cherche les *.mhd */
+		list<string> mhdFiles;
 		while((ent = readdir(dir)) != NULL) {
 			if(ent->d_type == DT_REG && (strstr(ent->d_name, ".mhd") != NULL)) {
-				LocalizedUSImage img(folderName, string(ent->d_name));
+				mhdFiles.push_back(string(ent->d_name));
 				counter++;
 			}
 		}
+		
+		/* On regarde si on en a au moins un */
+		if (counter == 0) {
+			log_console.errorStream() << "No data was found in folder " <<  folderName << " !";
+			throw std::logic_error("No data was found in given folder.");
+		}
+		else {
+			log_console.infoStream() << "Found " << counter << " mhd files.";
+			log_console.infoStream() << "Processing raw data...";
+		}
 
-		log_console.infoStream() << "Loaded data from " << counter << " files.";
+		/* On trie les noms de fichiers (cohérence spaciale) */
+		mhdFiles.sort(Image::compareDataOrder);
 
+		/* On charge les données */
+		float *x = new float[counter];
+		float *y = new float[counter];
+		float *z = new float[counter];
+		float **R = new float*[counter];
+		counter = 0;
+		
+		for (list<string>::iterator it = mhdFiles.begin() ; it != mhdFiles.end(); it++) {
+				LocalizedUSImage img(folderName, *it);
+				x[counter] = img.getOffset()[0];
+				y[counter] = img.getOffset()[1];
+				z[counter] = img.getOffset()[2];
+				R[counter] = new float[9];
+
+				for (int i = 0; i < 9; i++) {
+					R[counter][i] = img.getRotationMatrix()[i];
+				}
+
+				counter++;
+		}
+
+		
+		ofstream outfile;
+		outfile.open(folderName + "data.txt", ifstream::out);
+
+		for(unsigned int i = 0; i < counter; i++) {
+			outfile << x[i] << " \t" << y[i] << " \t" << z[i];
+			for (int j = 0; j < 9; j++) {
+				outfile << "\t" << R[i][j];
+			}
+
+			outfile << endl;
+		}
+
+		outfile.close();
+		
+
+		log_console.infoStream() << "Finished to read data from folder " << folderName << ".";
+}
+
+bool Image::compareDataOrder(string const & str1, string const & str2) {
+	
+	istringstream stream1(str1);
+	istringstream stream2(str2);
+
+	int n1, n2;
+
+	while(stream1.get() != '#');
+	while(stream2.get() != '#');
+
+	stream1 >> n1;
+	stream2 >> n2;
+
+	return n1 < n2;
 }

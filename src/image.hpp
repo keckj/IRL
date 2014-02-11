@@ -22,4 +22,5 @@ class Image {
 		void computeGradientVectorFlow();
 		
 		static void displayImage(Mat &m);
+		static bool compareDataOrder(string const &str1, string const &str2);
 };

@@ -27,6 +27,7 @@ class LocalizedUSImage {
 		static void initialize();
 		
 	private:
+		int nData;
 		int width, height;
 		bool rawMajor;
 
