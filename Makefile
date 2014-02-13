@@ -1,7 +1,4 @@
 
-
-### LIBRAIRIES EXTERIEURES ###
-OPENCV_INCLUDEPATH = -I/usr/local/include
 OPENCV_LIBPATH = -L/usr/lib
 OPENCV_LIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui
 
@@ -19,11 +16,15 @@ OPENGL_LIBS = -lglfw3 -lGL -lGLEW -lGLU -lX11 -lXxf86vm -lXrandr -lpthread -lXi
 #OPENGL_LIBS = -lGL -lGLEW -lglfw3 -lX11 -lsfml-graphics -lsfml-window -lsfml-system
 ###############################
 
+#macros
+containing = $(foreach v,$2,$(if $(findstring $1,$v),$v))
+not_containing = $(foreach v,$2,$(if $(findstring $1,$v),,$v))
+subdirs = $(shell find $1 -type d)
 
 #LDFLAGS= -lSDL2main -lSDL2 -lSDL2_ttf -lSDL2_mixer -lGL -lGLU
-LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) -llog4cpp #$(OPENCL_LIBS) $(OPENCV_LIBS) #$(CUDA_LIBS)
-INCLUDE = $(OPENGL_INCLUDEPATH)# $(OPENCL_INCLUDEPATH) $(OPENCV_INCLUDEPATH) #$(CUDA_INCLUDEPATH)
-LIBS = $(OPENCL_LIBPATH) #$lOpenCL $(OPENGL_LIBPATH) $(OPENCV_LIBPATH) #$(CUDA_LIBPATH)
+LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) -llog4cpp $(CUDA_LIBS)#$(OPENCL_LIBS) $(OPENCV_LIBS) 
+INCLUDE = $(OPENGL_INCLUDEPATH) $(CUDA_INCLUDEPATH)# $(OPENCL_INCLUDEPATH) $(OPENCV_INCLUDEPATH) #
+LIBS = $(OPENCL_LIBPATH) $(CUDA_LIBPATH)#$lOpenCL $(OPENGL_LIBPATH) $(OPENCV_LIBPATH) #$(CUDA_LIBPATH)
 
 #Compilateurs
 CC=gcc
@@ -44,69 +45,47 @@ PROFILINGFLAGS= -pg
 RELEASEFLAGS= -O3
 
 # Source et destination des fichiers
-SRCDIR = src/
-OBJDIR = obj/
-
 TARGET = main
 
-EXT = c C cc cpp s S asm cu
-SRC = $(notdir $(wildcard $(addprefix $(SRCDIR)*., $(EXT))))
-OBJ = $(addprefix $(OBJDIR), $(addsuffix .o, $(basename $(SRC))))
+SRCDIR = $(realpath src)
+OBJDIR = $(realpath obj)
+EXCLUDED_SUBDIRS = $(call subdirs, src/old)
+SUBDIRS =  $(filter-out $(EXCLUDED_SUBDIRS), $(call subdirs, $(SRCDIR)))
 
+EXTENSIONS = $(addprefix *., c C cc cpp s S asm cu)
+SRC = $(foreach DIR, $(SUBDIRS), $(foreach EXT, $(EXTENSIONS), $(wildcard $(DIR)/$(EXT))))
+OBJ = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
 
 # Règles
 all: $(TARGET)
 
-debug: CFLAGS += $(DEBUGFLAGS)
-debug: CXXFLAGS += $(DEBUGFLAGS) 
-debug: NVCCFLAGS += $(DEBUGFLAGS) 
-debug: $(TARGET)
+debug: 
+	$(eval CFLAGS += $(DEBUGFLAGS))
+	$(eval CXXFLAGS += $(DEBUGFLAGS))
+	$(eval NVCCFLAGS += $(DEBUGFLAGS))
+debug: all
 
-profile: CFLAGS += $(PROFILINGFLAGS)
-profile: CXXFLAGS += $(PROFILINGFLAGS)
-profile: NVCCFLAGS += $(PROFILINGFLAGS)
-profile: $(TARGET)
+profile: 
+	$(eval CFLAGS += $(PROFILINGFLAGS))
+	$(eval CXXFLAGS += $(PROFILINGFLAGS))
+	$(eval NVCCFLAGS += $(PROFILINGFLAGS))
+	$(eval $(TARGET))
 
 release: CFLAGS += $(RELEASEFLAGS)
 release: CXXFLAGS += $(RELEASEFLAGS)
 release: NVCCFLAGS += $(RELEASEFLAGS)
 release: $(TARGET)
 
-$(TARGET): $(OBJ)
+$(TARGET): 
+	@echo $(SRCDIR)
 	@echo
+	@echo $(EXCLUDED_SUBDIRS)
 	@echo
-	#$(CXX) $(LIBS) $^ -o $@ $(LDFLAGS) $(CXXFLAGS) 
-	$(NVCC) $(LIBS) $^ -o $@ $(LDFLAGS) $(NVCC_FLAGS)
+	@echo $(SUBDIRS)
 	@echo
-
-
-$(OBJDIR)%.o : $(SRCDIR)%.c
+	@echo $(SRC)
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS)
-
-$(OBJDIR)%.o : $(SRCDIR)%.C 
-	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS)
-$(OBJDIR)%.o : $(SRCDIR)%.cc 
-	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS)
-$(OBJDIR)%.o : $(SRCDIR)%.cpp 
-	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS)
-
-$(OBJDIR)%.o : $(SRCDIR)%.s
-	@echo
-	$(AS) $(INCLUDE) -o $@ $^ $(ASFLAGS)
-$(OBJDIR)%.o : $(SRCDIR)%.S
-	@echo
-	$(AS) $(INCLUDE) -o $@ $^ $(ASFLAGS)
-$(OBJDIR)%.o : $(SRCDIR)%.asm
-	@echo
-	$(AS) $(INCLUDE) -o $@ $^ $(ASFLAGS)
-
-$(OBJDIR)%.o: $(SRCDIR)%.cu
-	@echo
-	$(NVCC) -I $(INCLUDE) -o $@ -c $^ $(NVCCFLAGS)
+	@echo $(OBJ)
 
 # "-" pour enlever les messages d'erreurs
 # "@" pour silent
@@ -119,4 +98,3 @@ clean:
 
 cleanall: clean
 	-@rm -f $(TARGET) $(TARGET).out 
-
