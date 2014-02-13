@@ -1,6 +1,0 @@
-syn keyword CTagsMember toogleWireframe toogleLight pts renderableList
-syn keyword CTagsGlobalVariable indices vertices normals allNormals allVertices
-syn keyword CTagsFunction addPoint draw drawElements getCoords Viewer verify drawArrays keyPressEvent drawImmediate helpString init mouseMoveEvent BezierCurve animate main addRenderable BinomCoefficient
-syn keyword CTagsDefinedName _VIEWER_ _CUBE_ _I_PARAMETRIC_CURVE_ _I_BEZIER_CURVE_ _I_PARAMETRIC_CLOSED_CURVE_ _RENDERABLE_
-syn keyword CTagsClass Renderable Cube Viewer IParametricCurve IParametricClosedCurve BezierCurve
-

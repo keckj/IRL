@@ -75,8 +75,8 @@ release: $(TARGET)
 $(TARGET): $(OBJ)
 	@echo
 	@echo
-	$(CXX) $(LIBS) $^ -o $@ $(LDFLAGS) $(CXXFLAGS) 
-	#$(NVCC) $(LIBS) $(LDFLAGS) $^ -o $@ $(NVCC_FLAGS)
+	#$(CXX) $(LIBS) $^ -o $@ $(LDFLAGS) $(CXXFLAGS) 
+	$(NVCC) $(LIBS) $^ -o $@ $(LDFLAGS) $(NVCC_FLAGS)
 	@echo
 
 
