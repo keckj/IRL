@@ -8,7 +8,6 @@
 #include "utils/log.hpp"
 #include "image/image.hpp"
 #include "image/LocalizedUSImage.hpp"
-#include "image.hpp"
 
 using namespace std;
 using namespace cv;

@@ -1,8 +1,8 @@
 
 
-#include "image.hpp"
-#include "log.hpp"
-#include "LocalizedUSImage.hpp"
+#include "image/image.hpp"
+#include "utils/log.hpp"
+#include "image/LocalizedUSImage.hpp"
 
 #include <stdio.h>
 #include <assert.h>

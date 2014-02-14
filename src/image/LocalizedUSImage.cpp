@@ -1,6 +1,6 @@
 
-#include "LocalizedUSImage.hpp"
-#include "log.hpp"
+#include "image/LocalizedUSImage.hpp"
+#include "utils/log.hpp"
 #include <iostream>
 #include <fstream>
 
