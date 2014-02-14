@@ -10,14 +10,8 @@
 #include "image/LocalizedUSImage.hpp"
 #include "image.hpp"
 
-#define USE_ROW_MAJOR GL_TRUE
-
 using namespace std;
 using namespace cv;
-
-int g_gl_width;
-int g_gl_height;
-bool resize2 = false;
 
 int main( int argc, const char* argv[] )
 {
