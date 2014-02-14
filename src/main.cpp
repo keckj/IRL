@@ -4,8 +4,11 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include "cuda.h"
+#include "cuda_runtime.h"
 
 #include "utils/log.hpp"
+#include "utils/cudaUtils.hpp"
 #include "image/image.hpp"
 #include "image/LocalizedUSImage.hpp"
 
@@ -20,6 +23,11 @@ int main( int argc, const char* argv[] )
 	//im.loadLocalizedUSImages("data/imagesUS/");
 	//im.loadLocalizedUSImages("data/processedImages/");
 	//return EXIT_SUCCESS;
+	
+	void *lolo;
+	CHECK_CUDA_ERRORS(cudaMalloc(&lolo, 99999999999));
+
+	return EXIT_SUCCESS;
 
 	LocalizedUSImage::initialize();
 	LocalizedUSImage img("data/processedImages/" , "IQ[data #123 (RF Grid).mhd");

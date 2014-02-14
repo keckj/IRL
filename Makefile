@@ -6,8 +6,8 @@ OPENCV_LIBPATH = -L/usr/lib
 OPENCV_LIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui
 
 CUDA_INCLUDEPATH = -I/usr/local/cuda-5.5/include
-CUDA_LIBPATH = -L/usr/local/cuda-5.5/lib
-CUDA_LIBS = -lcuda
+CUDA_LIBPATH = -L/usr/local/cuda-5.5/lib64 -L/usr/lib/nvidia-313-updates/
+CUDA_LIBS = -lcuda -lcudart
 
 OPENCL_INCLUDEPATH = -I/opt/AMDAPP/include
 OPENCL_LIBPATH = -L/opt/AMDAPP/lib/x86
@@ -26,7 +26,7 @@ LINKFLAGS= -O3 -arch=sm_20 -Xcompiler -Wextra -m64
 LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) $(CUDA_LIBS) -llog4cpp
 
 INCLUDE = -I$(SRCDIR) $(OPENGL_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCV_INCLUDEPATH)
-LIBS = $(OPENCL_LIBPATH) $(CUDA_LIBPATH) $(OPENCV_LIBPATH)
+LIBS = $(OPENGL_LIBPATH) $(CUDA_LIBPATH) $(OPENCV_LIBPATH)
 
 CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99
