@@ -52,27 +52,25 @@ int main( int argc, const char* argv[] )
 	xMin = +inf; yMin = +inf; zMin = +inf;	
 	
 	log_console.infoStream() << "Computing bounding box...";
-
+	
+	float vects[4][3] = { {0.0f,0.0f,0.0f}, {imgRealWidth,0.0f,0.0f}, {0.0f,imgRealHeight,0.0f}, {imgRealWidth,imgRealHeight,0.0f} };
 	for (int i = 0; i < nImages; i++) {
 		posX = x[i]; posY = y[i]; posZ = z[i];
 
-		xMin = (posX < xMin ? posX : xMin);
-		yMin = (posY < yMin ? posY : yMin);
-		zMin = (posZ < zMin ? posZ : zMin);
-		xMax = (posX > xMax ? posX : xMax);
-		yMax = (posY > yMax ? posY : yMax);
-		zMax = (posZ > zMax ? posZ : zMax);
-		
-		posX = R[0][0]*imgRealWidth + R[0][1]*imgRealHeight + R[0][2]*0.0f + posX;
-		posY = R[1][0]*imgRealWidth + R[1][1]*imgRealHeight + R[1][2]*0.0f + posY;
-		posZ = R[2][0]*imgRealWidth + R[2][1]*imgRealHeight + R[2][2]*0.0f + posZ;
+		for (int j = 0; j < 4; j++) {
 
-		xMin = (posX < xMin ? posX : xMin);
-		yMin = (posY < yMin ? posY : yMin);
-		zMin = (posZ < zMin ? posZ : zMin);
-		xMax = (posX > xMax ? posX : xMax);
-		yMax = (posY > yMax ? posY : yMax);
-		zMax = (posZ > zMax ? posZ : zMax);
+			posX = R[0][0]*vects[j][0] + R[0][1]*vects[j][1] + R[0][ 2]*vects[j][2] + posX;
+			posY = R[1][0]*vects[j][0] + R[1][1]*vects[j][1] + R[1][2]*vects[j][2] + posY;
+			posZ = R[2][0]*vects[j][0] + R[2][1]*vects[j][1] + R[2][2]*vects[j][2] + posZ;
+
+			xMin = (posX < xMin ? posX : xMin);
+			yMin = (posY < yMin ? posY : yMin);
+			zMin = (posZ < zMin ? posZ : zMin);
+			xMax = (posX > xMax ? posX : xMax);
+			yMax = (posY > yMax ? posY : yMax);
+			zMax = (posZ > zMax ? posZ : zMax);
+		
+		}
 	}
 
 	const float boxWidth = xMax - xMin;
@@ -134,12 +132,21 @@ int main( int argc, const char* argv[] )
 	//copy back array
 	CHECK_CUDA_ERRORS(cudaMemcpy(host_char_data, device_char_data, nImages*imgWidth*imgHeight, cudaMemcpyDeviceToHost));
 
-	Mat m0(imgHeight, imgWidth, CV_32F, data[0]);
-	m0.convertTo(m0, CV_8UC1);
-	Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data);
-	Image::displayImage(m0);
-	Image::displayImage(m1);
-	
+	//Mat m0(imgHeight, imgWidth, CV_32F, data[40]);
+	//m0.convertTo(m0, CV_8UC1);
+	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+40*imgWidth*imgHeight);
+	//Image::displayImage(m0);
+	//Image::displayImage(m1);
+
+	//namedWindow( "Display window", CV_WINDOW_AUTOSIZE );
+	//for (int i = 0; i < nImages; i++) {
+		//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
+		 //imshow("Display window", m1);
+		 //cvWaitKey(100);
+		 //cout << i << "/" << nImages << endl;
+	//}
+
+
 
 
 	//free
