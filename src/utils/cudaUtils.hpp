@@ -17,10 +17,10 @@ class CudaUtils {
 	public:
 		static void printCudaDevices(std::ostream &outputStream);
 		static void logCudaDevices(log4cpp::Category &log_output);
-
+		
 };
 
-inline void gpuAssert(cudaError_t code, char *file, int line, bool abort = true) {
+inline void gpuAssert(cudaError_t code, const std::string &file, int line, bool abort = true) {
 	if (code != cudaSuccess) 
 	{
 		log_console.errorStream() << "GPU Assert => " << cudaGetErrorString(code) << " in file " <<  file << ":" << line << ".";

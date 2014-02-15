@@ -34,6 +34,9 @@ CFLAGS= -W -Wall -Wextra -pedantic -std=c99
 CXX=g++
 CXXFLAGS= -W -Wall -Wextra -pedantic -std=c++11
 
+NVCC=nvcc
+NVCCFLAGS= -O3 -arch=sm_20 -Xcompiler -Wall -m64
+
 AS = nasm
 ASFLAGS= -f elf64
 

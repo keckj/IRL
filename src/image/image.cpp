@@ -46,9 +46,9 @@ int Image::loadImage(const char *name) {
 }
 
 int Image::loadImageFolder(const char* folder) {
-	
+
 	vector<string> *files = listdir(folder);
-	
+
 	char str[200];
 	int nbImg = 0;
 
@@ -60,20 +60,20 @@ int Image::loadImageFolder(const char* folder) {
 	}
 
 	log_console.info("Loaded %i images from folder %s", nbImg, folder);
-	
+
 	return nbImg;
 }
 
 void Image::computeGradientVectorFlow() {
 
 	log_console.info("Computing Gradient Vector Flow");
-	
+
 	Mat *img = images.front();
-	
+
 	log_console.debug("Loaded image");
 	log_console.debug("Size : %i x %i", img->size[0], img->size[1]);
 	log_console.debug("Step : %i x %i", img->step[0], img->step[1]);
-	
+
 
 	//CANNY
 	Mat gaussianBlurredImg, canny;
@@ -82,7 +82,7 @@ void Image::computeGradientVectorFlow() {
 	int lowThreshold = 30;
 	int kernel_size = 3;
 	Canny(gaussianBlurredImg, canny, lowThreshold, lowThreshold*3, kernel_size);
-	
+
 	canny.copyTo(*img, canny);
 	displayImage(*img);
 
@@ -91,18 +91,18 @@ void Image::computeGradientVectorFlow() {
 	log_console.debug("Thresholding");
 	threshold(canny, thres, 127, 255, THRESH_BINARY_INV);
 	displayImage(thres);
-	
+
 	//SOBEL
 	log_console.debug("Applying Sobel filter");
 	Mat f(thres.size[0], thres.size[1], CV_16S, Scalar::all(0));
 	Mat fx, fy, b, c1, c2;
-	
+
 	//add(f, 0, thres, f);
 	displayImage(f);
 
 	Sobel(f, fx, CV_16S, 1, 0, 3);
 	Sobel(f, fy, CV_16S, 0, 1, 3);
-	
+
 	//convertScaleAbs(sobelY, sobelY);
 	//convertScaleAbs(sobelX, sobelX);
 	//addWeighted(sobelX, 0.5, sobelY, 0.5, 0, sobel);
@@ -117,89 +117,104 @@ void Image::displayImage(Mat &m) {
 
 }
 
-void Image::loadLocalizedUSImages(string const & folderName) {
-		
-		DIR *dir;
-		struct dirent *ent;
-		unsigned int counter = 0;
-		
-		dir = opendir(folderName.c_str());
+void Image::loadLocalizedUSImages(
+		string const & folderName, 
+		int *nImage, int *imgWidth, int *imgHeight, float *deltaX, float *deltaY,  
+		float **x, float **y, float **z, float ***R, float ***data
+		) 
+{
 
-		log_console.infoStream() << "Loading data from folder " << folderName << " .";
+	DIR *dir;
+	struct dirent *ent;
+	unsigned int counter = 0;
 
-		if (dir == NULL) {
-			log_console.errorStream() << "Impossible to open folder " <<  folderName << " !";
-			throw std::logic_error("Impossible to open data folder.");
+	dir = opendir(folderName.c_str());
+
+	log_console.infoStream() << "Loading data from folder " << folderName << " .";
+
+	if (dir == NULL) {
+		log_console.errorStream() << "Impossible to open folder " <<  folderName << " !";
+		throw std::logic_error("Impossible to open data folder.");
+	}
+
+
+	/* On initialise le loader */
+	LocalizedUSImage::initialize();
+
+	/* On cherche les *.mhd */
+	list<string> mhdFiles;
+	while((ent = readdir(dir)) != NULL) {
+		if(ent->d_type == DT_REG && (strstr(ent->d_name, ".mhd") != NULL)) {
+			mhdFiles.push_back(string(ent->d_name));
+			counter++;
 		}
+	}
+
+	/* On regarde si on en a au moins un */
+	if (counter == 0) {
+		log_console.errorStream() << "No data was found in folder " <<  folderName << " !";
+		throw std::logic_error("No data was found in given folder.");
+	}
+	else {
+		*nImage = counter;
+		log_console.infoStream() << "Found " << counter << " mhd files.";
+		log_console.infoStream() << "Processing raw data...";
+	}
+
+	/* On trie les noms de fichiers (cohérence spaciale) */
+	mhdFiles.sort(Image::compareDataOrder);
+
+	/* On charge les données */
+	*x = new float[counter];
+	*y = new float[counter];
+	*z = new float[counter];
+	*R = new float*[counter];
+	*data = new float*[counter];
+	counter = 0;
+
+	for (list<string>::iterator it = mhdFiles.begin() ; it != mhdFiles.end(); it++) {
+		LocalizedUSImage img(folderName, *it);
+		(*x)[counter] = img.getOffset()[0];
+		(*y)[counter] = img.getOffset()[1];
+		(*z)[counter] = img.getOffset()[2];
+		(*R)[counter] = new float[9];
+
+		for (int i = 0; i < 9; i++) {
+			(*R)[counter][i] = img.getRotationMatrix()[i];
+		}
+		
+		(*data)[counter] = new float[img.getWidth() * img.getHeight()];
+		memcpy((*data)[counter], img.getImageData(), img.getWidth()*img.getHeight()*sizeof(float));
+
+		counter++;
+		
+		*imgWidth = img.getWidth();
+		*imgHeight = img.getHeight();
+		*deltaX = LocalizedUSImage::getElementSpacing()[0];
+		*deltaY = LocalizedUSImage::getElementSpacing()[1];
+	}
 	
-	
-		/* On initialise le loader */
-		LocalizedUSImage::initialize();
 
-		/* On cherche les *.mhd */
-		list<string> mhdFiles;
-		while((ent = readdir(dir)) != NULL) {
-			if(ent->d_type == DT_REG && (strstr(ent->d_name, ".mhd") != NULL)) {
-				mhdFiles.push_back(string(ent->d_name));
-				counter++;
-			}
-		}
-		
-		/* On regarde si on en a au moins un */
-		if (counter == 0) {
-			log_console.errorStream() << "No data was found in folder " <<  folderName << " !";
-			throw std::logic_error("No data was found in given folder.");
-		}
-		else {
-			log_console.infoStream() << "Found " << counter << " mhd files.";
-			log_console.infoStream() << "Processing raw data...";
-		}
 
-		/* On trie les noms de fichiers (cohérence spaciale) */
-		mhdFiles.sort(Image::compareDataOrder);
+	//ofstream outfile;
+	//outfile.open(folderName + "data.txt", ifstream::out);
 
-		/* On charge les données */
-		float *x = new float[counter];
-		float *y = new float[counter];
-		float *z = new float[counter];
-		float **R = new float*[counter];
-		counter = 0;
-		
-		for (list<string>::iterator it = mhdFiles.begin() ; it != mhdFiles.end(); it++) {
-				LocalizedUSImage img(folderName, *it);
-				x[counter] = img.getOffset()[0];
-				y[counter] = img.getOffset()[1];
-				z[counter] = img.getOffset()[2];
-				R[counter] = new float[9];
+	//for(unsigned int i = 0; i < counter; i++) {
+	//outfile << x[i] << " \t" << y[i] << " \t" << z[i];
+	//for (int j = 0; j < 9; j++) {
+	//outfile << "\t" << R[i][j];
+	//}
 
-				for (int i = 0; i < 9; i++) {
-					R[counter][i] = img.getRotationMatrix()[i];
-				}
+	//outfile << endl;
+	//}
 
-				counter++;
-		}
+	//outfile.close();
 
-		
-		ofstream outfile;
-		outfile.open(folderName + "data.txt", ifstream::out);
-
-		for(unsigned int i = 0; i < counter; i++) {
-			outfile << x[i] << " \t" << y[i] << " \t" << z[i];
-			for (int j = 0; j < 9; j++) {
-				outfile << "\t" << R[i][j];
-			}
-
-			outfile << endl;
-		}
-
-		outfile.close();
-		
-
-		log_console.infoStream() << "Finished to read data from folder " << folderName << ".";
+	log_console.infoStream() << "Finished to read data from folder " << folderName << ".";
 }
 
 bool Image::compareDataOrder(string const & str1, string const & str2) {
-	
+
 	istringstream stream1(str1);
 	istringstream stream2(str2);
 
