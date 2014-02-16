@@ -21,8 +21,8 @@ OPENGL_LIBS = -lglut -lQGLViewer -lGLU -lGL -lQtXml -lQtOpenGL -lQtGui -lQtCore 
 ####################
 
 #Compilateurs
-LINK= nvcc
-LINKFLAGS= -O3 -arch=sm_20 -Xcompiler -Wextra -m64
+LINK= g++
+LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++11
 LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) $(CUDA_LIBS) -llog4cpp
 
 INCLUDE = -I$(SRCDIR) $(OPENGL_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCV_INCLUDEPATH)
@@ -35,7 +35,8 @@ CXX=g++
 CXXFLAGS= -W -Wall -Wextra -pedantic -std=c++11
 
 NVCC=nvcc
-NVCCFLAGS= -O3 -arch=sm_20 -Xcompiler -Wall -m64
+NVCCFLAGS= -arch=sm_20 -Xcompiler -Wall -m64 -O3
+CUDADEBUGFLAGS= -Xcompiler -Wall -m64 -G -g -arch=sm_20 
 
 AS = nasm
 ASFLAGS= -f elf64

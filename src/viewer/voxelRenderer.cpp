@@ -5,8 +5,14 @@
 
 using namespace std;
 
-	VoxelRenderer::VoxelRenderer(int size, float cube_w, float cube_h, float cube_d, bool drawGrid, unsigned char threshold) 
-: size(size), cube_w(cube_w), cube_h(cube_h), cube_d(cube_d), drawGrid(drawGrid), tree(size), threshold(threshold)
+	VoxelRenderer::VoxelRenderer( 
+			unsigned int width, unsigned int height, unsigned int length, 
+			unsigned char *data,
+			float cube_w, float cube_h, float cube_d, 
+			bool drawGrid, unsigned char threshold) 
+:	width(width), height(height), length(length), data(data),
+	cube_w(cube_w), cube_h(cube_h), cube_d(cube_d), 
+	drawGrid(drawGrid), threshold(threshold)
 {
 
 	//for (int x = 0; x < size; x++) {
@@ -19,13 +25,13 @@ using namespace std;
 		//}
 	//}
 
-	for (int z = 0; z < size; z++ ) {
-	for (int y = 0; y < size; y++ ) {
-	for (int x = 0; x < size; x++ ) {
-	tree.set(x,y,z, 255);
-	}
-	}
-	}
+	//for (int z = 0; z < size; z++ ) {
+	//for (int y = 0; y < size; y++ ) {
+	//for (int x = 0; x < size; x++ ) {
+	//tree.set(x,y,z, 255);
+	//}
+	//}
+	//}
 }
 void VoxelRenderer::draw() {
 
@@ -47,11 +53,10 @@ void VoxelRenderer::drawNaive() {
 	unsigned char voxel;
 
 	//draw voxels
-	for (int z = 0; z < size; z++ ) {
-		tmp = tree.zSlice(z);
-		for (int y = 0; y < size; y++ ) {
-			for (int x = 0; x < size; x++ ) {
-				voxel = tmp(y,x);
+	for (unsigned int z = 0; z < length; z++ ) {
+		for (unsigned int y = 0; y < height; y++ ) {
+			for (unsigned int x = 0; x < width; x++ ) {
+				voxel = getData(x, y, z);
 				drawVoxel(voxel, x, y, z);
 			}
 		}
@@ -63,22 +68,16 @@ void VoxelRenderer::drawSurface() {
 	Array2D<unsigned char> backSlice, currentSlice, frontSlice;
 	unsigned char left, right, up, down, front, back, current;
 
-	for (int z = 0; z < size; z++ ) {
-		if(z != 0) 
-			backSlice = tree.zSlice(z-1);
-		if(z != size - 1) 
-			frontSlice = tree.zSlice(z+1);
-
-		currentSlice = tree.zSlice(z);
-		for (int y = 0; y < size; y++ ) {
-			for (int x = 0; x < size; x++ ) {
-				right = (x == size - 1 ? 0 : currentSlice(y, x+1));
+	for (unsigned int z = 0; z < length; z++ ) {
+		for (unsigned int y = 0; y < height; y++ ) {
+			for (unsigned int x = 0; x < width; x++ ) {
+				right = (x == width - 1 ? 0 : currentSlice(y, x+1));
 				left = (x == 0 ? 0 : currentSlice(y, x-1));
 
-				up = (y == size - 1 ? 0 : currentSlice(y+1, x));
+				up = (y == height - 1 ? 0 : currentSlice(y+1, x));
 				down = (y == 0 ? 0 : currentSlice(y-1, x));
 
-				front = (z == size - 1 ? 0 : frontSlice(y, x));
+				front = (z == length - 1 ? 0 : frontSlice(y, x));
 				back = (z == 0 ? 0 : backSlice(y, x));
 
 				current = currentSlice(y,x);	
@@ -251,12 +250,12 @@ void VoxelRenderer::drawWireFrame() {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glColor3f(1.0f, 1.0f, 1.0f);
 
-	for (int z = 0; z <= size; z++) {
+for (unsigned int z = 0; z <= length; z++) {
 
-		for (int y = 0; y <= size; y++) {
+		for (unsigned int y = 0; y <= height; y++) {
 
 			v1[0] = 0; v1[1] = y*cube_h; v1[2] = z*cube_d;
-			v2[0] = size*cube_w; v2[1] = y*cube_h; v2[2] = z*cube_d;
+			v2[0] = width*cube_w; v2[1] = y*cube_h; v2[2] = z*cube_d;
 
 			glBegin(GL_LINE_STRIP);
 			glVertex3fv(v1);
@@ -264,9 +263,9 @@ void VoxelRenderer::drawWireFrame() {
 			glEnd();
 		}
 
-		for (int x = 0; x <= size; x++) {
+		for (unsigned int x = 0; x <= width; x++) {
 			v1[0] = x*cube_w; v1[1] = 0; v1[2] = z*cube_d;
-			v2[0] = x*cube_w; v2[1] = size*cube_h; v2[2] = z*cube_d;
+			v2[0] = x*cube_w; v2[1] = height*cube_h; v2[2] = z*cube_d;
 
 			glBegin(GL_LINE_STRIP);
 			glVertex3fv(v1);
@@ -275,10 +274,10 @@ void VoxelRenderer::drawWireFrame() {
 		}
 	}
 
-	for (int x = 0; x <= size; x++) {
-		for (int y = 0; y <= size; y++) {
+	for (unsigned int x = 0; x <= width; x++) {
+		for (unsigned int y = 0; y <= height; y++) {
 			v1[0] = x*cube_w; v1[1] = y*cube_h; v1[2] = 0;
-			v2[0] = x*cube_w; v2[1] = y*cube_h; v2[2] = size*cube_d;
+			v2[0] = x*cube_w; v2[1] = y*cube_h; v2[2] = length*cube_d;
 
 			glBegin(GL_LINE_STRIP);
 			glVertex3fv(v1);
