@@ -33,6 +33,10 @@ using namespace std;
 	//}
 	//}
 }
+		
+unsigned char VoxelRenderer::getData(unsigned int x, unsigned int y, unsigned int z) {
+	return data[z*width*height + y*width + x];
+}
 void VoxelRenderer::draw() {
 
 	//draw grid
@@ -49,7 +53,6 @@ bool inline VoxelRenderer::isVisible(unsigned char voxel) {
 }
 
 void VoxelRenderer::drawNaive() {
-	Array2D<unsigned char> tmp;
 	unsigned char voxel;
 
 	//draw voxels
@@ -65,22 +68,21 @@ void VoxelRenderer::drawNaive() {
 
 void VoxelRenderer::drawSurface() {
 
-	Array2D<unsigned char> backSlice, currentSlice, frontSlice;
 	unsigned char left, right, up, down, front, back, current;
 
 	for (unsigned int z = 0; z < length; z++ ) {
 		for (unsigned int y = 0; y < height; y++ ) {
 			for (unsigned int x = 0; x < width; x++ ) {
-				right = (x == width - 1 ? 0 : currentSlice(y, x+1));
-				left = (x == 0 ? 0 : currentSlice(y, x-1));
+				right = (x == width - 1 ? 0 : getData(x+1,y,z));
+				left = (x == 0 ? 0 : getData(x-1,y,z));
 
-				up = (y == height - 1 ? 0 : currentSlice(y+1, x));
-				down = (y == 0 ? 0 : currentSlice(y-1, x));
+				up = (y == height - 1 ? 0 : getData(x,y+1,z));
+				down = (y == 0 ? 0 : getData(x,y-1,z));
 
-				front = (z == length - 1 ? 0 : frontSlice(y, x));
-				back = (z == 0 ? 0 : backSlice(y, x));
+				front = (z == length - 1 ? 0 : getData(x,y,z+1));
+				back = (z == 0 ? 0 : getData(x,y,z-1));
 
-				current = currentSlice(y,x);	
+				current = getData(x,y,z);	
 
 				drawVoxel(current, right, left, up, down, front, back, x,y,z);
 			}

@@ -18,15 +18,19 @@ OPENGL_INCLUDEPATH = -I/usr/lib64/qt4/mkspecs/linux-g++-64 -I/usr/include/QtCore
 OPENGL_LIBS = -lglut -lQGLViewer -lGLU -lGL -lQtXml -lQtOpenGL -lQtGui -lQtCore -lpthread 
 #OPENGL_LIBS = -lglfw3 -lGL -lGLEW -lGLU -lX11 -lXxf86vm -lXrandr -lpthread -lXi
 
+VIEWER_LIBPATH = -L/usr/X11R6/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib 
+VIEWER_INCLUDEPATH = -I/usr/share/qt4/mkspecs/linux-g++-64 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui -I/usr/include/qt4/QtOpenGL -I/usr/include/qt4/QtXml -I/usr/include/qt4 -I/usr/include -I/usr/X11R6/include
+VIEWER_LIBS = -lQGLViewer -lGLU -lglut -lGL -lQtXml -lQtOpenGL -lQtGui -lQtCore -lpthread 
+
 ####################
 
 #Compilateurs
 LINK= g++
 LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++11
-LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) $(CUDA_LIBS) -llog4cpp
+LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) $(CUDA_LIBS) $(VIEWER_LIBS) -llog4cpp
 
-INCLUDE = -I$(SRCDIR) $(OPENGL_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCV_INCLUDEPATH)
-LIBS = $(OPENGL_LIBPATH) $(CUDA_LIBPATH) $(OPENCV_LIBPATH)
+INCLUDE = -I$(SRCDIR) $(OPENGL_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCV_INCLUDEPATH) $(VIEWER_INCLUDEPATH)
+LIBS = $(OPENGL_LIBPATH) $(CUDA_LIBPATH) $(OPENCV_LIBPATH) $(VIEWER_LIBPATH)
 
 CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99

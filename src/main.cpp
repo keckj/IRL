@@ -7,10 +7,15 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 
+#include <QApplication>
+#include <QWidget>
 #include "utils/log.hpp"
 #include "utils/cudaUtils.hpp"
 #include "image/image.hpp"
 #include "image/LocalizedUSImage.hpp"
+#include "viewer/viewer.h"
+#include "viewer/voxelRenderer.hpp"
+
 
 using namespace std;
 using namespace cv;
@@ -249,7 +254,7 @@ int main( int argc, const char* argv[] )
 	CHECK_CUDA_ERRORS(cudaMemcpy(host_voxel_data, device_voxel_data, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
 	
 	long counter = 0;
-	for (int i = 0; i < gridSize; i++) {
+	for (unsigned int i = 0; i < gridSize; i++) {
 		if(host_voxel_data[i] != 255) {
 			counter++;
 		}
@@ -258,6 +263,15 @@ int main( int argc, const char* argv[] )
 	log_console.infoStream() << "Actual filling rate : " << (float)counter/gridSize;
 	log_console.infoStream() << "Hit rate : " << (float)nImages*imgWidth*imgHeight/counter;
 
+	
+	QApplication application(argc,argv);
+	viewer.addRenderable(new VoxelRenderer(64, 64, 64, device_voxel_data,
+				0.001, 0.001, 0.001, false, 0));
+	viewer.setWindowTitle("viewer");
+	viewer.show();
+	application.exec();
+
+
 	//free
 	log_console.info("Free remaining data.");
 	CHECK_CUDA_ERRORS(cudaFree(device_char_data));
@@ -265,8 +279,6 @@ int main( int argc, const char* argv[] )
 
 
 	return EXIT_SUCCESS;
-
-	
 
 	////////////////////////////////////////////////////
 	LocalizedUSImage::initialize();

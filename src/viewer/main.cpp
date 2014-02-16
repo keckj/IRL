@@ -14,18 +14,23 @@ int main(int argc, char** argv)
 	QApplication application(argc,argv);
 	
 
-	unsigned char *data = new unsigned char[10*10*10];
+	unsigned char *data = new unsigned char[256*256*256];
 
+	cout << "INIT" << endl;
+	for (int i = 0; i < 256*256*256; i++) {
+		data[i] = i%255;
+	}
+
+	cout << "DRAW" << endl;
 	Viewer viewer;
-	viewer.addRenderable(new VoxelRenderer(10, 10, 10, data,
-				0.01, 0.01, 0.01, false, 127));
+	viewer.addRenderable(new VoxelRenderer(256, 256, 256, data,
+				0.001, 0.001, 0.001, false, 0));
 	viewer.setWindowTitle("viewer");
 	viewer.show();
 	
 	// Run main loop.
 	application.exec();
 
-	cout << "lolo" << endl;
 	return 0;
 
 	
