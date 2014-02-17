@@ -54,9 +54,9 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 
 	unsigned char value = char_image_data[id];
 	unsigned char hit = hit_counter[i];
+	
+#ifdef _VOXEL_MEAN_VALUE
 	float mean;
-
-	//if we already hit the voxel 255 times
 	if(hit == 255) {
 		return;
 	}
@@ -69,6 +69,15 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 		voxel_data[i] = (unsigned char) mean;
 		hit_counter[i] = hit + 1;
 	}
+#else
+	if (hit != 0 && value > voxel_data[i]) {
+		voxel_data[i] = value;
+	}
+	else {
+		hit_counter[i] = 1;
+		voxel_data[i] = value;
+	}
+#endif
 
 }
 

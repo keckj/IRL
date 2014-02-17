@@ -61,9 +61,9 @@ $(OBJDIR)%.o : $(SRCDIR)%.asm
 	@echo
 	$(AS) $(INCLUDE) -o $@ $^ $(ASFLAGS)
 
-$(OBJDIR)%.o: $(SRCDIR)%.cu
+$(OBJDIR)%.o: $(SRCDIR)%.cu 
 	@echo
-	$(NVCC) $(INCLUDE) -o $@ -c $^ $(NVCCFLAGS)
+	$(NVCC) $(INCLUDE) -o $@ -c $^ $(NVCCFLAGS) $(DEFINES)
 
 
 # "-" pour enlever les messages d'erreurs

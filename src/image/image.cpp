@@ -242,7 +242,7 @@ bool Image::compareDataOrder(string const & str1, string const & str2) {
 		
 		
 		
-void Image::filter1D(float **data, unsigned int nData, int size, float sigma) {
+void Image::filter1D(float *data, int nData, int size, float sigma) {
 
 	assert(size % 2 == 1);
 	assert(sigma > 0.0f);
@@ -250,39 +250,46 @@ void Image::filter1D(float **data, unsigned int nData, int size, float sigma) {
 	float *kernel = new float[size/2 + 1];
 
 	float coef, sum;
+	int i;
 
-	for (int i = 0; i <= size/2; i++) {
+	for (i = 0; i <= size/2; i++) {
 		coef = 1/sigma * exp(-i*i/(2.0f*sigma*sigma));
 		sum += coef;
 		kernel[i] = coef;  
 	}
-	
-	//float *old_vals = new float[size/2];
-	//float current;
-	
-	//for (i = 0; i < size/2; i++) {
-		//old_vals[i] = data[i];
-	//}
-	
-	//for (int n = 0; n < nData; n++) {
-		//if(n < size/2 - 1)
-			//;
-		//else if(n > nData - size/2 + 1)
-			//;
-		//else {
-			//current = data[n]*kernel[0];
 
-			//for (i = 0; i < size/2; i++) {
-				//current += old_vals[i]*kernel[i+1];
-				//current += data[n+i+1]*kernel[î+1];
-			//}
+	for (i = 1; i <= size/2; i++) {
+		sum += kernel[i];
+	}
+	
+	float *old_vals = new float[size/2];
+	float current;
+	
+	for (i = 0; i < size/2; i++) {
+		old_vals[i] = data[i];
+	}
+	
+	for (int n = 0; n < nData; n++) {
+		if(n < size/2)
+			;
+		else if(n > nData - 1 -size/2)
+			;
+		else {
+			current = data[n]*kernel[0];
+
+			for (i = 0; i < size/2; i++) {
+				current += old_vals[i]*kernel[i+1];
+				current += data[n+i+1]*kernel[i+1];
+			}
 			
 			//actualize old values
-			//for (i = 0; i < size/2; i++) {
-				//old_vals[i] = (i == size/2 - 1 ? data[n] : old_vals[i+1]);
-			//}
-		//}
-	//}
+			for (i = 0; i < size/2; i++) {
+				old_vals[i] = (i == size/2 - 1 ? data[n] : old_vals[i+1]);
+			}
+
+			data[n] = current/sum;
+		}
+	}
 	
 }
 

@@ -34,9 +34,6 @@ int main( int argc, char** argv)
 {
 	initLogs();
 	
-	//Image::filter1D(NULL, 10, 9, 1.0f);	
-	//return 0;
-
 	Image im;
 	int nImages;
 	float *x,*y,*z, **R, **data;
@@ -45,6 +42,10 @@ int main( int argc, char** argv)
 	//im.loadLocalizedUSImages("data/imagesUS/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
 	im.loadLocalizedUSImages("data/processedImages/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
 	//im.loadLocalizedUSImages("data/femur/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
+	
+	//Image::filter1D(x, nImages, 5, 1.0f);	
+	//Image::filter1D(y, nImages, 5, 1.0f);	
+	//Image::filter1D(z, nImages, 5, 1.0f);	
 
 
 	const int imgWidth = w;
@@ -309,7 +310,7 @@ int main( int argc, char** argv)
 	VoxelRenderer *VR = new VoxelRenderer(
 			voxelGridWidth, voxelGridHeight, voxelGridLength, 
 			host_voxel_data,
-			0.001, 0.001, 0.001, false, 128);
+			0.01, 0.01, 0.01, false, 128);
 
 	log_console.info("Computing geometry...");
 	VR->computeGeometry();

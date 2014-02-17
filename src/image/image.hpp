@@ -28,5 +28,5 @@ class Image {
 		static void displayImage(Mat &m);
 		static bool compareDataOrder(string const &str1, string const &str2);
 
-		static void filter1D(float **data, unsigned int nData, int size, float sigma);
+		static void filter1D(float *data, int nData, int size, float sigma);
 };
