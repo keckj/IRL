@@ -39,14 +39,14 @@ int main( int argc, char** argv)
 	float *x,*y,*z, **R, **data;
 	float dx, dy;
 	int w, h;
-	//im.loadLocalizedUSImages("data/imagesUS/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
+	im.loadLocalizedUSImages("data/imagesUS/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
 	//im.loadLocalizedUSImages("data/processedImages/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
-	im.loadLocalizedUSImages("data/femur/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
+	//im.loadLocalizedUSImages("data/femur/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
 
 
 	const int imgWidth = w;
 	const int imgHeight = h;
-	const float deltaGrid = 0.1;
+	const float deltaGrid = 0.05;
 	const float deltaX = dx;
 	const float deltaY = dy;
 	const float imgRealWidth = imgWidth*dx;
@@ -274,7 +274,7 @@ int main( int argc, char** argv)
 	VoxelRenderer *VR = new VoxelRenderer(
 			voxelGridWidth, voxelGridHeight, voxelGridLength, 
 			host_voxel_data,
-			0.001, 0.001, 0.001, false, 50);
+			0.0001, 0.0001, 0.0001, false, 50);
 
 	log_console.info("Computing geometry...");
 	VR->computeGeometry();
