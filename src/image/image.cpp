@@ -161,9 +161,9 @@ void Image::loadLocalizedUSImages(
 	}
 	
 
-	/* On trie les noms de fichiers (cohérence spaciale) */
-	//log_console.infoStream() << "Sorting filenames...";
-	//mhdFiles.sort(Image::compareDataOrder);
+	//On trie les noms de fichiers (cohérence spaciale) 
+	log_console.infoStream() << "Sorting filenames...";
+	mhdFiles.sort(Image::compareDataOrder);
 	
 
 	/* On charge les données */
@@ -239,3 +239,50 @@ bool Image::compareDataOrder(string const & str1, string const & str2) {
 
 	return n1 < n2;
 }
+		
+		
+		
+void Image::filter1D(float **data, unsigned int nData, int size, float sigma) {
+
+	assert(size % 2 == 1);
+	assert(sigma > 0.0f);
+
+	float *kernel = new float[size/2 + 1];
+
+	float coef, sum;
+
+	for (int i = 0; i <= size/2; i++) {
+		coef = 1/sigma * exp(-i*i/(2.0f*sigma*sigma));
+		sum += coef;
+		kernel[i] = coef;  
+	}
+	
+	//float *old_vals = new float[size/2];
+	//float current;
+	
+	//for (i = 0; i < size/2; i++) {
+		//old_vals[i] = data[i];
+	//}
+	
+	//for (int n = 0; n < nData; n++) {
+		//if(n < size/2 - 1)
+			//;
+		//else if(n > nData - size/2 + 1)
+			//;
+		//else {
+			//current = data[n]*kernel[0];
+
+			//for (i = 0; i < size/2; i++) {
+				//current += old_vals[i]*kernel[i+1];
+				//current += data[n+i+1]*kernel[î+1];
+			//}
+			
+			//actualize old values
+			//for (i = 0; i < size/2; i++) {
+				//old_vals[i] = (i == size/2 - 1 ? data[n] : old_vals[i+1]);
+			//}
+		//}
+	//}
+	
+}
+

@@ -321,3 +321,19 @@ void VoxelRenderer::writeVect(GLfloat *array, unsigned int &offset, GLfloat x, G
 	array[offset++] = y;
 	array[offset++] = z;
 }
+		
+void VoxelRenderer::keyPressEvent(QKeyEvent* keyEvent, Viewer& viewer) {
+	switch(keyEvent->key()) {
+		case(Qt::Key_Minus): {
+			threshold = (threshold > 245 ? 255 : threshold + 10);
+			computeGeometry();
+			break;
+		}
+
+		case(Qt::Key_Plus): {
+			computeGeometry();
+			threshold = (threshold < 10 ? 0 : threshold - 10);
+			break;
+		}
+	}
+}

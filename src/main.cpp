@@ -28,25 +28,28 @@ extern void VNNKernel(
 		const unsigned int voxelGridWidth, const unsigned int voxelGridHeight, const unsigned int voxelGridLength,
 		float *offsetX, float *offsetY, float *offsetZ,
 		float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
-		unsigned char *char_image_data, unsigned char *voxel_data);
+		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter);
 
 int main( int argc, char** argv)
 {
 	initLogs();
+	
+	//Image::filter1D(NULL, 10, 9, 1.0f);	
+	//return 0;
 
 	Image im;
 	int nImages;
 	float *x,*y,*z, **R, **data;
 	float dx, dy;
 	int w, h;
-	im.loadLocalizedUSImages("data/imagesUS/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
-	//im.loadLocalizedUSImages("data/processedImages/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
+	//im.loadLocalizedUSImages("data/imagesUS/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
+	im.loadLocalizedUSImages("data/processedImages/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
 	//im.loadLocalizedUSImages("data/femur/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
 
 
 	const int imgWidth = w;
 	const int imgHeight = h;
-	const float deltaGrid = 0.05;
+	const float deltaGrid = 0.2f;
 	const float deltaX = dx;
 	const float deltaY = dy;
 	const float imgRealWidth = imgWidth*dx;
@@ -160,8 +163,9 @@ int main( int argc, char** argv)
 	log_console.info("Free float image data.");
 	CHECK_CUDA_ERRORS(cudaFree(device_float_data));
 	
+	//CHECK_CUDA_ERRORS(cudaMemcpy(host_char_data, device_char_data, nImages*imgWidth*imgHeight, cudaMemcpyDeviceToHost));
+	
 	//show results
-	CHECK_CUDA_ERRORS(cudaMemcpy(host_char_data, device_char_data, nImages*imgWidth*imgHeight, cudaMemcpyDeviceToHost));
 	//Mat m0(imgHeight, imgWidth, CV_32F, data[40]);
 	//m0.convertTo(m0, CV_8UC1);
 	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+40*imgWidth*imgHeight);
@@ -177,8 +181,14 @@ int main( int argc, char** argv)
 		//cvWaitKey(100);
 		//cout << i << "/" << nImages << endl;
 	//}
-
-
+	
+	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data);
+	//VideoWriter writer("img/data_0.avi", CV_FOURCC('M','J','P','G'), 12, m1.size(), false);
+	 //for (int i = 0; i < nImages; i++) {
+		//Mat m0(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
+		//writer << m0;
+	 //}
+	 //return 0;
 
 	log_console.info("Copying offset and rotation data to GPU...");
 	//copy offset data
@@ -234,14 +244,23 @@ int main( int argc, char** argv)
 	CHECK_CUDA_ERRORS(cudaMemcpy(r9_d, r9_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
 	
 	//allocate voxels
-	log_console.info("Allocating voxel grid on GPU...");
+	log_console.info("Allocating voxel grid to GPU...");
 	unsigned char *device_voxel_data;
 	unsigned char *host_voxel_data;
 	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &host_voxel_data, gridSize*sizeof(unsigned char)));
 	CHECK_CUDA_ERRORS(cudaMalloc((void**) &device_voxel_data, gridSize*sizeof(unsigned char)));
 	
-	//set device voxels to 255
+	//allocate hit counter
+	log_console.info("Allocating hit counter to GPU...");
+	unsigned char *device_hit_counter;
+	unsigned char *host_hit_counter;
+	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &host_hit_counter, gridSize*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMalloc((void**) &device_hit_counter, gridSize*sizeof(unsigned char)));
+	
+	//set voxels anb hit counter to 0
+	log_console.info("Setting memory to 0...");
 	CHECK_CUDA_ERRORS(cudaMemset(device_voxel_data, 0, gridSize*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMemset(device_hit_counter, 0, gridSize*sizeof(unsigned char)));
 
 	//compute VNN
 	log_console.info("[KERNEL] Computing HOLE FILLING using VNN method...");
@@ -251,30 +270,46 @@ int main( int argc, char** argv)
 			voxelGridWidth,  voxelGridHeight,  voxelGridLength,
 			offsetX_d, offsetY_d, offsetZ_d,
 			r1_d, r2_d, r3_d, r4_d, r5_d, r6_d, r7_d, r8_d, r9_d,
-			device_char_data, device_voxel_data);
+			device_char_data, device_voxel_data, device_hit_counter);
 
 	//copy back voxels
 	log_console.info("Done. Copying voxels data back to RAM...");
 	CHECK_CUDA_ERRORS(cudaMemcpy(host_voxel_data, device_voxel_data, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
 	
-	long counter = 0;
+	//copy back hit counter
+	log_console.info("Done. Copying hit counter data back to RAM...");
+	CHECK_CUDA_ERRORS(cudaMemcpy(host_hit_counter, device_hit_counter, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+	
+	long nHit = 0, sumHitRate = 0;
+	unsigned char maxHitRate = 0, currentHitRate;
 	for (unsigned int i = 0; i < gridSize; i++) {
-		if(host_voxel_data[i] != 255) {
-			counter++;
+		currentHitRate = host_hit_counter[i];
+
+		if(currentHitRate != 0) {
+			nHit++;
+			sumHitRate += currentHitRate;
+			maxHitRate = (currentHitRate > maxHitRate ? currentHitRate : maxHitRate);
 		}
 	}
-	log_console.infoStream() << "Theorical filling rate : " << (float)nImages*imgWidth*imgHeight/gridSize;
-	log_console.infoStream() << "Actual filling rate : " << (float)counter/gridSize;
-	log_console.infoStream() << "Hit rate : " << (float)nImages*imgWidth*imgHeight/counter;
 
-	
+	log_console.infoStream() << "Theorical filling rate : " << (float)nImages*imgWidth*imgHeight/gridSize;
+	log_console.infoStream() << "Actual filling rate : " << (float)nHit/gridSize;
+	log_console.infoStream() << "Mean hit rate : " << (float)sumHitRate/nHit;
+	log_console.infoStream() << "MaxHitRate hit rate : " << (unsigned int) maxHitRate;
+
+	log_console.info("Free hit data on CPU and GPU.");
+	cudaFree(device_hit_counter);
+	cudaFreeHost(host_hit_counter);
+
+
+	log_console.info("Launching voxel engine...");
 	QApplication application(argc,argv);
 
 
 	VoxelRenderer *VR = new VoxelRenderer(
 			voxelGridWidth, voxelGridHeight, voxelGridLength, 
 			host_voxel_data,
-			0.0001, 0.0001, 0.0001, false, 50);
+			0.001, 0.001, 0.001, false, 128);
 
 	log_console.info("Computing geometry...");
 	VR->computeGeometry();

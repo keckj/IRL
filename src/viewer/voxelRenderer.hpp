@@ -17,6 +17,9 @@ class VoxelRenderer : public Renderable
 
 		void computeGeometry();
 		void draw();
+	
+	
+		void keyPressEvent(QKeyEvent*, Viewer&);
 
 	private:
 		unsigned int width, height, length;

@@ -28,7 +28,7 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 		const unsigned int voxelGridWidth, const unsigned int voxelGridHeight, const unsigned int voxelGridLength,
 		float *offsetX, float *offsetY, float *offsetZ,
 		float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
-		unsigned char *char_image_data, unsigned char *voxel_data) {
+		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter) {
 	
 	unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;    // this thread handles the data at its thread id
 	unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;    // this thread handles the data at its thread id
@@ -52,7 +52,24 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 	
 	unsigned long i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;
 
-	voxel_data[i] = char_image_data[id];
+	unsigned char value = char_image_data[id];
+	unsigned char hit = hit_counter[i];
+	float mean;
+
+	//if we already hit the voxel 255 times
+	if(hit == 255) {
+		return;
+	}
+	else if(hit == 0) {
+		voxel_data[i] = value;
+		hit_counter[i] = hit + 1;
+	}
+	else {
+		mean = ((int)hit*(int)voxel_data[i] + value)/(hit + 1);
+		voxel_data[i] = (unsigned char) mean;
+		hit_counter[i] = hit + 1;
+	}
+
 }
 
 void VNNKernel(const int nImages, const int imgWidth, const int imgHeight, 
@@ -61,10 +78,10 @@ void VNNKernel(const int nImages, const int imgWidth, const int imgHeight,
 		const unsigned int voxelGridWidth, const unsigned int voxelGridHeight, const unsigned int voxelGridLength,
 		float *offsetX, float *offsetY, float *offsetZ,
 		float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
-		unsigned char *char_image_data, unsigned char *voxel_data) {
+		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter) {
 
 	dim3 dimBlock(32, 32, 1);
-	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f), nImages);
+	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f - 1), nImages);
 
 	VNN<<<dimGrid,dimBlock>>>(nImages, imgWidth, imgHeight, 
 			deltaGrid,  deltaX,  deltaY,
@@ -72,6 +89,6 @@ void VNNKernel(const int nImages, const int imgWidth, const int imgHeight,
 			voxelGridWidth,  voxelGridHeight,  voxelGridLength,
 			offsetX, offsetY, offsetZ,
 			r1, r2, r3, r4, r5, r6, r7, r8, r9,
-			char_image_data, voxel_data);
+			char_image_data, voxel_data, hit_counter);
 }
 	
