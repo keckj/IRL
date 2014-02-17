@@ -5,38 +5,18 @@
 
 using namespace std;
 
-	VoxelRenderer::VoxelRenderer( 
-			unsigned int width, unsigned int height, unsigned int length, 
-			unsigned char *data,
-			float cube_w, float cube_h, float cube_d, 
-			bool drawGrid, unsigned char threshold) 
+VoxelRenderer::VoxelRenderer( 
+		unsigned int width, unsigned int height, unsigned int length, 
+		unsigned char *data,
+		float cube_w, float cube_h, float cube_d, 
+		bool drawGrid, unsigned char threshold) 
 :	width(width), height(height), length(length), data(data),
 	cube_w(cube_w), cube_h(cube_h), cube_d(cube_d), 
-	drawGrid(drawGrid), threshold(threshold)
+	drawGrid(drawGrid), threshold(threshold),
+	nQuads(0), quads(0), normals(0), colors(0)
 {
-
-	//for (int x = 0; x < size; x++) {
-		//if(x % 10 != 0) 
-			//continue;
-		//for (int y = 0; y < size; y++) {
-			//for (int z = 0; z < size; z++) {
-				//tree.set(x,y,z, (x*x*y*z)%255);
-			//}
-		//}
-	//}
-
-	//for (int z = 0; z < size; z++ ) {
-	//for (int y = 0; y < size; y++ ) {
-	//for (int x = 0; x < size; x++ ) {
-	//tree.set(x,y,z, 255);
-	//}
-	//}
-	//}
 }
-		
-unsigned char VoxelRenderer::getData(unsigned int x, unsigned int y, unsigned int z) {
-	return data[z*width*height + y*width + x];
-}
+
 void VoxelRenderer::draw() {
 
 	//draw grid
@@ -45,202 +25,31 @@ void VoxelRenderer::draw() {
 	}
 
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
-	drawSurface();
+
+	// activate the use of GL_VERTEX_ARRAY and GL_NORMAL_ARRAY
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+
+	// specify the arrays to use
+	glNormalPointer(GL_FLOAT, 0, normals);
+	glVertexPointer(3, GL_FLOAT, 0 , quads);
+	glColorPointer(3, GL_FLOAT, 0 , colors);
+
+	glDrawArrays(GL_QUADS, 0, 4*nQuads);
+
+	// disable the use of arrays (do not forget!)
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 }
 
 bool inline VoxelRenderer::isVisible(unsigned char voxel) {
 	return (voxel > threshold);
 }
 
-void VoxelRenderer::drawNaive() {
-	unsigned char voxel;
-
-	//draw voxels
-	for (unsigned int z = 0; z < length; z++ ) {
-		for (unsigned int y = 0; y < height; y++ ) {
-			for (unsigned int x = 0; x < width; x++ ) {
-				voxel = getData(x, y, z);
-				drawVoxel(voxel, x, y, z);
-			}
-		}
-	}
-}
-
-void VoxelRenderer::drawSurface() {
-
-	unsigned char left, right, up, down, front, back, current;
-
-	for (unsigned int z = 0; z < length; z++ ) {
-		for (unsigned int y = 0; y < height; y++ ) {
-			for (unsigned int x = 0; x < width; x++ ) {
-				right = (x == width - 1 ? 0 : getData(x+1,y,z));
-				left = (x == 0 ? 0 : getData(x-1,y,z));
-
-				up = (y == height - 1 ? 0 : getData(x,y+1,z));
-				down = (y == 0 ? 0 : getData(x,y-1,z));
-
-				front = (z == length - 1 ? 0 : getData(x,y,z+1));
-				back = (z == 0 ? 0 : getData(x,y,z-1));
-
-				current = getData(x,y,z);	
-
-				drawVoxel(current, right, left, up, down, front, back, x,y,z);
-			}
-		}
-	}
-}
-
-
-void inline VoxelRenderer::drawVoxel(
-		unsigned char current, 
-		unsigned char right, unsigned char left, 
-		unsigned char up, unsigned char down, 
-		unsigned char front, unsigned char back,
-		int x, int y, int z) {
-
-	if(!isVisible(current))	
-		return;
-
-	glTranslatef(x*cube_w, y*cube_h, z*cube_d);
-	glColor3f(current/255.0f, current/255.0f, current/255.0f);
-
-	if(!isVisible(up))
-		drawQuad(UP);
-
-	if(!isVisible(down))
-		drawQuad(DOWN);
-
-	if(!isVisible(right))
-		drawQuad(RIGHT);
-
-	if(!isVisible(left))
-		drawQuad(LEFT);
-
-	if(!isVisible(front))
-		drawQuad(FRONT);
-
-	if(!isVisible(back))
-		drawQuad(BACK);
-
-	glTranslatef(-x*cube_w, -y*cube_h, -z*cube_d);
-
-}
-
-void inline VoxelRenderer::drawQuad(Side side) {
-
-	glBegin(GL_QUADS);
-
-	switch(side) 
-	{
-		case UP: 
-			{
-				//glColor3f(0.0f, 1.0f, 0.0f);
-				glNormal3f(0.0f, 1.0f, 0.0f);
-				glVertex3f(0.0f, cube_h, 0.0f);
-				glVertex3f(0.0f, cube_h, cube_d);
-				glVertex3f(cube_w, cube_h, cube_d);
-				glVertex3f(cube_w, cube_h, 0.0f);
-				break;
-			}
-
-		case DOWN: 
-			{
-				//glColor3f(0.0f, 0.5f, 0.0f);
-				glNormal3f(0.0f, -1.0f, 0.0f);
-				glVertex3f(0.0f, 0.0f, 0.0f);
-				glVertex3f(0.0f, 0.0f, cube_d);
-				glVertex3f(cube_w, 0.0f, cube_d);
-				glVertex3f(cube_w, 0.0f, 0.0f);
-				break;
-			}
-
-		case RIGHT: 
-			{
-				//glColor3f(1.0f, 0.0f, 0.0f);
-				glNormal3f(1.0f, 0.0f, 0.0f);
-				glVertex3f(cube_w, 0.0f, 0.0f);
-				glVertex3f(cube_w, cube_h, 0.0f);
-				glVertex3f(cube_w, cube_h, cube_d);
-				glVertex3f(cube_w, 0.0f, cube_d);
-				break;
-			}
-		case LEFT: 
-			{
-				//glColor3f(0.5f, 0.0f, 0.0f);
-				glNormal3f(-1.0f, 0.0f, 0.0f);
-				glVertex3f(0.0f, 0.0f, 0.0f);
-				glVertex3f(0.0f, cube_h, 0.0f);
-				glVertex3f(0.0f, cube_h, cube_d);
-				glVertex3f(0.0f, 0.0f, cube_d);
-				break;
-			}
-		case FRONT: 
-			{
-				//glColor3f(0.0f, 0.0f, 1.0f);
-				glNormal3f(0.0f, 0.0f, 1.0f);
-				glVertex3f(0.0f, 0.0f, cube_d);
-				glVertex3f(cube_w, 0.0f, cube_d);
-				glVertex3f(cube_w, cube_h, cube_d);
-				glVertex3f(0.0f, cube_h, cube_d);
-				break;
-			}
-		case BACK: 
-			{
-				//glColor3f(0.0f, 0.0f, 0.5f);
-				glNormal3f(0.0f, 0.0f, -1.0f);
-				glVertex3f(0.0f, 0.0f, 0.0f);
-				glVertex3f(cube_w, 0.0f, 0.0f);
-				glVertex3f(cube_w, cube_h, 0.0f);
-				glVertex3f(0.0f, cube_h, 0.0f);
-				break;
-			}
-	}
-
-	glEnd();
-}
-
-void VoxelRenderer::drawVoxel(unsigned char voxel, const int x, const int y, const int z) {
-
-	if(!isVisible(voxel)) 
-		return;
-
-	float dw, dh, dd;
-	dw = 0.5f * cube_w;
-	dh = 0.5f * cube_h;
-	dd = 0.5f * cube_d;
-
-	glTranslatef(x*cube_w + dw, y*cube_h + dh, z*cube_d + dd);
-	glColor3f(voxel/255.0f, voxel/255.0f, voxel/255.0f);
-
-	for (float dx = -dw; dx <= dw; dx+=cube_w) {
-		glNormal3f(dx < 0.0f ? -1.0f : 1.0f, 0.0f, 0.0f);
-		glBegin(GL_QUADS);
-		glVertex3f(dx, dh, dd);
-		glVertex3f(dx, -dh, dd);
-		glVertex3f(dx, -dh, -dd);
-		glVertex3f(dx, dh, -dd);
-		glEnd();
-	}
-	for (float dy = -dh; dy <= dh; dy+=cube_h) {
-		glNormal3f(0.0f, dy < 0.0f ? -1.0f : 1.0f, 0.0f);
-		glBegin(GL_QUADS);
-		glVertex3f(dw, dy, dd);
-		glVertex3f(dw, dy, -dd);
-		glVertex3f(-dw, dy, -dd);
-		glVertex3f(-dw, dy, dd);
-		glEnd();
-	}
-	for (float dz = -dd; dz <= dd; dz+=cube_d) {
-		glNormal3f(0.0f, 0.0f, dz < 0.0f ? -1.0f : 1.0f);
-		glBegin(GL_QUADS);
-		glVertex3f(dw, dh, dz);
-		glVertex3f(-dw, dh, dz);
-		glVertex3f(-dw, -dh, dz);
-		glVertex3f(dw, -dh, dz);
-		glEnd();
-	}
-
-	glTranslatef(-x*cube_w - dw, -y*cube_h - dh, -z*cube_d - dd);
+unsigned char VoxelRenderer::getData(unsigned int x, unsigned int y, unsigned int z) {
+	return data[z*width*height + y*width + x];
 }
 
 void VoxelRenderer::drawWireFrame() {
@@ -252,7 +61,7 @@ void VoxelRenderer::drawWireFrame() {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glColor3f(1.0f, 1.0f, 1.0f);
 
-for (unsigned int z = 0; z <= length; z++) {
+	for (unsigned int z = 0; z <= length; z++) {
 
 		for (unsigned int y = 0; y <= height; y++) {
 
@@ -293,3 +102,222 @@ for (unsigned int z = 0; z <= length; z++) {
 }
 
 
+void VoxelRenderer::computeGeometry() {
+
+	nQuads = countQuads();
+
+	delete [] quads;
+	delete [] normals;
+	delete [] colors;
+
+	quads = new GLfloat[3*4*nQuads];
+	normals = new GLfloat[3*4*nQuads];
+	colors = new GLfloat[3*4*nQuads];
+
+	computeQuadsAndNormals();
+}
+
+unsigned int inline VoxelRenderer::countQuads() {
+	unsigned int counter = 0;
+	unsigned char left, right, up, down, front, back, current;
+
+	for (unsigned int z = 0; z < length; z++ ) {
+		for (unsigned int y = 0; y < height; y++ ) {
+			for (unsigned int x = 0; x < width; x++ ) {
+				right = (x == width - 1 ? 0 : getData(x+1,y,z));
+				left = (x == 0 ? 0 : getData(x-1,y,z));
+
+				up = (y == height - 1 ? 0 : getData(x,y+1,z));
+				down = (y == 0 ? 0 : getData(x,y-1,z));
+
+				front = (z == length - 1 ? 0 : getData(x,y,z+1));
+				back = (z == 0 ? 0 : getData(x,y,z-1));
+
+				current = getData(x,y,z);	
+				counter += countFaces(current, right, left, up, down, front, back);
+			}
+		}
+	}
+
+	return counter;
+}
+
+unsigned char inline VoxelRenderer::countFaces (
+		unsigned char current, 
+		unsigned char right, unsigned char left, 
+		unsigned char up, unsigned char down, 
+		unsigned char front, unsigned char back
+		) {
+
+	if(!isVisible(current))	
+		return 0;
+
+	return (!isVisible(up)) + (!isVisible(down)) + (!isVisible(right)) +
+		(!isVisible(left)) + (!isVisible(front)) + (!isVisible(back));
+}
+
+void inline VoxelRenderer::computeQuadsAndNormals() {
+
+	unsigned char left, right, up, down, front, back, current;
+
+	unsigned int offset = 0;
+
+	for (unsigned int z = 0; z < length; z++ ) {
+		for (unsigned int y = 0; y < height; y++ ) {
+			for (unsigned int x = 0; x < width; x++ ) {
+				right = (x == width - 1 ? 0 : getData(x+1,y,z));
+				left = (x == 0 ? 0 : getData(x-1,y,z));
+
+				up = (y == height - 1 ? 0 : getData(x,y+1,z));
+				down = (y == 0 ? 0 : getData(x,y-1,z));
+
+				front = (z == length - 1 ? 0 : getData(x,y,z+1));
+				back = (z == 0 ? 0 : getData(x,y,z-1));
+
+				current = getData(x,y,z);	
+
+				computeVoxel(current, right, left, up, down, front, back, x,y,z, offset);
+			}
+		}
+	}
+
+}
+
+
+void inline VoxelRenderer::computeVoxel(
+		unsigned char current, 
+		unsigned char right, unsigned char left, 
+		unsigned char up, unsigned char down, 
+		unsigned char front, unsigned char back,
+		int x, int y, int z, 
+		unsigned int &offset) {
+
+	if(!isVisible(current))	
+		return;
+
+
+	if(!isVisible(up))
+		computeQuads(UP, current, offset, x, y, z);
+
+	if(!isVisible(down))
+		computeQuads(DOWN, current, offset, x, y, z);
+
+	if(!isVisible(right))
+		computeQuads(RIGHT, current, offset, x, y, z);
+
+	if(!isVisible(left))
+		computeQuads(LEFT, current, offset, x, y, z);
+
+	if(!isVisible(front))
+		computeQuads(FRONT, current, offset, x, y, z);
+
+	if(!isVisible(back))
+		computeQuads(BACK, current, offset, x, y, z);
+
+}
+
+void inline VoxelRenderer::computeQuads(
+		Side side, unsigned char current, 
+		unsigned int &offset,
+		int x, int y, int z) {
+
+	const float tx = x*cube_w;
+	const float ty = y*cube_h;
+	const float tz = z*cube_d;
+
+	for (int i = 0; i < 4; i++) {
+		writeVect(colors, offset, current/255.0f, current/255.0f, current/255.0f);
+	}
+	offset -= 4*3;
+
+	switch(side) 
+	{
+		case UP: 
+			{
+				writeVect(normals, offset, 0.0f, 1.0f, 0.0f);
+				writeVect(normals, offset, 0.0f, 1.0f, 0.0f);
+				writeVect(normals, offset, 0.0f, 1.0f, 0.0f);
+				writeVect(normals, offset, 0.0f, 1.0f, 0.0f);
+				offset -= 4*3;
+				writeVect(quads, offset, 0.0f + tx, cube_h + ty, 0.0f + tz);
+				writeVect(quads, offset, 0.0f + tx, cube_h + ty, cube_d + tz);
+				writeVect(quads, offset, cube_w + tx, cube_h + ty, cube_d + tz);
+				writeVect(quads, offset, cube_w + tx, cube_h + ty, 0.0f + tz);
+				break;
+			}
+
+		case DOWN: 
+			{
+				writeVect(normals, offset, 0.0f, -1.0f, 0.0f);
+				writeVect(normals, offset, 0.0f, -1.0f, 0.0f);
+				writeVect(normals, offset, 0.0f, -1.0f, 0.0f);
+				writeVect(normals, offset, 0.0f, -1.0f, 0.0f);
+				offset -= 4*3;
+				writeVect(quads, offset, 0.0f + tx, 0.0f + ty, 0.0f + tz);
+				writeVect(quads, offset, 0.0f + tx, 0.0f + ty, cube_d + tz);
+				writeVect(quads, offset, cube_w + tx, 0.0f + ty, cube_d + tz);
+				writeVect(quads, offset, cube_w + tx, 0.0f + ty, 0.0f + tz);
+				break;
+			}
+
+		case RIGHT: 
+			{
+				writeVect(normals, offset, 1.0f, 0.0f, 0.0f);
+				writeVect(normals, offset, 1.0f, 0.0f, 0.0f);
+				writeVect(normals, offset, 1.0f, 0.0f, 0.0f);
+				writeVect(normals, offset, 1.0f, 0.0f, 0.0f);
+				offset -= 4*3;
+				writeVect(quads, offset, cube_w + tx, 0.0f + ty, 0.0f + tz);
+				writeVect(quads, offset, cube_w + tx, cube_h + ty, 0.0f + tz);
+				writeVect(quads, offset, cube_w + tx, cube_h + ty, cube_d + tz);
+				writeVect(quads, offset, cube_w + tx, 0.0f + ty, cube_d + tz);
+				break;
+			}
+		case LEFT: 
+			{
+				writeVect(normals, offset, -1.0f, 0.0f, 0.0f);
+				writeVect(normals, offset, -1.0f, 0.0f, 0.0f);
+				writeVect(normals, offset, -1.0f, 0.0f, 0.0f);
+				writeVect(normals, offset, -1.0f, 0.0f, 0.0f);
+				offset -= 4*3;
+				writeVect(quads, offset, 0.0f + tx, 0.0f + ty, 0.0f + tz);
+				writeVect(quads, offset, 0.0f + tx, cube_h + ty, 0.0f + tz);
+				writeVect(quads, offset, 0.0f + tx, cube_h + ty, cube_d + tz);
+				writeVect(quads, offset, 0.0f + tx, 0.0f + ty, cube_d + tz);
+				break;
+			}
+		case FRONT: 
+			{
+				writeVect(normals, offset, 0.0f, 0.0f, 1.0f);
+				writeVect(normals, offset, 0.0f, 0.0f, 1.0f);
+				writeVect(normals, offset, 0.0f, 0.0f, 1.0f);
+				writeVect(normals, offset, 0.0f, 0.0f, 1.0f);
+				offset -= 4*3;
+				writeVect(quads, offset, 0.0f + tx, 0.0f + ty, cube_d + tz);
+				writeVect(quads, offset, cube_w + tx, 0.0f + ty, cube_d + tz);
+				writeVect(quads, offset, cube_w + tx, cube_h + ty, cube_d + tz);
+				writeVect(quads, offset, 0.0f + tx, cube_h + ty, cube_d + tz);
+				break;
+			}
+		case BACK: 
+			{
+				writeVect(normals, offset, 0.0f, 0.0f, -1.0f);
+				writeVect(normals, offset, 0.0f, 0.0f, -1.0f);
+				writeVect(normals, offset, 0.0f, 0.0f, -1.0f);
+				writeVect(normals, offset, 0.0f, 0.0f, -1.0f);
+				offset -= 4*3;
+				writeVect(quads, offset, 0.0f + tx, 0.0f + ty, 0.0f + tz);
+				writeVect(quads, offset, cube_w + tx, 0.0f + ty, 0.0f + tz);
+				writeVect(quads, offset, cube_w + tx, cube_h + ty, 0.0f + tz);
+				writeVect(quads, offset, 0.0f + tx, cube_h + ty, 0.0f + tz);
+				break;
+			}
+	}
+
+}
+
+void VoxelRenderer::writeVect(GLfloat *array, unsigned int &offset, GLfloat x, GLfloat y, GLfloat z) {
+	array[offset++] = x;
+	array[offset++] = y;
+	array[offset++] = z;
+}

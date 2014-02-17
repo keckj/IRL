@@ -3,6 +3,7 @@
 #define _VOXEL_RENDERER_
 
 #include "voxel.hpp"
+#include <GL/glut.h>
 
 class VoxelRenderer : public Renderable
 {
@@ -14,6 +15,7 @@ class VoxelRenderer : public Renderable
 				float cube_w, float cube_h, float cube_d, 
 				bool drawGrid, unsigned char threshold);
 
+		void computeGeometry();
 		void draw();
 
 	private:
@@ -23,31 +25,43 @@ class VoxelRenderer : public Renderable
 		bool drawGrid;
 		unsigned char threshold;
 
+		unsigned int nQuads;
+		GLfloat *quads, *normals, *colors;
+
 		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		
 
-		void drawSurface();
-		void drawNaive();
 		void drawWireFrame();
-
 
 		unsigned char getData(unsigned int x, unsigned int y, unsigned int z);
 
 		bool inline isVisible(unsigned char voxel);
 
-		void inline drawVoxel(
-				unsigned char voxel,
-				int x, int y, int z);
+		void writeVect(GLfloat *array, unsigned int &offset, GLfloat x, GLfloat y, GLfloat z);
 
-		void inline drawVoxel(
+
+		unsigned int inline countQuads();
+
+		unsigned char inline countFaces(
+				unsigned char current, 
+				unsigned char right, unsigned char left, 
+				unsigned char up, unsigned char down, 
+				unsigned char front, unsigned char back);
+
+		void inline computeQuadsAndNormals();
+
+		void inline computeVoxel(
 				unsigned char current, 
 				unsigned char right, unsigned char left, 
 				unsigned char up, unsigned char down, 
 				unsigned char front, unsigned char back,
+				int x, int y, int z, 
+				unsigned int& offset);
+
+		void inline computeQuads(
+				Side side, unsigned char current, 
+				unsigned int &offset,
 				int x, int y, int z);
 
-		void inline drawQuad(Side side);
-
 };
-
 #endif
 

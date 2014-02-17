@@ -33,27 +33,27 @@ release: all
 $(TARGET): $(OBJ)
 	@echo
 	@echo
-	$(LINK) $(LIBS) $^ -o $@ $(LDFLAGS) $(LINKFLAGS) 
+	$(LINK) $(LIBS) $^ -o $@ $(LDFLAGS) $(LINKFLAGS) $(DEFINES)
 	@echo
 
 
 $(OBJDIR)%.o : $(SRCDIR)%.c
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS)
+	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 
 $(OBJDIR)%.o : $(SRCDIR)%.C 
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS)
+	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 $(OBJDIR)%.o : $(SRCDIR)%.cc 
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS)
+	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 $(OBJDIR)%.o : $(SRCDIR)%.cpp 
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS)
+	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 
 $(OBJDIR)%.o : $(SRCDIR)%.s
 	@echo
-	$(AS) $(INCLUDE) -o $@ $^ $(ASFLAGS)
+	$(AS) $(INCLUDE) -o $@ $^ $(ASFLAGS) 
 $(OBJDIR)%.o : $(SRCDIR)%.S
 	@echo
 	$(AS) $(INCLUDE) -o $@ $^ $(ASFLAGS)

@@ -6,7 +6,7 @@ OPENCV_LIBPATH = -L/usr/lib
 OPENCV_LIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui
 
 CUDA_INCLUDEPATH = -I/usr/local/cuda-5.5/include
-CUDA_LIBPATH = -L/usr/local/cuda-5.5/lib64 -L/usr/lib/nvidia-313-updates/
+CUDA_LIBPATH = -L/usr/local/cuda-5.5/lib64 
 CUDA_LIBS = -lcuda -lcudart
 
 OPENCL_INCLUDEPATH = -I/opt/AMDAPP/include
@@ -21,6 +21,7 @@ OPENGL_LIBS = -lglut -lQGLViewer -lGLU -lGL -lQtXml -lQtOpenGL -lQtGui -lQtCore 
 VIEWER_LIBPATH = -L/usr/X11R6/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib 
 VIEWER_INCLUDEPATH = -I/usr/share/qt4/mkspecs/linux-g++-64 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui -I/usr/include/qt4/QtOpenGL -I/usr/include/qt4/QtXml -I/usr/include/qt4 -I/usr/include -I/usr/X11R6/include
 VIEWER_LIBS = -lQGLViewer -lGLU -lglut -lGL -lQtXml -lQtOpenGL -lQtGui -lQtCore -lpthread 
+VIEWER_DEFINES = -D_REENTRANT -DQT_NO_DEBUG -DQT_XML_LIB -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED
 
 ####################
 
@@ -31,6 +32,7 @@ LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) $(CUDA_LIBS) $(VIEWER_LIBS) -llog4cpp
 
 INCLUDE = -I$(SRCDIR) $(OPENGL_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCV_INCLUDEPATH) $(VIEWER_INCLUDEPATH)
 LIBS = $(OPENGL_LIBPATH) $(CUDA_LIBPATH) $(OPENCV_LIBPATH) $(VIEWER_LIBPATH)
+DEFINES= $(VIEWER_DEFINES)
 
 CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99
@@ -55,8 +57,8 @@ TARGET = main
 
 SRCDIR = $(realpath .)/src
 OBJDIR = $(realpath .)/obj
-TEST= old viewer
-EXCLUDED_SUBDIRS = $(foreach DIR, $(TEST), $(call subdirs, $(SRCDIR)/$(DIR)))
+EXCL= old #excluded dirs in src
+EXCLUDED_SUBDIRS = $(foreach DIR, $(EXCL), $(call subdirs, $(SRCDIR)/$(DIR)))
 SUBDIRS =  $(filter-out $(EXCLUDED_SUBDIRS), $(call subdirs, $(SRCDIR)))
 
 SRC_EXTENSIONS = c C cc cpp s S asm cu

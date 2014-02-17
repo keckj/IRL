@@ -19,16 +19,20 @@ class LocalizedUSImage {
 		float* getImageData() const;
 
 		bool isRawMajor() const;
+		bool isOk() const;
 
 		static float* getElementSpacing() ;
 		static float getSamplingFrequency() ; //in Hz
 		static float getImagingFrequency() ; //in Hz
 
 		static void initialize();
+
 		
 	private:
 		int nData;
 		int width, height;
+
+		bool okStatus;
 		bool rawMajor;
 
 		float *rotationMatrix;
@@ -39,7 +43,7 @@ class LocalizedUSImage {
 		static long samplingFrequency;
 		static long imagingFrequency;
 
-		void parseMhdFileAndLoadRawData(string const & dataFolder, string const & mhdFile);
+		bool parseMhdFileAndLoadRawData(string const & dataFolder, string const & mhdFile);
 };
 
 ostream& operator<<(ostream& os, const LocalizedUSImage& obj);

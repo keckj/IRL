@@ -30,7 +30,7 @@ extern void VNNKernel(
 		float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
 		unsigned char *char_image_data, unsigned char *voxel_data);
 
-int main( int argc, const char* argv[] )
+int main( int argc, char** argv)
 {
 	initLogs();
 
@@ -40,7 +40,8 @@ int main( int argc, const char* argv[] )
 	float dx, dy;
 	int w, h;
 	//im.loadLocalizedUSImages("data/imagesUS/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
-	im.loadLocalizedUSImages("data/processedImages/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
+	//im.loadLocalizedUSImages("data/processedImages/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
+	im.loadLocalizedUSImages("data/femur/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
 
 
 	const int imgWidth = w;
@@ -50,7 +51,7 @@ int main( int argc, const char* argv[] )
 	const float deltaY = dy;
 	const float imgRealWidth = imgWidth*dx;
 	const float imgRealHeight = imgHeight*dy;
-	const unsigned int imageSize = imgWidth * imgHeight * nImages;
+	const unsigned long imageSize = imgWidth * imgHeight * nImages;
 
 	log_console.infoStream() << "\tImage number : " << nImages;
 	log_console.infoStream() << "\tImages size : " << imgWidth << " x " << imgHeight << " (px)";
@@ -96,7 +97,7 @@ int main( int argc, const char* argv[] )
 	const unsigned int voxelGridWidth = minVoxelGridWidth;
 	const unsigned int voxelGridHeight = minVoxelGridHeight;
 	const unsigned int voxelGridLength = minVoxelGridLength;
-	const unsigned int gridSize = voxelGridWidth * voxelGridHeight * voxelGridLength;
+	const unsigned long gridSize = voxelGridWidth * voxelGridHeight * voxelGridLength;
 
 	log_console.infoStream() << "\tpMin = (" << xMin << "," << yMin << "," << zMin << ")";
 	log_console.infoStream() << "\tpMax = (" << xMax << "," << yMax << "," << zMax << ")";
@@ -108,11 +109,14 @@ int main( int argc, const char* argv[] )
 	log_console.infoStream() << "Effective grid size : " 
 		<< voxelGridWidth << "x" << voxelGridHeight << "x" << voxelGridLength;
 	log_console.infoStream() << "Effective grid memory size (unsigned char) : " 
-		<< gridSize/(1024*1024) * sizeof(unsigned char) << " MB";
+		<< (gridSize > 1024*1024 ? gridSize/(1024*1024) * sizeof(unsigned char) : gridSize/1024 * sizeof(unsigned char))
+		<< (gridSize > 1024*1024 ? "MB" : "KB");
 	log_console.infoStream() << "Effective images memory size (float) : " 
-		<< imageSize/(1024*1024) * sizeof(float) << " MB";
+		<< (imageSize > 1024*1024 ? imageSize/(1024*1024) * sizeof(float) : imageSize/1024*sizeof(float))
+		<< (imageSize > 1024*1024 ? "MB" : "KB");
 	log_console.infoStream() << "Effective images memory size (unsigned char) : " 
-		<< imageSize/(1024*1024) * sizeof(unsigned char) << " MB";
+		<< (imageSize > 1024*1024 ? imageSize/(1024*1024) * sizeof(unsigned char) : imageSize/1024*sizeof(unsigned char))
+		<< (imageSize > 1024*1024 ? "MB" : "KB");
 	log_console.infoStream() << "The programm will need to use at least " 
 		<< max((gridSize + imageSize)*sizeof(unsigned char), (sizeof(float)+sizeof(unsigned char))*imageSize)/(1024*1024)
 		<< " MB of VRAM.";
@@ -237,7 +241,7 @@ int main( int argc, const char* argv[] )
 	CHECK_CUDA_ERRORS(cudaMalloc((void**) &device_voxel_data, gridSize*sizeof(unsigned char)));
 	
 	//set device voxels to 255
-	CHECK_CUDA_ERRORS(cudaMemset(device_voxel_data, 255, gridSize*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMemset(device_voxel_data, 0, gridSize*sizeof(unsigned char)));
 
 	//compute VNN
 	log_console.info("[KERNEL] Computing HOLE FILLING using VNN method...");
@@ -265,8 +269,20 @@ int main( int argc, const char* argv[] )
 
 	
 	QApplication application(argc,argv);
-	viewer.addRenderable(new VoxelRenderer(64, 64, 64, device_voxel_data,
-				0.001, 0.001, 0.001, false, 0));
+
+
+	VoxelRenderer *VR = new VoxelRenderer(
+			voxelGridWidth, voxelGridHeight, voxelGridLength, 
+			host_voxel_data,
+			0.001, 0.001, 0.001, false, 50);
+
+	log_console.info("Computing geometry...");
+	VR->computeGeometry();
+	
+	log_console.info("Done!");
+
+	Viewer viewer;
+	viewer.addRenderable(VR);
 	viewer.setWindowTitle("viewer");
 	viewer.show();
 	application.exec();
@@ -275,7 +291,9 @@ int main( int argc, const char* argv[] )
 	//free
 	log_console.info("Free remaining data.");
 	CHECK_CUDA_ERRORS(cudaFree(device_char_data));
+	CHECK_CUDA_ERRORS(cudaFree(device_voxel_data));
 	CHECK_CUDA_ERRORS(cudaFreeHost(host_char_data));
+	CHECK_CUDA_ERRORS(cudaFreeHost(host_voxel_data));
 
 
 	return EXIT_SUCCESS;

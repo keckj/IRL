@@ -158,13 +158,16 @@ void Image::loadLocalizedUSImages(
 	else {
 		*nImage = counter;
 		log_console.infoStream() << "Found " << counter << " mhd files.";
-		log_console.infoStream() << "Processing raw data...";
 	}
+	
 
 	/* On trie les noms de fichiers (cohérence spaciale) */
-	mhdFiles.sort(Image::compareDataOrder);
+	//log_console.infoStream() << "Sorting filenames...";
+	//mhdFiles.sort(Image::compareDataOrder);
+	
 
 	/* On charge les données */
+	log_console.infoStream() << "Processing data...";
 	*x = new float[counter];
 	*y = new float[counter];
 	*z = new float[counter];
@@ -174,24 +177,31 @@ void Image::loadLocalizedUSImages(
 
 	for (list<string>::iterator it = mhdFiles.begin() ; it != mhdFiles.end(); it++) {
 		LocalizedUSImage img(folderName, *it);
-		(*x)[counter] = img.getOffset()[0];
-		(*y)[counter] = img.getOffset()[1];
-		(*z)[counter] = img.getOffset()[2];
-		(*R)[counter] = new float[9];
 
-		for (int i = 0; i < 9; i++) {
-			(*R)[counter][i] = img.getRotationMatrix()[i];
+		if (img.isOk()) {
+			(*x)[counter] = img.getOffset()[0];
+			(*y)[counter] = img.getOffset()[1];
+			(*z)[counter] = img.getOffset()[2];
+			(*R)[counter] = new float[9];
+
+			for (int i = 0; i < 9; i++) {
+				(*R)[counter][i] = img.getRotationMatrix()[i];
+			}
+			
+			(*data)[counter] = new float[img.getWidth() * img.getHeight()];
+			memcpy((*data)[counter], img.getImageData(), img.getWidth()*img.getHeight()*sizeof(float));
+
+			counter++;
+			
+			*imgWidth = img.getWidth();
+			*imgHeight = img.getHeight();
+			*deltaX = LocalizedUSImage::getElementSpacing()[0];
+			*deltaY = LocalizedUSImage::getElementSpacing()[1];
 		}
-		
-		(*data)[counter] = new float[img.getWidth() * img.getHeight()];
-		memcpy((*data)[counter], img.getImageData(), img.getWidth()*img.getHeight()*sizeof(float));
-
-		counter++;
-		
-		*imgWidth = img.getWidth();
-		*imgHeight = img.getHeight();
-		*deltaX = LocalizedUSImage::getElementSpacing()[0];
-		*deltaY = LocalizedUSImage::getElementSpacing()[1];
+		else {
+			(*nImage)--;
+			log_console.warnStream() << "The file " << *it << "is not valid. It has been skipped.";
+		}
 	}
 	
 
@@ -210,6 +220,7 @@ void Image::loadLocalizedUSImages(
 
 	//outfile.close();
 
+	log_console.infoStream() << "Read " << counter << "valid data files.";
 	log_console.infoStream() << "Finished to read data from folder " << folderName << ".";
 }
 

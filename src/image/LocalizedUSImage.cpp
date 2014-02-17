@@ -9,12 +9,12 @@ long LocalizedUSImage::samplingFrequency = 0;
 long LocalizedUSImage::imagingFrequency = 0;
 
 LocalizedUSImage::LocalizedUSImage(string const & dataFolder, string const & mhdFile, bool rawMajor) : 
-	rawMajor(rawMajor), imageData(0)
+	okStatus(false), rawMajor(rawMajor), imageData(0)
 {
 	rotationMatrix = new float[9];
 	offset = new float[3];
 
-	parseMhdFileAndLoadRawData(dataFolder, mhdFile);
+	okStatus = parseMhdFileAndLoadRawData(dataFolder, mhdFile);
 }
 
 LocalizedUSImage::~LocalizedUSImage() {
@@ -64,7 +64,7 @@ void LocalizedUSImage::initialize() {
 	LocalizedUSImage::elementSpacing[2] = 0.0f;
 }
 
-void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & dataFolder, string const & mhdFile) {
+bool LocalizedUSImage::parseMhdFileAndLoadRawData(string const & dataFolder, string const & mhdFile) {
 
 	log_console.infoStream() << "Opening mhd file > " << mhdFile;
 	ifstream infile;
@@ -73,7 +73,7 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & dataFolder, str
 
 	if(infile.bad() || infile.fail()) {
 		log_console.errorStream() << "Error while loading mhd file" << mhdFile << " !";
-		throw std::logic_error("Error while loading mhd file !");
+		return false;
 	}
 
 	string line, word, dataFile;
@@ -186,6 +186,7 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & dataFolder, str
 			dataFile = buffer.str();
 			dataFile = dataFolder + dataFile;
 		}
+
 	}
 
 	infile.close();
@@ -202,7 +203,7 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & dataFolder, str
 
 	if(infile.bad() || infile.fail()) {
 		log_console.errorStream() << "Error while loading raw data file" << dataFile << " !";
-		throw std::logic_error("Error while loading raw data file !");
+		return false;
 	}
 
 	unsigned long dataCharSize = width*height*sizeof(float);
@@ -216,6 +217,8 @@ void LocalizedUSImage::parseMhdFileAndLoadRawData(string const & dataFolder, str
 	log_console.infoStream() << "Finished to read data from > " << dataFile;
 
 	infile.close();
+		
+	return true;
 }
 
 ostream& operator<<(ostream& os, const LocalizedUSImage& obj) {
@@ -235,4 +238,8 @@ ostream& operator<<(ostream& os, const LocalizedUSImage& obj) {
 	os << endl;
 	
 	return os;
+}
+		
+bool LocalizedUSImage::isOk() const {
+	return this->okStatus;
 }
