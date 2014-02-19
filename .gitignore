@@ -1,0 +1,7 @@
+*.o
+tags
+types_c.taghl
+data/femur
+data/processedImages
+img/data_1.avi
+program.log
