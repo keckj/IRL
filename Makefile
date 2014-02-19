@@ -35,20 +35,20 @@ LIBS = $(OPENGL_LIBPATH) $(CUDA_LIBPATH) $(OPENCV_LIBPATH) $(VIEWER_LIBPATH)
 DEFINES= $(VIEWER_DEFINES) $(OPT)
 
 CC=gcc
-CFLAGS= -W -Wall -Wextra -pedantic -std=c99
+CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
 
 CXX=g++
-CXXFLAGS= -W -Wall -Wextra -pedantic -std=c++11
+CXXFLAGS= -W -Wall -Wextra -pedantic -std=c++11 -m64
 
 NVCC=nvcc
 NVCCFLAGS= -arch=sm_20 -Xcompiler -Wall -m64 -O3
-CUDADEBUGFLAGS= -Xcompiler -Wall -m64 -G -g -arch=sm_20 
 
 AS = nasm
 ASFLAGS= -f elf64
 
 # Autres flags 
 DEBUGFLAGS= -g -O0
+CUDADEBUGFLAGS= -Xcompiler -Wall -m64 -G -g -arch=sm_20 
 PROFILINGFLAGS= -pg
 RELEASEFLAGS= -O3
 

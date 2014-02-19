@@ -161,9 +161,11 @@ void Image::loadLocalizedUSImages(
 	}
 	
 
+#ifdef _SORT
 	//On trie les noms de fichiers (cohérence spaciale) 
 	log_console.infoStream() << "Sorting filenames...";
 	mhdFiles.sort(Image::compareDataOrder);
+#endif
 	
 
 	/* On charge les données */

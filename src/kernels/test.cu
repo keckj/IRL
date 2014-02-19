@@ -1,5 +1,8 @@
 #include <cmath>
+#include "kernels.hpp"
 #include "utils/cudaUtils.hpp"
+
+namespace kernel {
 
 __global__ void test(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data) {
 	
@@ -101,3 +104,4 @@ void VNNKernel(const int nImages, const int imgWidth, const int imgHeight,
 			char_image_data, voxel_data, hit_counter);
 }
 	
+}

@@ -15,44 +15,65 @@
 #include "image/LocalizedUSImage.hpp"
 #include "viewer/viewer.h"
 #include "viewer/voxelRenderer.hpp"
+#include "kernels/kernels.hpp"
 
 
 using namespace std;
 using namespace cv;
-
-extern void testKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data);
-extern void VNNKernel(
-		const int nImages, const int imgWidth, const int imgHeight, 
-		const float deltaGrid, const float deltaX, const float deltaY,
-		const float xMin, const float yMin, const float zMin,
-		const unsigned int voxelGridWidth, const unsigned int voxelGridHeight, const unsigned int voxelGridLength,
-		float *offsetX, float *offsetY, float *offsetZ,
-		float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
-		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter);
+using namespace kernel;
 
 int main( int argc, char** argv)
 {
 	initLogs();
+
+
+	//default values
+	float dG = 0.5f;
+	int thres = 0;
+	string dataSource("data/imagesUS/");
 	
+
+	//parsing input
+	if(argc >= 2) { 
+		if (argv[1][0] == '1')
+			dataSource = string("data/processedImages/");
+		else if(argv[1][0] == '2')  
+			dataSource = string("data/femur/");
+		else {
+			log_console.critStream() << "Failed to parse input argument 1 : " << argv[1] << " !";
+			exit(1);
+		}
+	}
+	if(argc >= 3) { 
+			dG = atof(argv[2]);
+	}
+	if(argc >= 4) { 
+			thres = atoi(argv[3]);
+			if(thres < 0 || thres > 255) {
+				log_console.critStream() << "Threshold must be set between 0 and 255 !";
+				exit(1);
+			}
+	}
+	if(argc >= 5) {
+			log_console.critStream() << "Too much input arguments " << argv[3] << " !";
+			exit(1);
+	}
+		
+	
+	//Loading data 
 	Image im;
 	int nImages;
 	float *x,*y,*z, **R, **data;
 	float dx, dy;
 	int w, h;
-	//im.loadLocalizedUSImages("data/imagesUS/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
-	im.loadLocalizedUSImages("data/processedImages/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
-	//im.loadLocalizedUSImages("data/femur/", &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
-	
-	//Image::filter1D(x, nImages, 5, 1.0f);	
-	//Image::filter1D(y, nImages, 5, 1.0f);	
-	//Image::filter1D(z, nImages, 5, 1.0f);	
+	im.loadLocalizedUSImages(dataSource, &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
 
-
+	const unsigned char viewerThreshold = (unsigned char) thres;
 	const int imgWidth = w;
 	const int imgHeight = h;
-	const float deltaGrid = 0.2f;
 	const float deltaX = dx;
 	const float deltaY = dy;
+	const float deltaGrid = dG;
 	const float imgRealWidth = imgWidth*dx;
 	const float imgRealHeight = imgHeight*dy;
 	const unsigned long imageSize = imgWidth * imgHeight * nImages;
@@ -62,6 +83,13 @@ int main( int argc, char** argv)
 	log_console.infoStream() << "\tSensor precision : " << deltaX*1000 << " x " << deltaY*1000 << " (µm)";
 	log_console.infoStream() << "\tImages real size : " << imgRealWidth << " x " << imgRealHeight << " (mm)";
 
+	//filtering positions
+	//Image::filter1D(x, nImages, 5, 1.0f);	
+	//Image::filter1D(y, nImages, 5, 1.0f);	
+	//Image::filter1D(z, nImages, 5, 1.0f);	
+
+
+	//compute bounding box
 	float posX, posY, posZ;
 	float xMin, xMax, yMin, yMax, zMin, zMax;
 
@@ -310,7 +338,7 @@ int main( int argc, char** argv)
 	VoxelRenderer *VR = new VoxelRenderer(
 			voxelGridWidth, voxelGridHeight, voxelGridLength, 
 			host_voxel_data,
-			0.01, 0.01, 0.01, false, 128);
+			0.01, 0.01, 0.01, false, viewerThreshold);
 
 	log_console.info("Computing geometry...");
 	VR->computeGeometry();

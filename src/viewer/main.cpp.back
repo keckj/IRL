@@ -1,0 +1,46 @@
+
+#include <QApplication>
+#include <QWidget>
+#include "viewer.h"
+#include "voxelRenderer.hpp"
+
+//#include "cylinder.h"
+using namespace std;
+
+int main(int argc, char** argv)
+{
+	// Read command lines arguments.
+	//
+	QApplication application(argc,argv);
+	
+	
+	unsigned int n = 256;
+	unsigned char *data = new unsigned char[n*n*n];
+
+	cout << "INIT" << endl;
+	for (unsigned int i = 0; i < n*n*n; i++) {
+		data[i] = i%255;
+	}
+	
+	VoxelRenderer *VR = new VoxelRenderer(n, n, n, data,
+				0.001, 0.001, 0.001, false, 128);
+
+
+	cout << "COMPUTE" << endl;
+
+	VR->computeGeometry();
+
+	cout << "DRAW" << endl;
+
+	Viewer viewer;
+	viewer.addRenderable(VR);
+	viewer.setWindowTitle("viewer");
+	viewer.show();
+	
+	// Run main loop.
+	application.exec();
+
+	return 0;
+
+	
+}

@@ -2,6 +2,8 @@
 #ifndef _VOXEL_RENDERER_
 #define _VOXEL_RENDERER_
 
+#define _CUDA_VIEWER
+
 #include "voxel.hpp"
 #include <GL/glut.h>
 
@@ -39,7 +41,8 @@ class VoxelRenderer : public Renderable
 
 		bool inline isVisible(unsigned char voxel);
 
-		void writeVect(GLfloat *array, unsigned int &offset, GLfloat x, GLfloat y, GLfloat z);
+		void writeVectAndIncr(GLfloat *array, unsigned int &offset, GLfloat x, GLfloat y, GLfloat z);
+		void writeVect(GLfloat *array, unsigned int offset, GLfloat x, GLfloat y, GLfloat z);
 
 
 		unsigned int inline countQuads();
