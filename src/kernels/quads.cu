@@ -160,10 +160,10 @@ namespace kernel {
 			case(3):
 				{ //up
 					writeVec3f(d_normals, arrayID, normalStride, 0.0f, 1.0f, 0.0f);
-					writeVec3f(d_quads, arrayID, 1, 0.0f + tx, cube_h + ty, 0.0f + tz);
-					writeVec3f(d_quads, arrayID + 1, 1, 0.0f + tx, cube_h + ty, cube_d + tz);
-					writeVec3f(d_quads, arrayID + 2, 1, cube_w + tx, cube_h + ty, cube_d + tz);
-					writeVec3f(d_quads, arrayID + 3, 1, cube_w + tx, cube_h + ty, 0.0f + tz);
+					writeVec3f(d_quads, 4*arrayID, 1, 0.0f + tx, cube_h + ty, 0.0f + tz);
+					writeVec3f(d_quads, 4*arrayID + 1, 1, 0.0f + tx, cube_h + ty, cube_d + tz);
+					writeVec3f(d_quads, 4*arrayID + 2, 1, cube_w + tx, cube_h + ty, cube_d + tz);
+					writeVec3f(d_quads, 4*arrayID + 3, 1, cube_w + tx, cube_h + ty, 0.0f + tz);
 					break;
 				}
 			case(4):
@@ -208,6 +208,13 @@ namespace kernel {
 		countVisibleQuads<<<dimGrid,dimBlock>>>(d_nQuads, d_voxel_grid, gridWidth, gridHeight, gridLength, threshold);
 		cudaDeviceSynchronize();
 		cudaMemcpy(h_nQuads, d_nQuads, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+
+		if(*h_nQuads == 0) {
+			*h_quads = 0;
+			*h_colors = 0;
+			*h_normals = 0;
+			return 0;
+		}
 
 		//compute quads
 		float *d_quads, *d_normals, *d_colors;

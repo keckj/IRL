@@ -29,32 +29,32 @@ void VoxelRenderer::draw() {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
 	
 		
-		glBegin(GL_QUADS);
-		for (unsigned int i = 0; i < nQuads; i++) {
-			glNormal3f(normals[3*i], normals[3*i+1], normals[3*i+2]);
-			glColor3f(colors[3*i], colors[3*i+1], colors[3*i+2]);
-			for (int j = 0; j < 4; j++) {
-				glVertex3f(quads[12*i+3*j], quads[12*i+3*j+1], quads[12*i+3*j+2]);
-			}
-		}
-		glEnd();
+		//glBegin(GL_QUADS);
+		//for (unsigned int i = 0; i < nQuads; i++) {
+			//glNormal3f(normals[3*i], normals[3*i+1], normals[3*i+2]);
+			//glColor3f(colors[3*i], colors[3*i+1], colors[3*i+2]);
+			//for (int j = 0; j < 4; j++) {
+				//glVertex3f(quads[12*i+3*j], quads[12*i+3*j+1], quads[12*i+3*j+2]);
+			//}
+		//}
+		//glEnd();
 
 	// activate the use of GL_VERTEX_ARRAY and GL_NORMAL_ARRAY
-	//glEnableClientState(GL_NORMAL_ARRAY);
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
 
 	// specify the arrays to use
-	//glNormalPointer(GL_FLOAT, 0, normals);
-	//glVertexPointer(3, GL_FLOAT, 0 , quads);
-	//glColorPointer(3, GL_FLOAT, 0 , colors);
+	glNormalPointer(GL_FLOAT, 0, normals);
+	glVertexPointer(3, GL_FLOAT, 0 , quads);
+	glColorPointer(3, GL_FLOAT, 0 , colors);
 
-	//glDrawArrays(GL_QUADS, 0, 4*nQuads);
+	glDrawArrays(GL_QUADS, 0, 4*nQuads);
 
 	// disable the use of arrays (do not forget!)
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_NORMAL_ARRAY);
-	//glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 }
 
 bool inline VoxelRenderer::isVisible(unsigned char voxel) {
@@ -116,30 +116,34 @@ void VoxelRenderer::drawWireFrame() {
 
 
 void VoxelRenderer::computeGeometry() {
+
+		
+#ifdef _CUDA_VIEWER
+	cudaFreeHost(quads);
+	cudaFreeHost(colors);
+	cudaFreeHost(normals);
 	
+	nQuads = kernel::computeQuads(
+			&quads, &normals, &colors, 
+			data,
+			width, height, length,
+			cube_w, cube_h, cube_d,
+			threshold,
+			kernel::NORMAL_PER_VERTEX, kernel::COLOR_PER_VERTEX);
+
+#else
 	delete [] quads;
 	delete [] normals;
 	delete [] colors;
-
-	//unsigned char *testGrid;
-	//cudaMalloc((void**) &testGrid, width*height*length*sizeof(unsigned char));
-	//cudaMemcpy(testGrid, data, width*height*length*sizeof(unsigned char), cudaMemcpyHostToDevice);
-	
-	//nQuads = kernel::computeQuads(
-			//&quads, &normals, &colors, 
-			//testGrid,
-			//width, height, length,
-			//cube_w, cube_h, cube_d,
-			//threshold);
-	
-	//cudaFree(testGrid);
-
 	nQuads = countQuads();
 	quads = new GLfloat[3*4*nQuads];
 	normals = new GLfloat[3*nQuads];
 	colors = new GLfloat[3*nQuads];
 	computeQuadsAndNormals();
+#endif
+
 }
+
 
 unsigned int inline VoxelRenderer::countQuads() {
 	unsigned int counter = 0;

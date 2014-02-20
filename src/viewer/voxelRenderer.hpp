@@ -11,11 +11,13 @@ class VoxelRenderer : public Renderable
 {
 	public:
 
+
 		VoxelRenderer( 
 				unsigned int width, unsigned int height, unsigned int length, 
 				unsigned char *data,
 				float cube_w, float cube_h, float cube_d, 
 				bool drawGrid, unsigned char threshold);
+
 
 		void computeGeometry();
 		void draw();

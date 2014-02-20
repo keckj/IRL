@@ -14,16 +14,16 @@ int main(int argc, char** argv)
 	QApplication application(argc,argv);
 	
 	
-	unsigned int n = 256;
+	unsigned int n = 1;
 	unsigned char *data = new unsigned char[n*n*n];
 
 	cout << "INIT" << endl;
 	for (unsigned int i = 0; i < n*n*n; i++) {
-		data[i] = i%255;
+		data[i] = 255;
 	}
 	
 	VoxelRenderer *VR = new VoxelRenderer(n, n, n, data,
-				0.001, 0.001, 0.001, false, 128);
+				0.01, 0.01, 0.01, false, 128);
 
 
 	cout << "COMPUTE" << endl;
