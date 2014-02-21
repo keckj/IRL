@@ -1,0 +1,22 @@
+#include "types.hpp"
+#include "kernelData.hpp"
+
+#include <iostream>
+
+using namespace kernel_manager;
+using namespace std;
+
+int main() {
+
+	int *data = new int[10];
+	KernelData<int> lolo(
+			data, dim3(1,1,1), 
+			HOST_DATA_POINTER, 
+			ARRAY_1D,
+			0, 
+			true);
+
+	cout << "end" << endl;
+
+	return 0;
+}

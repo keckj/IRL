@@ -29,13 +29,15 @@ int main( int argc, char** argv)
 
 	//default values
 	float dG = 0.5f;
-	int thres = 0;
+	int thres = 128;
 	string dataSource("data/imagesUS/");
 	
 
 	//parsing input
 	if(argc >= 2) { 
-		if (argv[1][0] == '1')
+		if (argv[1][0] == '0')
+			;
+		else if (argv[1][0] == '1')
 			dataSource = string("data/processedImages/");
 		else if(argv[1][0] == '2')  
 			dataSource = string("data/femur/");
@@ -326,9 +328,17 @@ int main( int argc, char** argv)
 	log_console.infoStream() << "Mean hit rate : " << (float)sumHitRate/nHit;
 	log_console.infoStream() << "MaxHitRate hit rate : " << (unsigned int) maxHitRate;
 
+	log_console.info("Free voxel data on CPU.");
+	cudaFreeHost(host_voxel_data);
+
+	log_console.info("Free image data on GPU and CPU.");
+	CHECK_CUDA_ERRORS(cudaFree(device_char_data));
+	CHECK_CUDA_ERRORS(cudaFreeHost(host_char_data));
+
 	log_console.info("Free hit data on CPU and GPU.");
 	cudaFree(device_hit_counter);
 	cudaFreeHost(host_hit_counter);
+	
 
 
 	log_console.info("Launching voxel engine...");
@@ -337,7 +347,7 @@ int main( int argc, char** argv)
 
 	VoxelRenderer *VR = new VoxelRenderer(
 			voxelGridWidth, voxelGridHeight, voxelGridLength, 
-			host_voxel_data,
+			device_voxel_data,
 			0.01, 0.01, 0.01, false, viewerThreshold);
 
 	log_console.info("Computing geometry...");
@@ -354,10 +364,8 @@ int main( int argc, char** argv)
 
 	//free
 	log_console.info("Free remaining data.");
-	CHECK_CUDA_ERRORS(cudaFree(device_char_data));
 	CHECK_CUDA_ERRORS(cudaFree(device_voxel_data));
-	CHECK_CUDA_ERRORS(cudaFreeHost(host_char_data));
-	CHECK_CUDA_ERRORS(cudaFreeHost(host_voxel_data));
+	//CHECK_CUDA_ERRORS(cudaFreeHost(host_voxel_data));
 
 
 	return EXIT_SUCCESS;

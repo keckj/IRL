@@ -258,7 +258,7 @@ namespace kernel {
 
 		//verify 
 		cudaMemcpy(h_counter, d_nQuads, sizeof(unsigned int), cudaMemcpyDeviceToHost);
-		std::cout << *h_counter << "\t" << *h_nQuads << std::endl;
+		/*std::cout << *h_counter << "\t" << *h_nQuads << std::endl;*/
 		assert((*h_counter) == (*h_nQuads)); 
 
 		//copy data back to CPU
