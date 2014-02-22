@@ -4,7 +4,7 @@
 
 namespace kernel {
 
-__global__ void test(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data) {
+__global__ void cast(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data) {
 	
 	unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;    // this thread handles the data at its thread id
 	unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;    // this thread handles the data at its thread id
@@ -16,11 +16,11 @@ __global__ void test(const int nImages, const int imgWidth, const int imgHeight,
 	char_data[id] = (unsigned char) float_data[id];
 }
 
-void testKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data) {
+void castKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data) {
 	dim3 dimBlock(32, 32, 1);
 	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f), nImages);
 
-	test<<<dimGrid,dimBlock>>>(nImages, imgWidth, imgHeight, float_data, char_data);
+	cast<<<dimGrid,dimBlock>>>(nImages, imgWidth, imgHeight, float_data, char_data);
 }
 
 
@@ -33,10 +33,9 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 		float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
 		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter) {
 	
-	unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;    // this thread handles the data at its thread id
-	unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;    // this thread handles the data at its thread id
+	unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;  
+	unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y; 
 	unsigned int id = idy*imgWidth + idx;
-	
 	unsigned int n = blockIdx.z;
 
 	if(idx >= imgWidth || idy >= imgHeight)
@@ -56,9 +55,10 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 	unsigned long i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;
 
 	unsigned char value = char_image_data[id];
-	unsigned char hit = hit_counter[i];
 	
 #ifdef _VOXEL_MEAN_VALUE
+	unsigned char hit = hit_counter[i];
+	__syncthreads();
 	float mean;
 	if(hit == 255) {
 		return;
@@ -70,14 +70,10 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 	else {
 		mean = ((int)hit*(int)voxel_data[i] + value)/(hit + 1);
 		voxel_data[i] = (unsigned char) mean;
-		hit_counter[i] = hit + 1;
+		atomicInc(hit_counter[i], 1);
 	}
 #else
-	if (hit != 0 && value > voxel_data[i]) {
-		voxel_data[i] = value;
-	}
-	else {
-		hit_counter[i] = 1;
+	if (value > voxel_data[i]) {
 		voxel_data[i] = value;
 	}
 #endif
@@ -93,7 +89,7 @@ void VNNKernel(const int nImages, const int imgWidth, const int imgHeight,
 		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter) {
 
 	dim3 dimBlock(32, 32, 1);
-	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f - 1), nImages);
+	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f) - 1, nImages);
 
 	VNN<<<dimGrid,dimBlock>>>(nImages, imgWidth, imgHeight, 
 			deltaGrid,  deltaX,  deltaY,

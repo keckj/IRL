@@ -15,6 +15,7 @@
 #include "image/LocalizedUSImage.hpp"
 #include "viewer/viewer.h"
 #include "viewer/voxelRenderer.hpp"
+#include "viewer/boundingBox.hpp"
 #include "kernels/kernels.hpp"
 
 
@@ -188,7 +189,7 @@ int main( int argc, char** argv)
 
 	//call kernel
 	log_console.info("[KERNEL] Casting image data to unsigned char.");
-	testKernel(nImages, imgWidth, imgHeight, device_float_data, device_char_data);
+	castKernel(nImages, imgWidth, imgHeight, device_float_data, device_char_data);
 
 	//free float array
 	log_console.info("Free float image data.");
@@ -348,7 +349,9 @@ int main( int argc, char** argv)
 	VoxelRenderer *VR = new VoxelRenderer(
 			voxelGridWidth, voxelGridHeight, voxelGridLength, 
 			device_voxel_data,
-			0.01, 0.01, 0.01, false, viewerThreshold);
+			0.1*deltaGrid, 0.1*deltaGrid, 0.1*deltaGrid, false, viewerThreshold);
+
+	BoundingBox *BB = new BoundingBox(voxelGridWidth, voxelGridHeight, voxelGridLength, 0.1*deltaGrid);
 
 	log_console.info("Computing geometry...");
 	VR->computeGeometry();
@@ -357,6 +360,7 @@ int main( int argc, char** argv)
 
 	Viewer viewer;
 	viewer.addRenderable(VR);
+	viewer.addRenderable(BB);
 	viewer.setWindowTitle("viewer");
 	viewer.show();
 	application.exec();

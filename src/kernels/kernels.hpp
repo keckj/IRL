@@ -4,7 +4,7 @@
 
 namespace kernel {
 
-void testKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data);
+void castKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data);
 
 void VNNKernel(
 		const int nImages, const int imgWidth, const int imgHeight, 
