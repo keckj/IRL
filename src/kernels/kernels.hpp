@@ -11,8 +11,8 @@ void VNNKernel(
 		const float deltaGrid, const float deltaX, const float deltaY,
 		const float xMin, const float yMin, const float zMin,
 		const unsigned int voxelGridWidth, const unsigned int voxelGridHeight, const unsigned int voxelGridLength,
-		float *offsetX, float *offsetY, float *offsetZ,
-		float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
+		float **offsets_d,
+		float **rotations_d,
 		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter);
 
 enum NormalType { NORMAL_PER_QUAD, NORMAL_PER_VERTEX};

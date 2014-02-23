@@ -4,6 +4,9 @@
 #include "utils/log.hpp"
 #include "image/LocalizedUSImage.hpp"
 
+#include "cuda.h"
+#include "cuda_runtime.h"
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -120,7 +123,8 @@ void Image::displayImage(Mat &m) {
 void Image::loadLocalizedUSImages(
 		string const & folderName, 
 		int *nImage, int *imgWidth, int *imgHeight, float *deltaX, float *deltaY,  
-		float **x, float **y, float **z, float ***R, float ***data
+		float ***offsets, float ***rotations, float **data,
+		bool pageLockedMemory
 		) 
 {
 
@@ -170,35 +174,57 @@ void Image::loadLocalizedUSImages(
 
 	/* On charge les données */
 	log_console.infoStream() << "Processing data...";
-	*x = new float[counter];
-	*y = new float[counter];
-	*z = new float[counter];
-	*R = new float*[counter];
-	*data = new float*[counter];
-	counter = 0;
+
+	*offsets = new float*[3];
+	for (int i = 0; i < 3; i++) {
+		if(pageLockedMemory)
+			cudaMallocHost((void**) (offsets+i), (*nImage)*sizeof(float));
+		else
+			(*offsets)[i] = new float[(*nImage)];
+	}
+	
+	*rotations = new float*[9];
+	for (int i = 0; i < 9; i++) {
+		if(pageLockedMemory)
+			cudaMallocHost((void**) (rotations+i), counter*sizeof(float));
+		else
+			(*rotations)[i] = new float[counter];
+	}
+	
+	unsigned int read_counter = 0;
+	bool firstImg = true;
 
 	for (list<string>::iterator it = mhdFiles.begin() ; it != mhdFiles.end(); it++) {
 		LocalizedUSImage img(folderName, *it);
 
 		if (img.isOk()) {
-			(*x)[counter] = img.getOffset()[0];
-			(*y)[counter] = img.getOffset()[1];
-			(*z)[counter] = img.getOffset()[2];
-			(*R)[counter] = new float[9];
+			if(firstImg) {
+				//get Size information
+				*imgWidth = img.getWidth();
+				*imgHeight = img.getHeight();
+				*deltaX = LocalizedUSImage::getElementSpacing()[0];
+				*deltaY = LocalizedUSImage::getElementSpacing()[1];
+				
+				//allocate data array
+				if(pageLockedMemory)
+					cudaMallocHost((void**) data, (*nImage)*img.getWidth()*img.getHeight()*sizeof(float));
+				else
+					*data = new float[(*nImage)*img.getWidth()*img.getHeight()];
 
-			for (int i = 0; i < 9; i++) {
-				(*R)[counter][i] = img.getRotationMatrix()[i];
+				firstImg = false;
+			}
+
+			for (int i = 0; i < 3; i++) {
+				(*offsets)[i][read_counter] = img.getOffset()[i];
 			}
 			
-			(*data)[counter] = new float[img.getWidth() * img.getHeight()];
-			memcpy((*data)[counter], img.getImageData(), img.getWidth()*img.getHeight()*sizeof(float));
-
-			counter++;
+			for (int i = 0; i < 9; i++) {
+				(*rotations)[i][read_counter] = img.getRotationMatrix()[i];
+			}
 			
-			*imgWidth = img.getWidth();
-			*imgHeight = img.getHeight();
-			*deltaX = LocalizedUSImage::getElementSpacing()[0];
-			*deltaY = LocalizedUSImage::getElementSpacing()[1];
+			memcpy((*data + img.getWidth()*img.getHeight()), img.getImageData(), img.getWidth()*img.getHeight()*sizeof(float));
+
+			read_counter++;
 		}
 		else {
 			(*nImage)--;

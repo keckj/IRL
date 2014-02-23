@@ -19,7 +19,8 @@ class Image {
 		void loadLocalizedUSImages(
 				string const & folderName, 
 				int *nImage, int *imgWidth, int *imgHeight, float *deltaX, float *deltaY,  
-				float **x, float **y, float **z, float ***R, float ***data
+				float ***offsets, float ***rotations, float **data,
+				bool pageLockedMemory
 				);
 
 		void computeImageFiltering();

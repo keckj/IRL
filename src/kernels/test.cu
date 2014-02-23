@@ -48,9 +48,18 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 	float py = r4[n]*vx + r5[n]*vy + r6[n]*0.0f + offsetY[n] - yMin;
 	float pz = r7[n]*vx + r8[n]*vy + r9[n]*0.0f + offsetZ[n] - zMin;
 
+	if ((idx == 0 && idy == 0) ||
+		(idx == 0 && idy == imgHeight - 1) ||
+		(idx == imgWidth-1 && idy == 0) ||
+		(idx == imgWidth-1 && idy == imgHeight-1)) {
+		printf("\nGPU %f\t%f\t%f", px+xMin, py+yMin, pz+zMin);
+	}
+
+
 	unsigned int ix = __float2uint_rd(px/deltaGrid);
 	unsigned int iy = __float2uint_rd(py/deltaGrid);
 	unsigned int iz = __float2uint_rd(pz/deltaGrid);
+		
 	
 	unsigned long i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;
 
@@ -84,19 +93,21 @@ void VNNKernel(const int nImages, const int imgWidth, const int imgHeight,
 		const float deltaGrid, const float deltaX, const float deltaY,
 		const float xMin, const float yMin, const float zMin,
 		const unsigned int voxelGridWidth, const unsigned int voxelGridHeight, const unsigned int voxelGridLength,
-		float *offsetX, float *offsetY, float *offsetZ,
-		float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
+		float **offsets_d,
+		float **rotations_d,
 		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter) {
 
 	dim3 dimBlock(32, 32, 1);
-	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f) - 1, nImages);
+	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f), nImages);
 
 	VNN<<<dimGrid,dimBlock>>>(nImages, imgWidth, imgHeight, 
 			deltaGrid,  deltaX,  deltaY,
 			xMin, yMin, zMin,
 			voxelGridWidth,  voxelGridHeight,  voxelGridLength,
-			offsetX, offsetY, offsetZ,
-			r1, r2, r3, r4, r5, r6, r7, r8, r9,
+			offsets_d[0], offsets_d[1], offsets_d[2],
+			rotations_d[0], rotations_d[1], rotations_d[2], 
+			rotations_d[3], rotations_d[4], rotations_d[5],
+			rotations_d[6], rotations_d[7], rotations_d[8],
 			char_image_data, voxel_data, hit_counter);
 }
 	

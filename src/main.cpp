@@ -66,10 +66,10 @@ int main( int argc, char** argv)
 	//Loading data 
 	Image im;
 	int nImages;
-	float *x,*y,*z, **R, **data;
+	float **offsets_h, **rotations_h, *float_data_h;
 	float dx, dy;
 	int w, h;
-	im.loadLocalizedUSImages(dataSource, &nImages, &w, &h, &dx, &dy, &x, &y, &z, &R, &data);
+	im.loadLocalizedUSImages(dataSource, &nImages, &w, &h, &dx, &dy, &offsets_h, &rotations_h, &float_data_h, true);
 
 	const unsigned char viewerThreshold = (unsigned char) thres;
 	const int imgWidth = w;
@@ -91,7 +91,6 @@ int main( int argc, char** argv)
 	//Image::filter1D(y, nImages, 5, 1.0f);	
 	//Image::filter1D(z, nImages, 5, 1.0f);	
 
-
 	//compute bounding box
 	float posX, posY, posZ;
 	float xMin, xMax, yMin, yMax, zMin, zMax;
@@ -104,12 +103,12 @@ int main( int argc, char** argv)
 
 	float vects[4][3] = {{0.0f,0.0f,0.0f}, {imgRealWidth,0.0f,0.0f}, {0.0f,imgRealHeight,0.0f}, {imgRealWidth,imgRealHeight,0.0f} };
 	for (int i = 0; i < nImages; i++) {
-		posX = x[i]; posY = y[i]; posZ = z[i];
+		posX = offsets_h[0][i]; posY = offsets_h[1][i]; posZ = offsets_h[2][i];
 
 		for (int j = 0; j < 4; j++) {
-			posX = R[i][0]*vects[j][0] + R[i][1]*vects[j][1] + R[i][2]*vects[j][2] + posX;
-			posY = R[i][3]*vects[j][0] + R[i][4]*vects[j][1] + R[i][5]*vects[j][2] + posY;
-			posZ = R[i][6]*vects[j][0] + R[i][7]*vects[j][1] + R[i][8]*vects[j][2] + posZ;
+			posX = rotations_h[0][i]*vects[j][0] + rotations_h[1][i]*vects[j][1] + rotations_h[2][i]*vects[j][2] + posX;
+			posY = rotations_h[3][i]*vects[j][0] + rotations_h[4][i]*vects[j][1] + rotations_h[5][i]*vects[j][2] + posY;
+			posX = rotations_h[8][i]*vects[j][0] + rotations_h[7][i]*vects[j][1] + rotations_h[8][i]*vects[j][2] + posZ;
 
 			xMin = (posX < xMin ? posX : xMin);
 			yMin = (posY < yMin ? posY : yMin);
@@ -117,6 +116,9 @@ int main( int argc, char** argv)
 			xMax = (posX > xMax ? posX : xMax);
 			yMax = (posY > yMax ? posY : yMax);
 			zMax = (posZ > zMax ? posZ : zMax);
+		
+			printf("\nCPU %f\t%f\t%f", posX, posY, posZ);
+			
 		}
 	}
 
@@ -168,154 +170,81 @@ int main( int argc, char** argv)
 	CHECK_CUDA_ERRORS(cudaFree(0));	
 
 	//image data
-	float *device_float_data, *host_float_data;
-	unsigned char *device_char_data, *host_char_data;
+	float *float_data_d;
+	unsigned char *char_data_h, *char_data_d;
 
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &host_float_data, nImages*imgWidth*imgHeight*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &host_char_data, nImages*imgWidth*imgHeight*sizeof(unsigned char)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &device_float_data, nImages*imgWidth*imgHeight*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &device_char_data, nImages*imgWidth*imgHeight*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &char_data_h, nImages*imgWidth*imgHeight*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMalloc((void**) &float_data_d, nImages*imgWidth*imgHeight*sizeof(float)));
+	CHECK_CUDA_ERRORS(cudaMalloc((void**) &char_data_d, nImages*imgWidth*imgHeight*sizeof(unsigned char)));
 
-	//copy not pinned memory to pinned memory
-	for (int i = 0; i < nImages; i++) {
-		memcpy(host_float_data + i*imgWidth*imgHeight, data[i], imgWidth*imgHeight*sizeof(float));
-		delete [] data[i];
-	}
-	delete [] data;
-
-	//copy host pinned memory to device memory
+	//copy host memory to device memory
 	log_console.info("Copying image data to GPU...");
-	CHECK_CUDA_ERRORS(cudaMemcpy(device_float_data, host_float_data, nImages*imgWidth*imgHeight*sizeof(float), cudaMemcpyHostToDevice));
+	CHECK_CUDA_ERRORS(cudaMemcpy(float_data_d, float_data_h, nImages*imgWidth*imgHeight*sizeof(float), cudaMemcpyHostToDevice));
 
 	//call kernel
 	log_console.info("[KERNEL] Casting image data to unsigned char.");
-	castKernel(nImages, imgWidth, imgHeight, device_float_data, device_char_data);
+	castKernel(nImages, imgWidth, imgHeight, float_data_d, char_data_d);
 
 	//free float array
 	log_console.info("Free float image data.");
-	CHECK_CUDA_ERRORS(cudaFree(device_float_data));
+	CHECK_CUDA_ERRORS(cudaFree(float_data_d));
 	
-	//CHECK_CUDA_ERRORS(cudaMemcpy(host_char_data, device_char_data, nImages*imgWidth*imgHeight, cudaMemcpyDeviceToHost));
-	
-	//show results
-	//Mat m0(imgHeight, imgWidth, CV_32F, data[40]);
-	//m0.convertTo(m0, CV_8UC1);
-	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+40*imgWidth*imgHeight);
-	//Image::displayImage(m0);
-	//Image::displayImage(m1);
-
-	//namedWindow( "Display window", CV_WINDOW_AUTOSIZE );
-	//for (int i = 0; i < nImages; i++) {
-		//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
-		//Mat m0(imgHeight, imgWidth, CV_32F, host_float_data+i*imgWidth*imgHeight);
-		//m0.convertTo(m0, CV_8UC1);
-		//imshow("Display window", m1);
-		//cvWaitKey(100);
-		//cout << i << "/" << nImages << endl;
-	//}
-	
-	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data);
-	//VideoWriter writer("img/data_0.avi", CV_FOURCC('M','J','P','G'), 12, m1.size(), false);
-	 //for (int i = 0; i < nImages; i++) {
-		//Mat m0(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
-		//writer << m0;
-	 //}
-	 //return 0;
-
 	log_console.info("Copying offset and rotation data to GPU...");
 	//copy offset data
-	float *offsetX_d, *offsetY_d, *offsetZ_d;
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &offsetX_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &offsetY_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &offsetZ_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMemcpy(offsetX_d, x, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(offsetY_d, y, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(offsetZ_d, z, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	//copy rotation data
-	float *r1_h, *r2_h, *r3_h, *r4_h, *r5_h, *r6_h, *r7_h, *r8_h, *r9_h;
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r1_h, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r2_h, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r3_h, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r4_h, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r5_h, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r6_h, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r7_h, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r8_h, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &r9_h, nImages*sizeof(float)));
-
-	for (int i = 0; i < nImages; i++) {
-		r1_h[i] = R[i][0];
-		r2_h[i] = R[i][1];
-		r3_h[i] = R[i][2];
-		r4_h[i] = R[i][3];
-		r5_h[i] = R[i][4];
-		r6_h[i] = R[i][5];
-		r7_h[i] = R[i][6];
-		r8_h[i] = R[i][7];
-		r9_h[i] = R[i][8];
+	float **offsets_d = new float*[3];
+	for (int i = 0; i < 3; i++) {
+		CHECK_CUDA_ERRORS(cudaMalloc((void**) (offsets_d+i), nImages*sizeof(float)));
+		CHECK_CUDA_ERRORS(cudaMemcpy(offsets_d[i], offsets_h[i] , nImages*sizeof(float), cudaMemcpyHostToDevice));
 	}
 
-	float *r1_d, *r2_d, *r3_d, *r4_d, *r5_d, *r6_d, *r7_d, *r8_d, *r9_d;
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r1_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r2_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r3_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r4_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r5_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r6_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r7_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r8_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &r9_d, nImages*sizeof(float)));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r1_d, r1_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r2_d, r2_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r3_d, r3_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r4_d, r4_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r5_d, r5_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r6_d, r6_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r7_d, r7_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r8_d, r8_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
-	CHECK_CUDA_ERRORS(cudaMemcpy(r9_d, r9_h, nImages*sizeof(float), cudaMemcpyHostToDevice));
+	//copy rotation data
+	float **rotations_d = new float*[9];
+	for (int i = 0; i < 9; i++) {
+		CHECK_CUDA_ERRORS(cudaMalloc((void**) (rotations_d+i), nImages*sizeof(float)));
+		CHECK_CUDA_ERRORS(cudaMemcpy(rotations_d[i], rotations_h[i], nImages*sizeof(float), cudaMemcpyHostToDevice));
+	}
 	
 	//allocate voxels
 	log_console.info("Allocating voxel grid to GPU...");
-	unsigned char *device_voxel_data;
-	unsigned char *host_voxel_data;
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &host_voxel_data, gridSize*sizeof(unsigned char)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &device_voxel_data, gridSize*sizeof(unsigned char)));
+	unsigned char *voxel_data_h;
+	unsigned char *voxel_data_d;
+	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &voxel_data_h, gridSize*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMalloc((void**) &voxel_data_d, gridSize*sizeof(unsigned char)));
 	
 	//allocate hit counter
 	log_console.info("Allocating hit counter to GPU...");
-	unsigned char *device_hit_counter;
-	unsigned char *host_hit_counter;
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &host_hit_counter, gridSize*sizeof(unsigned char)));
-	CHECK_CUDA_ERRORS(cudaMalloc((void**) &device_hit_counter, gridSize*sizeof(unsigned char)));
+	unsigned char *hit_counter_h;
+	unsigned char *hit_counter_d;
+	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &hit_counter_h, gridSize*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMalloc((void**) &hit_counter_d, gridSize*sizeof(unsigned char)));
 	
 	//set voxels anb hit counter to 0
 	log_console.info("Setting memory to 0...");
-	CHECK_CUDA_ERRORS(cudaMemset(device_voxel_data, 0, gridSize*sizeof(unsigned char)));
-	CHECK_CUDA_ERRORS(cudaMemset(device_hit_counter, 0, gridSize*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMemset(voxel_data_d, 0, gridSize*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMemset(hit_counter_d, 0, gridSize*sizeof(unsigned char)));
 
 	//compute VNN
-	log_console.info("[KERNEL] Computing HOLE FILLING using VNN method...");
+	log_console.info("[KERNEL] Computing BIN FILLING using VNN method...");
 	VNNKernel(nImages, imgWidth, imgHeight, 
 			deltaGrid, deltaX, deltaY,
 			xMin, yMin, zMin,
 			voxelGridWidth,  voxelGridHeight,  voxelGridLength,
-			offsetX_d, offsetY_d, offsetZ_d,
-			r1_d, r2_d, r3_d, r4_d, r5_d, r6_d, r7_d, r8_d, r9_d,
-			device_char_data, device_voxel_data, device_hit_counter);
+			offsets_d,
+			rotations_d,
+			char_data_d, voxel_data_d, hit_counter_d);
 
 	//copy back voxels
 	log_console.info("Done. Copying voxels data back to RAM...");
-	CHECK_CUDA_ERRORS(cudaMemcpy(host_voxel_data, device_voxel_data, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+	CHECK_CUDA_ERRORS(cudaMemcpy(voxel_data_h, voxel_data_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
 	
 	//copy back hit counter
 	log_console.info("Done. Copying hit counter data back to RAM...");
-	CHECK_CUDA_ERRORS(cudaMemcpy(host_hit_counter, device_hit_counter, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+	CHECK_CUDA_ERRORS(cudaMemcpy(hit_counter_d, hit_counter_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
 	
 	long nHit = 0, sumHitRate = 0;
 	unsigned char maxHitRate = 0, currentHitRate;
 	for (unsigned int i = 0; i < gridSize; i++) {
-		currentHitRate = host_hit_counter[i];
+		currentHitRate = hit_counter_h[i];
 
 		if(currentHitRate != 0) {
 			nHit++;
@@ -330,16 +259,15 @@ int main( int argc, char** argv)
 	log_console.infoStream() << "MaxHitRate hit rate : " << (unsigned int) maxHitRate;
 
 	log_console.info("Free voxel data on CPU.");
-	cudaFreeHost(host_voxel_data);
+	cudaFreeHost(voxel_data_h);
 
 	log_console.info("Free image data on GPU and CPU.");
-	CHECK_CUDA_ERRORS(cudaFree(device_char_data));
-	CHECK_CUDA_ERRORS(cudaFreeHost(host_char_data));
+	CHECK_CUDA_ERRORS(cudaFree(char_data_d));
+	CHECK_CUDA_ERRORS(cudaFreeHost(char_data_h));
 
 	log_console.info("Free hit data on CPU and GPU.");
-	cudaFree(device_hit_counter);
-	cudaFreeHost(host_hit_counter);
-	
+	cudaFree(hit_counter_d);
+	cudaFreeHost(hit_counter_h);
 
 
 	log_console.info("Launching voxel engine...");
@@ -348,7 +276,7 @@ int main( int argc, char** argv)
 
 	VoxelRenderer *VR = new VoxelRenderer(
 			voxelGridWidth, voxelGridHeight, voxelGridLength, 
-			device_voxel_data,
+			voxel_data_d,
 			0.1*deltaGrid, 0.1*deltaGrid, 0.1*deltaGrid, false, viewerThreshold);
 
 	BoundingBox *BB = new BoundingBox(voxelGridWidth, voxelGridHeight, voxelGridLength, 0.1*deltaGrid);
@@ -368,7 +296,7 @@ int main( int argc, char** argv)
 
 	//free
 	log_console.info("Free remaining data.");
-	CHECK_CUDA_ERRORS(cudaFree(device_voxel_data));
+	CHECK_CUDA_ERRORS(cudaFree(voxel_data_d));
 	//CHECK_CUDA_ERRORS(cudaFreeHost(host_voxel_data));
 
 
@@ -420,4 +348,31 @@ int main( int argc, char** argv)
 
 	return EXIT_SUCCESS;
 }
+
+	//CHECK_CUDA_ERRORS(cudaMemcpy(host_char_data, device_char_data, nImages*imgWidth*imgHeight, cudaMemcpyDeviceToHost));
+	
+	//show results
+	//Mat m0(imgHeight, imgWidth, CV_32F, data[40]);
+	//m0.convertTo(m0, CV_8UC1);
+	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+40*imgWidth*imgHeight);
+	//Image::displayImage(m0);
+	//Image::displayImage(m1);
+
+	//namedWindow( "Display window", CV_WINDOW_AUTOSIZE );
+	//for (int i = 0; i < nImages; i++) {
+		//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
+		//Mat m0(imgHeight, imgWidth, CV_32F, host_float_data+i*imgWidth*imgHeight);
+		//m0.convertTo(m0, CV_8UC1);
+		//imshow("Display window", m1);
+		//cvWaitKey(100);
+		//cout << i << "/" << nImages << endl;
+	//}
+	
+	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data);
+	//VideoWriter writer("img/data_0.avi", CV_FOURCC('M','J','P','G'), 12, m1.size(), false);
+	 //for (int i = 0; i < nImages; i++) {
+		//Mat m0(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
+		//writer << m0;
+	 //}
+	 //return 0;
 
