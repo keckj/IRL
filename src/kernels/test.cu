@@ -41,25 +41,23 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 	if(idx >= imgWidth || idy >= imgHeight)
 		return;
 
-	float vx = idx*deltaX;	
-	float vy = idy*deltaY;
+	float vx = (idx+0.5f)*deltaX;	
+	float vy = (idy+0.5f)*deltaY;
 	
 	float px = r1[n]*vx + r2[n]*vy + r3[n]*0.0f + offsetX[n] - xMin;
 	float py = r4[n]*vx + r5[n]*vy + r6[n]*0.0f + offsetY[n] - yMin;
 	float pz = r7[n]*vx + r8[n]*vy + r9[n]*0.0f + offsetZ[n] - zMin;
 
-	if ((idx == 0 && idy == 0) ||
-		(idx == 0 && idy == imgHeight - 1) ||
-		(idx == imgWidth-1 && idy == 0) ||
-		(idx == imgWidth-1 && idy == imgHeight-1)) {
-		printf("\nGPU %f\t%f\t%f", px+xMin, py+yMin, pz+zMin);
-	}
-
-
+	/*if ((idx == 0 && idy == 0) ||*/
+		/*(idx == 0 && idy == imgHeight - 1) ||*/
+		/*(idx == imgWidth-1 && idy == 0) ||*/
+		/*(idx == imgWidth-1 && idy == imgHeight-1)) {*/
+		/*printf("\nGPU %f\t%f\t%f", px+xMin, py+yMin, pz+zMin);*/
+	/*}*/
+	
 	unsigned int ix = __float2uint_rd(px/deltaGrid);
 	unsigned int iy = __float2uint_rd(py/deltaGrid);
 	unsigned int iz = __float2uint_rd(pz/deltaGrid);
-		
 	
 	unsigned long i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;
 
@@ -74,12 +72,12 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 	}
 	else if(hit == 0) {
 		voxel_data[i] = value;
-		hit_counter[i] = hit + 1;
+		hit_counter[i] = 1;
 	}
 	else {
 		mean = ((int)hit*(int)voxel_data[i] + value)/(hit + 1);
 		voxel_data[i] = (unsigned char) mean;
-		atomicInc(hit_counter[i], 1);
+		atomicAdd(hit_counter + i, 1);
 	}
 #else
 	if (value > voxel_data[i]) {

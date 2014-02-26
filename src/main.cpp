@@ -93,6 +93,7 @@ int main( int argc, char** argv)
 
 	//compute bounding box
 	float posX, posY, posZ;
+	float offsetX, offsetY, offsetZ;
 	float xMin, xMax, yMin, yMax, zMin, zMax;
 
 	float inf= std::numeric_limits<float>::infinity();
@@ -101,14 +102,14 @@ int main( int argc, char** argv)
 
 	log_console.infoStream() << "Computing bounding box...";
 
-	float vects[4][3] = {{0.0f,0.0f,0.0f}, {imgRealWidth,0.0f,0.0f}, {0.0f,imgRealHeight,0.0f}, {imgRealWidth,imgRealHeight,0.0f} };
+	float vects[4][3] = {{dx/2.0f,dy/2.0f,0.0f}, {imgRealWidth - dx/2.0f,dy/2.0f,0.0f}, {dx/2.0f,imgRealHeight -dy/2.0f ,0.0f}, {imgRealWidth - dx/2.0f,imgRealHeight - dy/2.0f,0.0f} };
 	for (int i = 0; i < nImages; i++) {
-		posX = offsets_h[0][i]; posY = offsets_h[1][i]; posZ = offsets_h[2][i];
+		offsetX = offsets_h[0][i]; offsetY = offsets_h[1][i]; offsetZ = offsets_h[2][i];
 
 		for (int j = 0; j < 4; j++) {
-			posX = rotations_h[0][i]*vects[j][0] + rotations_h[1][i]*vects[j][1] + rotations_h[2][i]*vects[j][2] + posX;
-			posY = rotations_h[3][i]*vects[j][0] + rotations_h[4][i]*vects[j][1] + rotations_h[5][i]*vects[j][2] + posY;
-			posX = rotations_h[8][i]*vects[j][0] + rotations_h[7][i]*vects[j][1] + rotations_h[8][i]*vects[j][2] + posZ;
+			posX = rotations_h[0][i]*vects[j][0] + rotations_h[1][i]*vects[j][1] + rotations_h[2][i]*vects[j][2] + offsetX;
+			posY = rotations_h[3][i]*vects[j][0] + rotations_h[4][i]*vects[j][1] + rotations_h[5][i]*vects[j][2] + offsetY;
+			posZ = rotations_h[6][i]*vects[j][0] + rotations_h[7][i]*vects[j][1] + rotations_h[8][i]*vects[j][2] + offsetZ;
 
 			xMin = (posX < xMin ? posX : xMin);
 			yMin = (posY < yMin ? posY : yMin);
@@ -117,7 +118,7 @@ int main( int argc, char** argv)
 			yMax = (posY > yMax ? posY : yMax);
 			zMax = (posZ > zMax ? posZ : zMax);
 		
-			printf("\nCPU %f\t%f\t%f", posX, posY, posZ);
+			//printf("\nCPU %f\t%f\t%f\n", posX, posY, posZ);
 			
 		}
 	}
@@ -162,53 +163,63 @@ int main( int argc, char** argv)
 		log_console.warnStream() << "The programm will use more then 1GB of VRAM, please check if your GPU has enough memory !";
 	}
 
-	CudaUtils::logCudaDevices(log_console);
+	//CudaUtils::logCudaDevices(log_console);
 
 	int maxDevice;
-	cudaGetDeviceCount(&maxDevice);
+	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&maxDevice));
 	CHECK_CUDA_ERRORS(cudaSetDevice(maxDevice-1));	
 	CHECK_CUDA_ERRORS(cudaFree(0));	
 
 	//image data
 	float *float_data_d;
-	unsigned char *char_data_h, *char_data_d;
+	unsigned char *char_data_d;
 
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &char_data_h, nImages*imgWidth*imgHeight*sizeof(unsigned char)));
 	CHECK_CUDA_ERRORS(cudaMalloc((void**) &float_data_d, nImages*imgWidth*imgHeight*sizeof(float)));
 	CHECK_CUDA_ERRORS(cudaMalloc((void**) &char_data_d, nImages*imgWidth*imgHeight*sizeof(unsigned char)));
 
 	//copy host memory to device memory
-	log_console.info("Copying image data to GPU...");
+	log_console.info("Copying float image data to GPU...");
 	CHECK_CUDA_ERRORS(cudaMemcpy(float_data_d, float_data_h, nImages*imgWidth*imgHeight*sizeof(float), cudaMemcpyHostToDevice));
+	
+	//free CPU float array
+	log_console.info("Free CPU float image data.");
+	CHECK_CUDA_ERRORS(cudaFreeHost(float_data_h));
 
 	//call kernel
 	log_console.info("[KERNEL] Casting image data to unsigned char.");
 	castKernel(nImages, imgWidth, imgHeight, float_data_d, char_data_d);
 
 	//free float array
-	log_console.info("Free float image data.");
+	log_console.info("Free GPU float image data.");
 	CHECK_CUDA_ERRORS(cudaFree(float_data_d));
 	
 	log_console.info("Copying offset and rotation data to GPU...");
 	//copy offset data
 	float **offsets_d = new float*[3];
 	for (int i = 0; i < 3; i++) {
-		CHECK_CUDA_ERRORS(cudaMalloc((void**) (offsets_d+i), nImages*sizeof(float)));
+		CHECK_CUDA_ERRORS(cudaMalloc((void**) &offsets_d[i], nImages*sizeof(float)));
 		CHECK_CUDA_ERRORS(cudaMemcpy(offsets_d[i], offsets_h[i] , nImages*sizeof(float), cudaMemcpyHostToDevice));
 	}
 
 	//copy rotation data
 	float **rotations_d = new float*[9];
 	for (int i = 0; i < 9; i++) {
-		CHECK_CUDA_ERRORS(cudaMalloc((void**) (rotations_d+i), nImages*sizeof(float)));
+		CHECK_CUDA_ERRORS(cudaMalloc((void**) &rotations_d[i], nImages*sizeof(float)));
 		CHECK_CUDA_ERRORS(cudaMemcpy(rotations_d[i], rotations_h[i], nImages*sizeof(float), cudaMemcpyHostToDevice));
+	}
+
+	//free rotation and translation
+	log_console.info("Free CPU offset and rotation data.");
+	for (int i = 0; i < 3; i++) {
+		CHECK_CUDA_ERRORS(cudaFreeHost(offsets_h[i]));
+	}
+	for (int i = 0; i < 9; i++) {
+		CHECK_CUDA_ERRORS(cudaFreeHost(rotations_h[i]));
 	}
 	
 	//allocate voxels
 	log_console.info("Allocating voxel grid to GPU...");
-	unsigned char *voxel_data_h;
 	unsigned char *voxel_data_d;
-	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &voxel_data_h, gridSize*sizeof(unsigned char)));
 	CHECK_CUDA_ERRORS(cudaMalloc((void**) &voxel_data_d, gridSize*sizeof(unsigned char)));
 	
 	//allocate hit counter
@@ -222,7 +233,7 @@ int main( int argc, char** argv)
 	log_console.info("Setting memory to 0...");
 	CHECK_CUDA_ERRORS(cudaMemset(voxel_data_d, 0, gridSize*sizeof(unsigned char)));
 	CHECK_CUDA_ERRORS(cudaMemset(hit_counter_d, 0, gridSize*sizeof(unsigned char)));
-
+	
 	//compute VNN
 	log_console.info("[KERNEL] Computing BIN FILLING using VNN method...");
 	VNNKernel(nImages, imgWidth, imgHeight, 
@@ -233,13 +244,14 @@ int main( int argc, char** argv)
 			rotations_d,
 			char_data_d, voxel_data_d, hit_counter_d);
 
-	//copy back voxels
-	log_console.info("Done. Copying voxels data back to RAM...");
-	CHECK_CUDA_ERRORS(cudaMemcpy(voxel_data_h, voxel_data_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
-	
+	cudaDeviceSynchronize();
+
 	//copy back hit counter
 	log_console.info("Done. Copying hit counter data back to RAM...");
-	CHECK_CUDA_ERRORS(cudaMemcpy(hit_counter_d, hit_counter_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+	CHECK_CUDA_ERRORS(cudaMemcpy(hit_counter_h, hit_counter_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+	
+	log_console.info("Free image char data on GPU.");
+	CHECK_CUDA_ERRORS(cudaFree(char_data_d));
 	
 	long nHit = 0, sumHitRate = 0;
 	unsigned char maxHitRate = 0, currentHitRate;
@@ -258,16 +270,9 @@ int main( int argc, char** argv)
 	log_console.infoStream() << "Mean hit rate : " << (float)sumHitRate/nHit;
 	log_console.infoStream() << "MaxHitRate hit rate : " << (unsigned int) maxHitRate;
 
-	log_console.info("Free voxel data on CPU.");
-	cudaFreeHost(voxel_data_h);
-
-	log_console.info("Free image data on GPU and CPU.");
-	CHECK_CUDA_ERRORS(cudaFree(char_data_d));
-	CHECK_CUDA_ERRORS(cudaFreeHost(char_data_h));
-
 	log_console.info("Free hit data on CPU and GPU.");
-	cudaFree(hit_counter_d);
-	cudaFreeHost(hit_counter_h);
+	CHECK_CUDA_ERRORS(cudaFree(hit_counter_d));
+	CHECK_CUDA_ERRORS(cudaFreeHost(hit_counter_h));
 
 
 	log_console.info("Launching voxel engine...");
@@ -279,7 +284,7 @@ int main( int argc, char** argv)
 			voxel_data_d,
 			0.1*deltaGrid, 0.1*deltaGrid, 0.1*deltaGrid, false, viewerThreshold);
 
-	BoundingBox *BB = new BoundingBox(voxelGridWidth, voxelGridHeight, voxelGridLength, 0.1*deltaGrid);
+	BoundingBox *BB = new BoundingBox(voxelGridWidth, voxelGridHeight, voxelGridLength, 0.01*deltaGrid);
 
 	log_console.info("Computing geometry...");
 	VR->computeGeometry();
@@ -294,60 +299,55 @@ int main( int argc, char** argv)
 	application.exec();
 
 
-	//free
-	log_console.info("Free remaining data.");
-	CHECK_CUDA_ERRORS(cudaFree(voxel_data_d));
-	//CHECK_CUDA_ERRORS(cudaFreeHost(host_voxel_data));
-
-
-	return EXIT_SUCCESS;
-
-	////////////////////////////////////////////////////
-	LocalizedUSImage::initialize();
-	LocalizedUSImage img("data/processedImages/" , "IQ[data #123 (RF Grid).mhd");
-
-	Mat m(img.getHeight(), img.getWidth(), CV_64F, img.getImageData());
-
-	double min, max;
-	minMaxIdx(m, &min, &max);
-	cout << "\nvals \t" << min << "\t" << max << endl;
-	Mat hist;
-	int hist_size = 128;
-	float range[] = {(float) min, (float) max};
-	const float *hist_range = {range};
-	calcHist(&m, 1, 0, Mat(), hist, 1, &hist_size, &hist_range, true, false);
-
-	int hist_w = 512; int hist_h = 400;
-	int bin_w = cvRound( (double) hist_w/hist_size );
-	Mat histImage( hist_h, hist_w, CV_8UC1, Scalar( 0,0,0) );
-	normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-
-	for( int i = 1; i < hist_size; i++ )
-	{
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
-				Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
-				Scalar( 255, 0, 0), 2, 8, 0  );
-	}
-
-	/// Display
-	namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
-	imshow("calcHist Demo", histImage );
-
-	//cout << img;
-	Mat m2,m3;
-	m.convertTo(m2, CV_8UC1);
-	m.convertTo(m3, CV_8UC1);
-	GaussianBlur(m2, m2, Size(9,9), 5.0);
-	int lowThreshold = 30;
-	int kernel_size = 3;
-	Canny(m2, m2, lowThreshold, lowThreshold*3, kernel_size);
-	m2.copyTo(m3, m2);
-	Image::displayImage(m3);
-
-	log_console.info("END OF MAIN PROGRAMM");
-
 	return EXIT_SUCCESS;
 }
+
+	//////////////////////////////////////////////////
+	//LocalizedUSImage::initialize();
+	//LocalizedUSImage img("data/processedImages/" , "IQ[data #123 (RF Grid).mhd");
+
+	//Mat m(img.getHeight(), img.getWidth(), CV_64F, img.getImageData());
+
+	//double min, max;
+	//minMaxIdx(m, &min, &max);
+	//cout << "\nvals \t" << min << "\t" << max << endl;
+	//Mat hist;
+	//int hist_size = 128;
+	//float range[] = {(float) min, (float) max};
+	//const float *hist_range = {range};
+	//calcHist(&m, 1, 0, Mat(), hist, 1, &hist_size, &hist_range, true, false);
+
+	//int hist_w = 512; int hist_h = 400;
+	//int bin_w = cvRound( (double) hist_w/hist_size );
+	//Mat histImage( hist_h, hist_w, CV_8UC1, Scalar( 0,0,0) );
+	//normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+
+	//for( int i = 1; i < hist_size; i++ )
+	//{
+		//line( histImage, Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
+				//Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
+				//Scalar( 255, 0, 0), 2, 8, 0  );
+	//}
+
+	/// Display
+	//namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
+	//imshow("calcHist Demo", histImage );
+
+	//cout << img;
+	//Mat m2,m3;
+	//m.convertTo(m2, CV_8UC1);
+	//m.convertTo(m3, CV_8UC1);
+	//GaussianBlur(m2, m2, Size(9,9), 5.0);
+	//int lowThreshold = 30;
+	//int kernel_size = 3;
+	//Canny(m2, m2, lowThreshold, lowThreshold*3, kernel_size);
+	//m2.copyTo(m3, m2);
+	//Image::displayImage(m3);
+
+	//log_console.info("END OF MAIN PROGRAMM");
+
+	//return EXIT_SUCCESS;
+//}
 
 	//CHECK_CUDA_ERRORS(cudaMemcpy(host_char_data, device_char_data, nImages*imgWidth*imgHeight, cudaMemcpyDeviceToHost));
 	

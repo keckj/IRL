@@ -178,7 +178,7 @@ void Image::loadLocalizedUSImages(
 	*offsets = new float*[3];
 	for (int i = 0; i < 3; i++) {
 		if(pageLockedMemory)
-			cudaMallocHost((void**) (offsets+i), (*nImage)*sizeof(float));
+			cudaMallocHost((void**) (*offsets+i), (*nImage)*sizeof(float));
 		else
 			(*offsets)[i] = new float[(*nImage)];
 	}
@@ -186,7 +186,7 @@ void Image::loadLocalizedUSImages(
 	*rotations = new float*[9];
 	for (int i = 0; i < 9; i++) {
 		if(pageLockedMemory)
-			cudaMallocHost((void**) (rotations+i), counter*sizeof(float));
+			cudaMallocHost((void**) (*rotations+i), counter*sizeof(float));
 		else
 			(*rotations)[i] = new float[counter];
 	}
@@ -222,7 +222,7 @@ void Image::loadLocalizedUSImages(
 				(*rotations)[i][read_counter] = img.getRotationMatrix()[i];
 			}
 			
-			memcpy((*data + img.getWidth()*img.getHeight()), img.getImageData(), img.getWidth()*img.getHeight()*sizeof(float));
+			memcpy((*data + read_counter*img.getWidth()*img.getHeight()), img.getImageData(), img.getWidth()*img.getHeight()*sizeof(float));
 
 			read_counter++;
 		}
