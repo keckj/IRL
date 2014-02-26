@@ -282,7 +282,7 @@ int main( int argc, char** argv)
 	VoxelRenderer *VR = new VoxelRenderer(
 			voxelGridWidth, voxelGridHeight, voxelGridLength, 
 			voxel_data_d,
-			0.1*deltaGrid, 0.1*deltaGrid, 0.1*deltaGrid, false, viewerThreshold);
+			0.01*deltaGrid, 0.01*deltaGrid, 0.01*deltaGrid, false, viewerThreshold);
 
 	BoundingBox *BB = new BoundingBox(voxelGridWidth, voxelGridHeight, voxelGridLength, 0.01*deltaGrid);
 
