@@ -16,6 +16,7 @@
 #include "viewer/viewer.h"
 #include "viewer/voxelRenderer.hpp"
 #include "viewer/boundingBox.hpp"
+#include "viewer/rectangle.hpp"
 #include "kernels/kernels.hpp"
 
 
@@ -64,11 +65,17 @@ int main( int argc, char** argv)
 		
 	
 	//Loading data 
+	
 	Image im;
 	int nImages;
 	float **offsets_h, **rotations_h, *float_data_h;
 	float dx, dy;
 	int w, h;
+	
+	//Note sur le stockage
+	//offset[0-2][numImage] //rotation[0-8][numImage], //data[numImage] 
+	//       X Y Z                     R0 ... R8
+	
 	im.loadLocalizedUSImages(dataSource, &nImages, &w, &h, &dx, &dy, &offsets_h, &rotations_h, &float_data_h, true);
 
 	const unsigned char viewerThreshold = (unsigned char) thres;
@@ -102,7 +109,15 @@ int main( int argc, char** argv)
 
 	log_console.infoStream() << "Computing bounding box...";
 
-	float vects[4][3] = {{dx/2.0f,dy/2.0f,0.0f}, {imgRealWidth - dx/2.0f,dy/2.0f,0.0f}, {dx/2.0f,imgRealHeight -dy/2.0f ,0.0f}, {imgRealWidth - dx/2.0f,imgRealHeight - dy/2.0f,0.0f} };
+
+	//centres des voxels des 4 coins d'une image US
+	float vects[4][3] = {
+		{dx/2.0f,dy/2.0f,0.0f}, 
+		{imgRealWidth - dx/2.0f,dy/2.0f,0.0f}, 
+		{dx/2.0f,imgRealHeight -dy/2.0f ,0.0f}, 
+		{imgRealWidth - dx/2.0f,imgRealHeight - dy/2.0f,0.0f} 
+	};
+
 	for (int i = 0; i < nImages; i++) {
 		offsetX = offsets_h[0][i]; offsetY = offsets_h[1][i]; offsetZ = offsets_h[2][i];
 
@@ -208,14 +223,15 @@ int main( int argc, char** argv)
 		CHECK_CUDA_ERRORS(cudaMemcpy(rotations_d[i], rotations_h[i], nImages*sizeof(float), cudaMemcpyHostToDevice));
 	}
 
+	//TODO
 	//free rotation and translation
-	log_console.info("Free CPU offset and rotation data.");
-	for (int i = 0; i < 3; i++) {
-		CHECK_CUDA_ERRORS(cudaFreeHost(offsets_h[i]));
-	}
-	for (int i = 0; i < 9; i++) {
-		CHECK_CUDA_ERRORS(cudaFreeHost(rotations_h[i]));
-	}
+	//log_console.info("Free CPU offset and rotation data.");
+	//for (int i = 0; i < 3; i++) {
+		//CHECK_CUDA_ERRORS(cudaFreeHost(offsets_h[i]));
+	//}
+	//for (int i = 0; i < 9; i++) {
+		//CHECK_CUDA_ERRORS(cudaFreeHost(rotations_h[i]));
+	//}
 	
 	//allocate voxels
 	log_console.info("Allocating voxel grid to GPU...");
@@ -286,6 +302,20 @@ int main( int argc, char** argv)
 
 	BoundingBox *BB = new BoundingBox(voxelGridWidth, voxelGridHeight, voxelGridLength, 0.01*deltaGrid);
 
+	const float blue[] = {0.0f,0.0f,1.0f};
+	const float green[] = {0.0f,1.0f,0.0f};
+	const float red[] = {1.0f,0.0f,0.0f};
+	const float origin[] = {-xMin, -yMin, -zMin};
+
+	float *vec = new float[3];
+	float *rot = new float[9];
+	for (int i = 0; i < 3; i++) {vec[i] = offsets_h[i][0] + origin[i]; cout << vec[i] << endl;}
+	for (int i = 0; i < 9; i++) rot[i] = rotations_h[i][0];
+	const float *cvec = vec;
+	const float *crot = rot;
+
+	Rectangle *rect = new Rectangle(imgRealWidth,imgRealHeight,cvec, crot ,&red[0], 0.02*deltaGrid, 0.0f);//-deltaGrid/2.0);
+
 	log_console.info("Computing geometry...");
 	VR->computeGeometry();
 	
@@ -294,6 +324,7 @@ int main( int argc, char** argv)
 	Viewer viewer;
 	viewer.addRenderable(VR);
 	viewer.addRenderable(BB);
+	viewer.addRenderable(rect);
 	viewer.setWindowTitle("viewer");
 	viewer.show();
 	application.exec();
