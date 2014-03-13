@@ -29,4 +29,13 @@ inline void gpuAssert(cudaError_t code, const std::string &file, int line, bool 
 	}
 }
 
+inline void checkKernelExecution() {
+		cudaError_t error = cudaGetLastError();
+		if(error != cudaSuccess)
+		{
+			log_console.errorStream() << "Kernel launch failed : " << cudaGetErrorString(error);
+			throw std::logic_error("Kernel launch failed !");
+		}
+}
+
 #endif

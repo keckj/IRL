@@ -13,9 +13,9 @@ OPENCL_INCLUDEPATH = -I/opt/AMDAPP/include
 OPENCL_LIBPATH = -L/opt/AMDAPP/lib/x86
 OPENCL_LIBS = -lOpenCL
 
-OPENGL_LIBPATH = -L/usr/X11R6/lib64
-OPENGL_INCLUDEPATH = -I/usr/lib64/qt4/mkspecs/linux-g++-64 -I/usr/include/QtCore -I/usr/include/QtGui -I/usr/include/QtOpenGL -I/usr/include/QtXml -I/usr/include -I/usr/X11R6/include 
-OPENGL_LIBS = -lglut -lQGLViewer -lGLU -lGL -lQtXml -lQtOpenGL -lQtGui -lQtCore -lpthread 
+#OPENGL_LIBPATH = -L/usr/X11R6/lib64
+#OPENGL_INCLUDEPATH = -I/usr/lib64/qt4/mkspecs/linux-g++-64 -I/usr/include/QtCore -I/usr/include/QtGui -I/usr/include/QtOpenGL -I/usr/include/QtXml -I/usr/include -I/usr/X11R6/include 
+#OPENGL_LIBS = -lglut -lQGLViewer -lGLU -lGL -lQtXml -lQtOpenGL -lQtGui -lQtCore -lpthread 
 #OPENGL_LIBS = -lglfw3 -lGL -lGLEW -lGLU -lX11 -lXxf86vm -lXrandr -lpthread -lXi
 
 VIEWER_LIBPATH = -L/usr/X11R6/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib 
@@ -42,14 +42,14 @@ CXX=g++
 CXXFLAGS= -W -Wall -Wextra -pedantic -std=c++11 -m64
 
 NVCC=nvcc
-NVCCFLAGS= -arch=sm_20 -Xcompiler -Wall -m64 -O3
+NVCCFLAGS= -Xcompiler -Wall -m64 -gencode arch=compute_20,code=sm_20 -O3
 
 AS = nasm
 ASFLAGS= -f elf64
 
 # Autres flags 
 DEBUGFLAGS= -g -O0
-CUDADEBUGFLAGS= -Xcompiler -Wall -m64 -G -g -arch=sm_20 
+CUDADEBUGFLAGS= -Xcompiler -Wall -m64 -G -g -gencode arch=compute_20,code=sm_20 -Xptxas="-v" 
 PROFILINGFLAGS= -pg
 RELEASEFLAGS= -O3
 

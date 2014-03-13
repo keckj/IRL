@@ -178,7 +178,7 @@ int main( int argc, char** argv)
 		log_console.warnStream() << "The programm will use more then 1GB of VRAM, please check if your GPU has enough memory !";
 	}
 
-	//CudaUtils::logCudaDevices(log_console);
+	CudaUtils::logCudaDevices(log_console);
 
 	int maxDevice;
 	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&maxDevice));
@@ -259,6 +259,7 @@ int main( int argc, char** argv)
 			offsets_d,
 			rotations_d,
 			char_data_d, voxel_data_d, hit_counter_d);
+	
 
 	cudaDeviceSynchronize();
 
@@ -309,12 +310,12 @@ int main( int argc, char** argv)
 
 	float *vec = new float[3];
 	float *rot = new float[9];
-	for (int i = 0; i < 3; i++) {vec[i] = offsets_h[i][0] + origin[i]; cout << vec[i] << endl;}
+	for (int i = 0; i < 3; i++) vec[i] = offsets_h[i][0] + origin[i];
 	for (int i = 0; i < 9; i++) rot[i] = rotations_h[i][0];
 	const float *cvec = vec;
 	const float *crot = rot;
 
-	Rectangle *rect = new Rectangle(imgRealWidth,imgRealHeight,cvec, crot ,&red[0], 0.02*deltaGrid, 0.0f);//-deltaGrid/2.0);
+	Rectangle *rect = new Rectangle(imgRealWidth,imgRealHeight,cvec, crot ,&red[0], 0.01*deltaGrid, 0.0f);//-deltaGrid/2.0);
 
 	log_console.info("Computing geometry...");
 	VR->computeGeometry();

@@ -11,7 +11,7 @@ namespace kernel {
 			unsigned char *d_voxel_grid,
 			const unsigned int gridWidth, const unsigned int gridHeight, const unsigned int gridLength,
 			const unsigned char threshold) {
-
+	
 		unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
 		unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;
 		unsigned int idz = blockIdx.z;
@@ -45,6 +45,7 @@ namespace kernel {
 		if (threadIdx.x == 0 && threadIdx.y == 0) {
 			atomicAdd(d_counter, localBlockCounter);
 		}
+		
 	}
 
 
@@ -58,7 +59,9 @@ namespace kernel {
 		}
 	}
 
-	__global__ void computeVisibleQuads( 
+	__global__ void 
+	__launch_bounds__(1024)
+	computeVisibleQuads( 
 			unsigned int *d_counter,
 			float *d_quads, float *d_normals, float *d_colors,
 			unsigned char *d_voxel_grid,
@@ -66,14 +69,17 @@ namespace kernel {
 			const float cube_w, const float cube_h, const float cube_d,
 			const unsigned char threshold,
 			const unsigned char normalStride, const unsigned char colorStride) {
+		
 
 		unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
 		unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;
 		unsigned int idz = blockIdx.z % gridLength;
 		unsigned int id = idz*gridWidth*gridHeight + idy*gridWidth + idx;
 
-		if(idx >= gridWidth || idy >= gridHeight)
+
+		if(idx >= gridWidth || idy >= gridHeight) {
 			return;
+		}
 
 		unsigned char voxelValue = d_voxel_grid[id];	
 		if (voxelValue <= threshold)
@@ -81,6 +87,7 @@ namespace kernel {
 
 		unsigned char face = blockIdx.z/gridLength;
 		bool draw = false;
+		
 
 		switch(face) {
 			case(0): 
@@ -117,6 +124,7 @@ namespace kernel {
 
 		if(!draw)
 			return;
+
 
 		//get an array id
 		const unsigned int arrayID = atomicAdd(d_counter, 1);
@@ -202,12 +210,15 @@ namespace kernel {
 		unsigned int *h_nQuads = new unsigned int[1];
 		unsigned int *d_nQuads;
 
-		cudaMalloc((void**) &d_nQuads, sizeof(unsigned int));
-		cudaMemset(d_nQuads, 0, sizeof(unsigned int));
+		CHECK_CUDA_ERRORS(cudaMalloc((void**) &d_nQuads, sizeof(unsigned int)));
+		CHECK_CUDA_ERRORS(cudaMemset(d_nQuads, 0, sizeof(unsigned int)));
 
 		countVisibleQuads<<<dimGrid,dimBlock>>>(d_nQuads, d_voxel_grid, gridWidth, gridHeight, gridLength, threshold);
-		cudaDeviceSynchronize();
-		cudaMemcpy(h_nQuads, d_nQuads, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+		checkKernelExecution();
+		CHECK_CUDA_ERRORS(cudaDeviceSynchronize());
+		CHECK_CUDA_ERRORS(cudaMemcpy(h_nQuads, d_nQuads, sizeof(unsigned int), cudaMemcpyDeviceToHost));
+		
+		/*log_console.infoStream() << "Nquads avant génération " << *h_nQuads;*/
 
 		if(*h_nQuads == 0) {
 			*h_quads = 0;
@@ -226,20 +237,20 @@ namespace kernel {
 		const unsigned int colorSize = colorStride*(*h_nQuads)*3*sizeof(float);
 
 		//quads
-		cudaMallocHost((void**) h_quads, quadSize);
-		cudaMalloc((void**) &d_quads, quadSize);
+		CHECK_CUDA_ERRORS(cudaMallocHost((void**) h_quads, quadSize));
+		CHECK_CUDA_ERRORS(cudaMalloc((void**) &d_quads, quadSize));
 
 		//normals
-		cudaMallocHost((void**) h_normals, normalSize);
-		cudaMalloc((void**) &d_normals, normalSize);
+		CHECK_CUDA_ERRORS(cudaMallocHost((void**) h_normals, normalSize));
+		CHECK_CUDA_ERRORS(cudaMalloc((void**) &d_normals, normalSize));
 
 		//colors
-		cudaMallocHost((void**) h_colors, colorSize);
-		cudaMalloc((void**) &d_colors, colorSize);
+		CHECK_CUDA_ERRORS(cudaMallocHost((void**) h_colors, colorSize));
+		CHECK_CUDA_ERRORS(cudaMalloc((void**) &d_colors, colorSize));
 
 		//counter
 		unsigned int *h_counter = new unsigned int[1];
-		cudaMemset(d_nQuads, 0, sizeof(unsigned int));
+		CHECK_CUDA_ERRORS(cudaMemset(d_nQuads, 0, sizeof(unsigned int)));
 
 		//compute 
 
@@ -254,26 +265,30 @@ namespace kernel {
 				threshold,
 				normalStride, colorStride);
 
-		cudaDeviceSynchronize();
+		checkKernelExecution();
+					
+		CHECK_CUDA_ERRORS(cudaDeviceSynchronize());
 
 		//verify 
-		cudaMemcpy(h_counter, d_nQuads, sizeof(unsigned int), cudaMemcpyDeviceToHost);
-		/*std::cout << *h_counter << "\t" << *h_nQuads << std::endl;*/
-		assert((*h_counter) == (*h_nQuads)); 
+		CHECK_CUDA_ERRORS(cudaMemcpy(h_counter, d_nQuads, sizeof(unsigned int), cudaMemcpyDeviceToHost));
+		/*log_console.infoStream() << "Nquads après génération " << *h_counter;*/
+		
+
+		assert((*h_counter) == (*h_nQuads));
 
 		//copy data back to CPU
-		cudaMemcpy(*h_quads, d_quads, quadSize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(*h_normals, d_normals, normalSize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(*h_colors, d_colors, colorSize, cudaMemcpyDeviceToHost);
+		CHECK_CUDA_ERRORS(cudaMemcpy(*h_quads, d_quads, quadSize, cudaMemcpyDeviceToHost));
+		CHECK_CUDA_ERRORS(cudaMemcpy(*h_normals, d_normals, normalSize, cudaMemcpyDeviceToHost));
+		CHECK_CUDA_ERRORS(cudaMemcpy(*h_colors, d_colors, colorSize, cudaMemcpyDeviceToHost));
 
 		//keep data before free
 		const unsigned int nQuads = *(h_nQuads);
 
 		//free remaining data
-		cudaFree(d_nQuads);
-		cudaFree(d_quads);
-		cudaFree(d_normals);
-		cudaFree(d_colors);
+		CHECK_CUDA_ERRORS(cudaFree(d_nQuads));
+		CHECK_CUDA_ERRORS(cudaFree(d_quads));
+		CHECK_CUDA_ERRORS(cudaFree(d_normals));
+		CHECK_CUDA_ERRORS(cudaFree(d_colors));
 
 		free(h_counter);
 		free(h_nQuads);

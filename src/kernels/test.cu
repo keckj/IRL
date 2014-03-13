@@ -107,6 +107,8 @@ void VNNKernel(const int nImages, const int imgWidth, const int imgHeight,
 			rotations_d[3], rotations_d[4], rotations_d[5],
 			rotations_d[6], rotations_d[7], rotations_d[8],
 			char_image_data, voxel_data, hit_counter);
+	
+	checkKernelExecution();
 }
 	
 }
