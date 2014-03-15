@@ -1,4 +1,7 @@
 
+
+NARCH=30
+
 ####################
 ### LIB EXTERNES ###
 ####################
@@ -28,7 +31,7 @@ VIEWER_DEFINES = -D_REENTRANT -DQT_NO_DEBUG -DQT_XML_LIB -DQT_OPENGL_LIB -DQT_GU
 #Compilateurs
 LINK= g++
 LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++11
-LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) $(CUDA_LIBS) $(VIEWER_LIBS) -llog4cpp 
+LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) $(CUDA_LIBS) $(VIEWER_LIBS) -llog4cpp -pthread -lX11
 
 LOCAL=/home/GMCAO/keckjb/local
 INCLUDE = -I$(SRCDIR) -I$(LOCAL)/include $(OPENGL_INCLUDEPATH) $(CUDA_INCLUDEPATH) $(OPENCV_INCLUDEPATH) $(VIEWER_INCLUDEPATH)
@@ -42,14 +45,14 @@ CXX=g++
 CXXFLAGS= -W -Wall -Wextra -pedantic -std=c++11 -m64
 
 NVCC=nvcc
-NVCCFLAGS= -Xcompiler -Wall -m64 -gencode arch=compute_20,code=sm_20 -O3
+NVCCFLAGS= -Xcompiler -Wall -m64 -gencode arch=compute_$(NARCH),code=sm_$(NARCH) -O3
 
 AS = nasm
 ASFLAGS= -f elf64
 
 # Autres flags 
 DEBUGFLAGS= -g -O0
-CUDADEBUGFLAGS= -Xcompiler -Wall -m64 -G -g -gencode arch=compute_20,code=sm_20 -Xptxas="-v" 
+CUDADEBUGFLAGS= -Xcompiler -Wall -m64 -G -g -gencode arch=compute_$(NARCH),code=sm_$(NARCH) -Xptxas="-v" 
 PROFILINGFLAGS= -pg
 RELEASEFLAGS= -O3
 

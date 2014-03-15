@@ -26,8 +26,15 @@ class Image {
 		void computeImageFiltering();
 		void computeGradientVectorFlow();
 		
+		bool compareDataOrder(string const & str1, string const & str2);
+		
 		static void displayImage(Mat &m);
-		static bool compareDataOrder(string const &str1, string const &str2);
+		static void displayQTImage(Mat &m);
 
 		static void filter1D(float *data, int nData, int size, float sigma);
+	
+		enum SliceAxe {AXE_X, AXE_Y, AXE_Z};
+		static void generateParellelSlices(unsigned char *data, unsigned int nSlices,
+				unsigned int gridWidth, unsigned int gridHeight, unsigned int gridLength,
+				SliceAxe axe = AXE_X, unsigned int pixelSize = 1);
 };

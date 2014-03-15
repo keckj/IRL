@@ -15,6 +15,7 @@
 #include <fstream>
 #include <dirent.h>
 #include <opencv/cv.h>
+#include <QtGui>
 
 using namespace cv;
 using namespace std;
@@ -321,3 +322,58 @@ void Image::filter1D(float *data, int nData, int size, float sigma) {
 	
 }
 
+void Image::generateParellelSlices(unsigned char *data, unsigned int nSlices,
+		unsigned int gridWidth, unsigned int gridHeight, unsigned int gridLength,
+		SliceAxe axe, unsigned int voxelSize) {
+
+	
+	unsigned int sliceWidth=0, sliceHeight=0, maxSlices=0;
+
+	switch(axe) {
+		case(AXE_X):
+			sliceWidth = gridHeight;
+			sliceHeight = gridLength;
+			maxSlices = gridWidth;
+			break;
+		case(AXE_Y):
+			sliceWidth = gridLength;
+			sliceHeight = gridWidth;
+			maxSlices = gridHeight;
+			break;
+		case(AXE_Z):
+			sliceWidth = gridWidth;
+			sliceHeight = gridHeight;
+			maxSlices = gridLength;
+			break;
+	}
+
+	cout << "nSlices => " << nSlices << "\t maxSlices => " << maxSlices << endl;
+	assert(nSlices <= maxSlices);
+
+	unsigned int step = maxSlices/nSlices;
+
+	Mat img;
+	for (unsigned int k= 0; k < nSlices; k++) {
+		img.create(sliceHeight*voxelSize, sliceWidth*voxelSize, CV_8UC1);	
+		for (unsigned int i = 0; i < sliceWidth; i++) {
+			for (unsigned int j = 0; j < sliceHeight; j++) {
+				for (unsigned int m = 0; m < voxelSize; m++) {
+					for (unsigned int n = 0; n < voxelSize; n++) {
+						img.at<unsigned char>(j*voxelSize+n,i*voxelSize+m) = data[k*step*gridWidth*gridHeight + i*gridWidth + j];
+					}
+				}
+			}
+		}
+		displayQTImage(img);
+	}
+
+
+
+}
+
+void Image::displayQTImage(Mat &m) {
+     QWidget window;
+     window.resize(800, 600);
+     window.show();
+     window.setWindowTitle("test");
+}

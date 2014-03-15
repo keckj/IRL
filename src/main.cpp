@@ -4,11 +4,16 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <thread>
+
 #include "cuda.h"
 #include "cuda_runtime.h"
 
 #include <QApplication>
 #include <QWidget>
+#include <QtGui>
+#include <X11/Xlib.h>
+
 #include "utils/log.hpp"
 #include "utils/cudaUtils.hpp"
 #include "image/image.hpp"
@@ -17,6 +22,7 @@
 #include "viewer/voxelRenderer.hpp"
 #include "viewer/boundingBox.hpp"
 #include "viewer/rectangle.hpp"
+#include "qtgui/mainWindow.hpp"
 #include "kernels/kernels.hpp"
 
 
@@ -27,6 +33,7 @@ using namespace kernel;
 int main( int argc, char** argv)
 {
 	initLogs();
+	XInitThreads();
 
 
 	//default values
@@ -235,8 +242,9 @@ int main( int argc, char** argv)
 	
 	//allocate voxels
 	log_console.info("Allocating voxel grid to GPU...");
-	unsigned char *voxel_data_d;
+	unsigned char *voxel_data_d, *voxel_data_h;
 	CHECK_CUDA_ERRORS(cudaMalloc((void**) &voxel_data_d, gridSize*sizeof(unsigned char)));
+	CHECK_CUDA_ERRORS(cudaMallocHost((void**) &voxel_data_h, gridSize*sizeof(unsigned char)));
 	
 	//allocate hit counter
 	log_console.info("Allocating hit counter to GPU...");
@@ -262,6 +270,10 @@ int main( int argc, char** argv)
 	
 
 	cudaDeviceSynchronize();
+
+	//TODO remove
+	CHECK_CUDA_ERRORS(cudaMemcpy(voxel_data_h, voxel_data_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+	
 
 	//copy back hit counter
 	log_console.info("Done. Copying hit counter data back to RAM...");
@@ -293,43 +305,11 @@ int main( int argc, char** argv)
 
 
 	log_console.info("Launching voxel engine...");
-	QApplication application(argc,argv);
-
-
-	VoxelRenderer *VR = new VoxelRenderer(
-			voxelGridWidth, voxelGridHeight, voxelGridLength, 
-			voxel_data_d,
-			0.01*deltaGrid, 0.01*deltaGrid, 0.01*deltaGrid, false, viewerThreshold);
-
-	BoundingBox *BB = new BoundingBox(voxelGridWidth, voxelGridHeight, voxelGridLength, 0.01*deltaGrid);
-
-	const float blue[] = {0.0f,0.0f,1.0f};
-	const float green[] = {0.0f,1.0f,0.0f};
-	const float red[] = {1.0f,0.0f,0.0f};
-	const float origin[] = {-xMin, -yMin, -zMin};
-
-	float *vec = new float[3];
-	float *rot = new float[9];
-	for (int i = 0; i < 3; i++) vec[i] = offsets_h[i][0] + origin[i];
-	for (int i = 0; i < 9; i++) rot[i] = rotations_h[i][0];
-	const float *cvec = vec;
-	const float *crot = rot;
-
-	Rectangle *rect = new Rectangle(imgRealWidth,imgRealHeight,cvec, crot ,&red[0], 0.01*deltaGrid, 0.0f);//-deltaGrid/2.0);
-
-	log_console.info("Computing geometry...");
-	VR->computeGeometry();
 	
-	log_console.info("Done!");
-
-	Viewer viewer;
-	viewer.addRenderable(VR);
-	viewer.addRenderable(BB);
-	viewer.addRenderable(rect);
-	viewer.setWindowTitle("viewer");
-	viewer.show();
+	
+	QApplication application(argc,argv);
+	MainWindow *mainWindow = new MainWindow(0,0,0);
 	application.exec();
-
 
 	return EXIT_SUCCESS;
 }
