@@ -1,4 +1,9 @@
 
+#Makefile @Darkvador
+#NARCH 20
+#MAKE=make
+
+#Makefile @Poulpy
 NARCH=30
 MAKE=colormake
 
