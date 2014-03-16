@@ -10,6 +10,7 @@
 #ifndef _VIEWER_
 #define _VIEWER_
 
+#include <QWidget>
 #include <QGLViewer/qglviewer.h>
 #include <list>
 using namespace std;
@@ -21,7 +22,7 @@ class Viewer : public QGLViewer
 {
 	public :
 	        
-		Viewer();
+		Viewer(QWidget *parent = 0);
 		virtual ~Viewer();
 		void addRenderable(Renderable *r);
 

@@ -25,6 +25,8 @@ VoxelRenderer::VoxelRenderer(
 #endif
 	
 	log_console.infoStream() << "Current threshold set to " << (unsigned int) threshold << " !";
+
+	computeGeometry();
 }
 
 void VoxelRenderer::draw() {
@@ -54,17 +56,6 @@ void VoxelRenderer::draw() {
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 		
-	
-	//glBegin(GL_QUADS);
-		//for (unsigned int i = 0; i < nQuads; i++) {
-			//glNormal3f(normals[3*i], normals[3*i+1], normals[3*i+2]);
-			//glColor3f(colors[3*i], colors[3*i+1], colors[3*i+2]);
-			//for (int j = 0; j < 4; j++) {
-				//glVertex3f(quads[12*i+3*j], quads[12*i+3*j+1], quads[12*i+3*j+2]);
-			//}
-		//}
-		//glEnd();
-
 }
 
 bool inline VoxelRenderer::isVisible(unsigned char voxel) {
@@ -132,6 +123,7 @@ void VoxelRenderer::computeGeometry() {
 	cudaFreeHost(quads);
 	cudaFreeHost(colors);
 	cudaFreeHost(normals);
+	
 	
 	nQuads = kernel::computeQuads(
 			&quads, &normals, &colors, 

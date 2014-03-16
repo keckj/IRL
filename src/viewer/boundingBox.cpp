@@ -1,4 +1,5 @@
 #include "boundingBox.hpp"
+#include <iostream>
 
 BoundingBox::BoundingBox(unsigned int gridWidth, unsigned int gridHeight,
 			unsigned int gridLength, float deltaG)

@@ -11,7 +11,6 @@ class VoxelRenderer : public Renderable
 {
 	public:
 
-
 		VoxelRenderer( 
 				unsigned int width, unsigned int height, unsigned int length, 
 				unsigned char *data,

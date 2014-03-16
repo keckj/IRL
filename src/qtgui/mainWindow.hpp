@@ -3,30 +3,24 @@
 
 #include <QtGui>
 #include <QGLWidget>
-#include <QGLViewer/qglviewer.h>
-#include "grid/voxelGrid.hpp"
 
 #include "qtgui/menuBar.hpp"
 #include "qtgui/statusBar.hpp"
+#include "qtgui/sidePanel.hpp"
+#include "qtgui/voxelViewer.hpp"
 
 class MainWindow : public QMainWindow {
 	
 	public:
-		MainWindow(const VoxelGrid *v, 
-				bool drawVoxels = true, unsigned char viewerThreshold = 127);
+		MainWindow();
 		~MainWindow();
 
 	private:
-		const VoxelGrid *voxelGrid;
-
-		QWidget *central, *test;
-		QGLViewer *viewer;
-		QSplitter *layout;
+		QSplitter *slider;
+		VoxelViewer *voxelViewer;
+		SidePanel *sidePanel;
 		MenuBar *menuBar;
 		StatusBar *statusBar;
-
-		bool drawVoxels;
-		unsigned char viewerThreshold;
 
 		void keyPressEvent(QKeyEvent *k);
 };

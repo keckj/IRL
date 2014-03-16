@@ -4,13 +4,15 @@
 class VoxelGrid {
 public:
 	
-	explicit VoxelGrid(unsigned char *gridData,
+	explicit VoxelGrid(unsigned char *gridData_h, 
+			unsigned char *gridData_d,
 			const float gridRealWidth, 
 			const float gridRealHeight, 
 			const float gridRealLength, 
 			const float deltaGrid);
 	
-	explicit VoxelGrid(unsigned char *gridData,
+	explicit VoxelGrid(unsigned char *gridData_h,
+			unsigned char *gridData_d,
 			const unsigned int gridWidth, 
 			const unsigned int gridHeight, 
 			const unsigned int gridLength, 
@@ -21,11 +23,13 @@ public:
 	unsigned int width() const;
 	unsigned int height() const;
 	unsigned int length() const;
-	unsigned int voxelSize() const;
+	float voxelSize() const;
 	unsigned int dataSize() const;
+	unsigned char *dataHost() const;
+	unsigned char *dataDevice() const;
 
 private:
-	unsigned char *gridData;
+	unsigned char *gridData_h, *gridData_d;
 	const unsigned int gridWidth, gridHeight, gridLength;
 	const float deltaGrid;
 };

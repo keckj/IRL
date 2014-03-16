@@ -1,56 +1,42 @@
-#include "qtgui/mainWindow.hpp"
 #include <QKeyEvent>
 #include <QStatusBar>
 
-MainWindow::MainWindow(
-		const VoxelGrid *voxelGrid,
-		bool drawVoxels, 
-		unsigned char viewerThreshold) :
-	QMainWindow(0), 
-	voxelGrid(voxelGrid),
-	drawVoxels(drawVoxels), 
-	viewerThreshold(viewerThreshold) {
+#include "qtgui/mainWindow.hpp"
+#include "qtgui/globalGuiVars.hpp"
+
+MainWindow::MainWindow() :
+slider(0), voxelViewer(0), sidePanel(0), menuBar(0), statusBar(0)
+{
 	
 		QDesktopWidget widget;
 		QRect mainScreenSize = widget.availableGeometry(widget.primaryScreen());
 
+		this->setWindowTitle("Voxel Engine v1.2");
+		this->resize(mainScreenSize.width(),mainScreenSize.height());
+		this->setStyleSheet("QMainWindow { background-color: white; }");
+		this->setAutoFillBackground(true);
+		
 		menuBar = new MenuBar(this);
 		this->setMenuBar(menuBar);
 
 		statusBar = new StatusBar(this);
 		this->setStatusBar(statusBar);
 
-
-		this->setWindowTitle("Poulpy");
-		this->resize(mainScreenSize.width(),mainScreenSize.height());
-		this->setStyleSheet("QMainWindow { background-color: white; }");
-		this->setAutoFillBackground(true);
-
-
-		layout = new QSplitter(Qt::Horizontal, this);
+		slider = new QSplitter(Qt::Horizontal, this);
 		
-		test = new QWidget(layout);
-		test->resize(100,600);
-		test->setStyleSheet("QWidget {background-color: red;}");
-		test->setAutoFillBackground(true);
+		voxelViewer = new VoxelViewer(0.001, slider);
+		sidePanel = new SidePanel(slider);
 
-		viewer = new QGLViewer(layout);
+		slider->addWidget(voxelViewer);
+		slider->addWidget(sidePanel);
+		slider->setStretchFactor(0,2);
+		slider->setStretchFactor(1,5);
 
-		layout->addWidget(viewer);
-		layout->addWidget(test);
-		layout->setStretchFactor(0,2);
-		layout->setStretchFactor(1,5);
-
-		setCentralWidget(layout);
-
-		show();
+		this->setCentralWidget(slider);
+		this->show();
 	}
 
 MainWindow::~MainWindow() {
-	delete test;
-	delete viewer;
-	delete central;
-	delete layout;
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *k) {

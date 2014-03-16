@@ -9,21 +9,17 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 
-#include <QApplication>
 #include <QWidget>
 #include <QtGui>
 #include <X11/Xlib.h>
 
+#include "kernels/kernels.hpp"
 #include "utils/log.hpp"
 #include "utils/cudaUtils.hpp"
 #include "image/image.hpp"
 #include "image/LocalizedUSImage.hpp"
-#include "viewer/viewer.h"
-#include "viewer/voxelRenderer.hpp"
-#include "viewer/boundingBox.hpp"
-#include "viewer/rectangle.hpp"
-#include "qtgui/mainWindow.hpp"
-#include "kernels/kernels.hpp"
+#include "qtgui/mainApplication.hpp"
+#include "grid/voxelGrid.hpp"
 
 
 using namespace std;
@@ -303,15 +299,11 @@ int main( int argc, char** argv)
 	CHECK_CUDA_ERRORS(cudaFree(hit_counter_d));
 	CHECK_CUDA_ERRORS(cudaFreeHost(hit_counter_h));
 
+	VoxelGrid grid(voxel_data_h, voxel_data_d, voxelGridWidth, voxelGridHeight, voxelGridLength, deltaGrid);
 
-	log_console.info("Launching voxel engine...");
-	
-	
-	QApplication application(argc,argv);
-	MainWindow *mainWindow = new MainWindow(0,0,0);
-	application.exec();
-
-	return EXIT_SUCCESS;
+	log_console.info("Launching gui...");
+	MainApplication mainApplication(&grid,true,127);	
+	return mainApplication.exec();
 }
 
 	//////////////////////////////////////////////////

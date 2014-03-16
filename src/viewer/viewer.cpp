@@ -9,15 +9,11 @@
 #include "viewer.h"
 #include "renderable.h"
 
-Viewer::Viewer() {
+Viewer::Viewer(QWidget *parent) : QGLViewer(parent)  {
 }
 
 Viewer::~Viewer()
 {
-	list<Renderable *>::iterator it;
-	for (it = renderableList.begin(); it != renderableList.end(); ++it) {
- 		delete(*it);
-	}
 	renderableList.clear();
 }
 
@@ -28,9 +24,6 @@ void Viewer::addRenderable(Renderable *r)
 
 void Viewer::init()
 {
-        // glut initialisation (mandatory) 
-        //int dum;
-      //glutInit(&dum, NULL);
 
 	//=== VIEWING PARAMETERS
 	restoreStateFromFile();   // Restore previous viewer state.
