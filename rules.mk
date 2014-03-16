@@ -5,7 +5,6 @@ not_containing = $(foreach v,$2,$(if $(findstring $1,$v),,$v))
 subdirs = $(shell find $1 -type d)
 
 # Règles
-all: create_dirs $(TARGET)
 
 ifeq ($(LINK), NVCC)
 debug: LINKFLAGS = $(CUDADEBUGFLAGS) 
@@ -30,26 +29,34 @@ release: CFLAGS += $(RELEASEFLAGS)
 release: CXXFLAGS += $(RELEASEFLAGS)
 release: all
 
-$(TARGET): $(OBJ)
+all: create_dirs
+	$(MAKE) $(TARGET)
+
+$(TARGET): $(MOCOUTPUT) $(OBJ)
 	@echo
 	@echo
-	$(LINK) $(LIBS) $^ -o $@ $(LDFLAGS) $(LINKFLAGS) $(DEFINES)
+	-$(LINK) $(LIBS) $(OBJ) -o $@ $(LDFLAGS) $(LINKFLAGS) $(DEFINES)
 	@echo
+
+#QT macro preprocessor
+$(SRCDIR)%.moc : $(SRCDIR)%.hpp
+	@echo
+	$(MOC) $(INCLUDE) $(DEFINES) -o $@ -i $^ $(MOCFLAGS)
+################
 
 
 $(OBJDIR)%.o : $(SRCDIR)%.c
+	-$(CC) $(INCLUDE) -o $@ -c $^ $(CFLAGS) $(DEFINES)
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
-
 $(OBJDIR)%.o : $(SRCDIR)%.C 
+	-$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 $(OBJDIR)%.o : $(SRCDIR)%.cc 
+	-$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 $(OBJDIR)%.o : $(SRCDIR)%.cpp 
+	-$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 	@echo
-	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 
 $(OBJDIR)%.o : $(SRCDIR)%.s
 	@echo
@@ -68,10 +75,10 @@ $(OBJDIR)%.o: $(SRCDIR)%.cu
 
 # "-" pour enlever les messages d'erreurs
 # "@" pour silent
-.PHONY: clean cleanall create_dirs
+.PHONY: clean cleanall create_dirs all
 
 clean:
-	-@rm -f $(OBJ)
+	-@rm -f $(OBJ) 
 
 cleanall:
 	-@rm -rf $(TARGET) $(TARGET).out $(OBJDIR)

@@ -2,10 +2,17 @@
 #define SIDEPANEL_H
 
 #include <QWidget>
+#include <QSlider>
+#include <QBoxLayout>
 
 class SidePanel : public QWidget {
+	Q_OBJECT
+
 	public:
 		SidePanel(QWidget *parent = 0);
+		~SidePanel();
+	private slots:
+		void sliderUpdate(int value);
 
 };
 
