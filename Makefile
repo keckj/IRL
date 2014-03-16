@@ -43,6 +43,7 @@ CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
 
 CXX=g++
 CXXFLAGS= -W -Wall -Wextra -pedantic -std=c++11 -m64
+#-Wshadow -Wstrict-aliasing -Weffc++ -Werror
 
 NVCC=nvcc
 NVCCFLAGS= -Xcompiler -Wall -m64 -gencode arch=compute_$(NARCH),code=sm_$(NARCH) -O3
