@@ -10,10 +10,20 @@
 #include "viewer/boundingBox.hpp"
 
 class VoxelViewer : public Viewer {
+	Q_OBJECT
 
 	public:
 		VoxelViewer(float alpha, QWidget *parent = 0);
 		~VoxelViewer();
+		
+		void keyPressEvent(QKeyEvent*);
+	
+	signals:
+		void updateThreshold();
+		void childKeyEvent(QKeyEvent *keyEvent);
+
+	public slots:
+		void drawVoxels();
 
 	private:
 
@@ -21,7 +31,6 @@ class VoxelViewer : public Viewer {
 		VoxelRenderer *voxelRenderer;
 		BoundingBox *boundingBox;
 
-		
 
 
 };

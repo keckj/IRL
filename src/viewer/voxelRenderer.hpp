@@ -15,21 +15,19 @@ class VoxelRenderer : public Renderable
 				unsigned int width, unsigned int height, unsigned int length, 
 				unsigned char *data,
 				float cube_w, float cube_h, float cube_d, 
-				bool drawGrid, unsigned char threshold);
+				bool *drawGrid, bool *drawGridOnce, unsigned char *threshold);
 
 
 		void computeGeometry();
 		void draw();
 	
-	
-		void keyPressEvent(QKeyEvent*, Viewer&);
 
 	private:
 		unsigned int width, height, length;
 		unsigned char *data;
 		float cube_w, cube_h, cube_d;
-		bool drawGrid;
-		unsigned char threshold;
+		bool &drawGrid, &drawGridOnce;
+		unsigned char &threshold;
 
 		unsigned int nQuads;
 		GLfloat *quads, *normals, *colors;

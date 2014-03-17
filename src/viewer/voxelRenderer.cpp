@@ -12,10 +12,10 @@ VoxelRenderer::VoxelRenderer(
 		unsigned int width, unsigned int height, unsigned int length, 
 		unsigned char *data,
 		float cube_w, float cube_h, float cube_d, 
-		bool drawGrid, unsigned char threshold) 
+		bool *drawGrid, bool *drawGridOnce, unsigned char *threshold) 
 :	width(width), height(height), length(length), data(data),
 	cube_w(cube_w), cube_h(cube_h), cube_d(cube_d), 
-	drawGrid(drawGrid), threshold(threshold),
+	drawGrid(*drawGrid), drawGridOnce(*drawGridOnce), threshold(*threshold),
 	nQuads(0), quads(0), normals(0), colors(0)
 {
 #ifdef _CUDA_VIEWER
@@ -23,21 +23,17 @@ VoxelRenderer::VoxelRenderer(
 #else
 	log_console.info("Created a CPU Voxel Renderer !");
 #endif
-	
-	log_console.infoStream() << "Current threshold set to " << (unsigned int) threshold << " !";
+
+	log_console.infoStream() << "Current threshold set to " << (unsigned int &) threshold << " !";
 
 	computeGeometry();
 }
 
 void VoxelRenderer::draw() {
 
-	//draw grid
-	if(drawGrid) {
-		drawWireFrame();
-	}
-
+	//draw computed grid
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
-	
+
 	// activate the use of GL_VERTEX_ARRAY, GL_NORMAL_ARRAY and GL_COLOR_ARRAY
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -47,7 +43,7 @@ void VoxelRenderer::draw() {
 	glNormalPointer(GL_FLOAT, 0, normals);
 	glVertexPointer(3, GL_FLOAT, 0 , quads);
 	glColorPointer(3, GL_FLOAT, 0 , colors);
-	
+
 	//draw quads
 	glDrawArrays(GL_QUADS, 0, 4*nQuads);
 
@@ -55,7 +51,7 @@ void VoxelRenderer::draw() {
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
-		
+
 }
 
 bool inline VoxelRenderer::isVisible(unsigned char voxel) {
@@ -118,34 +114,38 @@ void VoxelRenderer::drawWireFrame() {
 
 void VoxelRenderer::computeGeometry() {
 
-//CUDA based quad generation
-#ifdef _CUDA_VIEWER
-	cudaFreeHost(quads);
-	cudaFreeHost(colors);
-	cudaFreeHost(normals);
-	
-	
-	nQuads = kernel::computeQuads(
-			&quads, &normals, &colors, 
-			data,
-			width, height, length,
-			cube_w, cube_h, cube_d,
-			threshold,
-			kernel::NORMAL_PER_VERTEX, kernel::COLOR_PER_VERTEX);
+	if(drawGrid || drawGridOnce)  {
+		drawGridOnce = false;
 
-//CPU based quad generation
+		//CUDA based quad generation
+#ifdef _CUDA_VIEWER
+		cudaFreeHost(quads);
+		cudaFreeHost(colors);
+		cudaFreeHost(normals);
+
+
+		nQuads = kernel::computeQuads(
+				&quads, &normals, &colors, 
+				data,
+				width, height, length,
+				cube_w, cube_h, cube_d,
+				threshold,
+				kernel::NORMAL_PER_VERTEX, kernel::COLOR_PER_VERTEX);
+
+		//CPU based quad generation
 #else
-	delete [] quads;
-	delete [] normals;
-	delete [] colors;
-	nQuads = countQuads();
-	quads = new GLfloat[3*4*nQuads];
-	normals = new GLfloat[3*nQuads];
-	colors = new GLfloat[3*nQuads];
-	computeQuadsAndNormals();
+		delete [] quads;
+		delete [] normals;
+		delete [] colors;
+		nQuads = countQuads();
+		quads = new GLfloat[3*4*nQuads];
+		normals = new GLfloat[3*nQuads];
+		colors = new GLfloat[3*nQuads];
+		computeQuadsAndNormals();
 #endif
-	
-	log_console.infoStream() << "Computed " << nQuads << " quads !";
+
+		log_console.infoStream() << "Computed " << nQuads << " quads !";
+	}
 }
 
 
@@ -333,21 +333,4 @@ void VoxelRenderer::writeVect(GLfloat *array, unsigned int offset, GLfloat x, GL
 	array[tmp++] = y;
 	array[tmp++] = z;
 }
-		
-void VoxelRenderer::keyPressEvent(QKeyEvent* keyEvent, Viewer& viewer) {
-	switch(keyEvent->key()) {
-		case(Qt::Key_Minus): {
-			threshold = (threshold > 245 ? 255 : threshold + 10);
-			log_console.infoStream() << "Current threshold set to " << (unsigned int) threshold << " !";
-			computeGeometry();
-			break;
-		}
 
-		case(Qt::Key_Plus): {
-			threshold = (threshold < 10 ? 0 : threshold - 10);
-			log_console.infoStream() << "Current threshold set to " << (unsigned int) threshold << " !";
-			computeGeometry();
-			break;
-		}
-	}
-}

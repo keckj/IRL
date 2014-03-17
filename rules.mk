@@ -35,7 +35,7 @@ all: create_dirs
 $(TARGET): $(MOCOUTPUT) $(OBJ)
 	@echo
 	@echo
-	-$(LINK) $(LIBS) $(OBJ) -o $@ $(LDFLAGS) $(LINKFLAGS) $(DEFINES)
+	$(LINK) $(LIBS) $(OBJ) -o $@ $(LDFLAGS) $(LINKFLAGS) $(DEFINES)
 	@echo
 
 #QT macro preprocessor
@@ -46,16 +46,16 @@ $(SRCDIR)%.moc : $(SRCDIR)%.hpp
 
 
 $(OBJDIR)%.o : $(SRCDIR)%.c
-	-$(CC) $(INCLUDE) -o $@ -c $^ $(CFLAGS) $(DEFINES)
+	$(CC) $(INCLUDE) -o $@ -c $^ $(CFLAGS) $(DEFINES)
 	@echo
 $(OBJDIR)%.o : $(SRCDIR)%.C 
-	-$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
+	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 	@echo
 $(OBJDIR)%.o : $(SRCDIR)%.cc 
-	-$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
+	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 	@echo
 $(OBJDIR)%.o : $(SRCDIR)%.cpp 
-	-$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
+	$(CXX) $(INCLUDE) -o $@ -c $^ $(CXXFLAGS) $(DEFINES)
 	@echo
 
 $(OBJDIR)%.o : $(SRCDIR)%.s

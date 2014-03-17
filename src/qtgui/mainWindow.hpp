@@ -10,6 +10,7 @@
 #include "qtgui/voxelViewer.hpp"
 
 class MainWindow : public QMainWindow {
+	Q_OBJECT
 	
 	public:
 		MainWindow();
@@ -23,6 +24,9 @@ class MainWindow : public QMainWindow {
 		StatusBar *statusBar;
 
 		void keyPressEvent(QKeyEvent *k);
+	
+	private slots:
+		void childKeyEvent(QKeyEvent *k);
 };
 
 #endif /* end of include guard: MAINWINDOW_H */

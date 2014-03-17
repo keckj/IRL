@@ -29,8 +29,7 @@ void Viewer::init()
 	restoreStateFromFile();   // Restore previous viewer state.
 
 	toogleWireframe = false;  // filled faces
-	toogleLight = true;       // light on
-	help();                   // display help
+	toogleLight = false;       // light on
 
 	if (toogleLight == true)
 		glEnable(GL_LIGHTING);

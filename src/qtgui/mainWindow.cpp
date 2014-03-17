@@ -2,11 +2,14 @@
 #include <QStatusBar>
 
 #include "qtgui/mainWindow.hpp"
+#include "qtgui/mainWindow.moc"
 #include "qtgui/globalGuiVars.hpp"
+
 
 MainWindow::MainWindow() :
 slider(0), voxelViewer(0), sidePanel(0), menuBar(0), statusBar(0)
 {
+		qtgui::mainWindow = this;
 	
 		QDesktopWidget widget;
 		QRect mainScreenSize = widget.availableGeometry(widget.primaryScreen());
@@ -27,10 +30,15 @@ slider(0), voxelViewer(0), sidePanel(0), menuBar(0), statusBar(0)
 		voxelViewer = new VoxelViewer(0.001, slider);
 		sidePanel = new SidePanel(slider);
 
+		connect(voxelViewer, SIGNAL(updateThreshold()), sidePanel, SLOT(updateThreshold()));
+		connect(sidePanel, SIGNAL(drawVoxels()), voxelViewer, SLOT(drawVoxels()));
+		
+		connect(voxelViewer, SIGNAL(childKeyEvent(QKeyEvent *)), this, SLOT(childKeyEvent(QKeyEvent *)));
+
 		slider->addWidget(voxelViewer);
 		slider->addWidget(sidePanel);
-		slider->setStretchFactor(0,2);
-		slider->setStretchFactor(1,5);
+		slider->setStretchFactor(0,6);
+		slider->setStretchFactor(1,3);
 
 		this->setCentralWidget(slider);
 		this->show();
@@ -47,4 +55,8 @@ void MainWindow::keyPressEvent(QKeyEvent *k) {
 			break;
 		
 	}
+}
+		
+void MainWindow::childKeyEvent(QKeyEvent *k) {
+	keyPressEvent(k);
 }
