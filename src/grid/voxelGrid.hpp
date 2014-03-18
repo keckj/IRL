@@ -28,6 +28,8 @@ public:
 	unsigned char *dataHost() const;
 	unsigned char *dataDevice() const;
 
+	unsigned char operator()(unsigned int i, unsigned int j, unsigned int k);
+
 private:
 	unsigned char *gridData_h, *gridData_d;
 	const unsigned int gridWidth, gridHeight, gridLength;

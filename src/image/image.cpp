@@ -322,53 +322,48 @@ void Image::filter1D(float *data, int nData, int size, float sigma) {
 	
 }
 
-void Image::generateParellelSlices(unsigned char *data, unsigned int nSlices,
-		unsigned int gridWidth, unsigned int gridHeight, unsigned int gridLength,
-		SliceAxe axe, unsigned int voxelSize) {
+QImage *Image::generateParallelSlice(unsigned int nSlice,
+		VoxelGrid &grid, SliceAxe axe) {
 
 	
-	unsigned int sliceWidth=0, sliceHeight=0, maxSlices=0;
+	unsigned int sliceWidth=0, sliceHeight=0;
 
 	switch(axe) {
 		case(AXE_X):
-			sliceWidth = gridHeight;
-			sliceHeight = gridLength;
-			maxSlices = gridWidth;
+			sliceWidth = grid.height();
+			sliceHeight = grid.length();
 			break;
 		case(AXE_Y):
-			sliceWidth = gridLength;
-			sliceHeight = gridWidth;
-			maxSlices = gridHeight;
+			sliceWidth = grid.length();
+			sliceHeight = grid.width();
 			break;
 		case(AXE_Z):
-			sliceWidth = gridWidth;
-			sliceHeight = gridHeight;
-			maxSlices = gridLength;
+			sliceWidth = grid.width();
+			sliceHeight = grid.height();
+			//return new QImage(grid.dataHost() + sliceWidth*sliceHeight*sizeof(unsigned char), sliceWidth, sliceHeight, sliceWidth, QImage::Format_Indexed8);
 			break;
 	}
 
-	cout << "nSlices => " << nSlices << "\t maxSlices => " << maxSlices << endl;
-	assert(nSlices <= maxSlices);
 
-	unsigned int step = maxSlices/nSlices;
+	unsigned char *data = new unsigned char[sliceWidth*sliceHeight];
 
-	Mat img;
-	for (unsigned int k= 0; k < nSlices; k++) {
-		img.create(sliceHeight*voxelSize, sliceWidth*voxelSize, CV_8UC1);	
-		for (unsigned int i = 0; i < sliceWidth; i++) {
-			for (unsigned int j = 0; j < sliceHeight; j++) {
-				for (unsigned int m = 0; m < voxelSize; m++) {
-					for (unsigned int n = 0; n < voxelSize; n++) {
-						img.at<unsigned char>(j*voxelSize+n,i*voxelSize+m) = data[k*step*gridWidth*gridHeight + i*gridWidth + j];
+	for (unsigned int i = 0; i < sliceHeight; i++) {
+		for (unsigned int j = 0; j < sliceWidth; j++) {
+					switch(axe) {
+						case(AXE_X):
+							data[i*sliceWidth+j] = grid(nSlice,j,i);
+							break;
+						case(AXE_Y):
+							data[i*sliceWidth+j] = grid(i,nSlice,j);
+							break;
+						case(AXE_Z):
+							data[i*sliceWidth+j] = grid(j,i,nSlice);
+							break;
 					}
-				}
-			}
 		}
-		displayQTImage(img);
 	}
 
-
-
+	return new QImage(data, sliceWidth, sliceHeight, sliceWidth, QImage::Format_Indexed8);
 }
 
 void Image::displayQTImage(Mat &m) {

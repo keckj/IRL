@@ -9,6 +9,10 @@
 #include <QComboBox>
 #include <QSlider>
 #include <QGroupBox>
+#include <QPixmap>
+#include <QImage>
+#include <QVector>
+#include <QRgb>
 
 class SidePanel : public QWidget {
 	Q_OBJECT
@@ -33,11 +37,21 @@ class SidePanel : public QWidget {
 	private:
 		QBoxLayout *layout, *renderLayout, *sliceLayout;
 		QGroupBox *renderGroupBox, *sliceGroupBox;
-		QLabel *thresholdLabel, *axeLabel, *currentSliceLabel;
+		QLabel *thresholdLabel, *axeLabel, *currentSliceLabel, *sliceLabel;
 		QSlider *thresholdSlider, *sliceSlider;
 		QPushButton *renderPushButton;
 		QCheckBox *realTimeRenderCheckBox;
 		QComboBox *axeComboBox;
+		QPixmap *slicePixMap;
+		QImage *sliceImage;
+
+		QVector<QRgb> grayScaleColorTable;
+
+		bool axeChanged;
+
+		void renderSlice();
+
+		void resizeEvent(QResizeEvent *event);
 
 };
 

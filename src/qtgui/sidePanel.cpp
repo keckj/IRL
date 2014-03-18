@@ -7,9 +7,14 @@
 #include <iostream>
 
 
-SidePanel::SidePanel(QWidget *parent) : QWidget(parent) {
+SidePanel::SidePanel(QWidget *parent) : QWidget(parent), sliceImage(0), axeChanged(false) {
 
 		qtgui::sidepanel::sidepanel = this;
+	
+		//colortable for grayscale img
+		for (int i = 0; i < 255; i++) {
+			grayScaleColorTable.push_back(qRgb(i,i,i));
+		}
 	
 		this->setStyleSheet("QWidget {background-color: white;}");
 		this->setAutoFillBackground(true);
@@ -48,6 +53,11 @@ SidePanel::SidePanel(QWidget *parent) : QWidget(parent) {
 		thresholdLabel = new QLabel();
 		currentSliceLabel = new QLabel();
 		axeLabel = new QLabel("Axe :");
+		sliceLabel = new QLabel();
+		sliceLabel->setMinimumHeight(400);
+		sliceLabel->setMinimumWidth(200);
+		sliceLabel->setScaledContents(true);
+		sliceLabel->setFixedSize(0,0);
 
 		//CheckBox
 		realTimeRenderCheckBox = new QCheckBox("Real time voxel rendering");
@@ -85,6 +95,9 @@ SidePanel::SidePanel(QWidget *parent) : QWidget(parent) {
 		sliceSlider->setTracking(true);
 		sliceSlider->setValue(0);
 		connect(sliceSlider, SIGNAL(valueChanged(int)), this, SLOT(sliceSliderUpdate(int)));
+
+		//QPixmap
+		slicePixMap = new QPixmap();
 		
 		//Layouts
 		layout = new QBoxLayout(QBoxLayout::TopToBottom, this);
@@ -108,6 +121,8 @@ SidePanel::SidePanel(QWidget *parent) : QWidget(parent) {
 		sliceLayout->addWidget(axeComboBox);
 		sliceLayout->addWidget(currentSliceLabel);
 		sliceLayout->addWidget(sliceSlider);
+		sliceLayout->addWidget(sliceLabel);
+		sliceLayout->setAlignment(sliceLabel, Qt::AlignHCenter);
 		
 		layout->setSpacing(50);
 		layout->addWidget(renderGroupBox);
@@ -119,6 +134,7 @@ SidePanel::SidePanel(QWidget *parent) : QWidget(parent) {
 		sliceSliderUpdate(0);
 		axeUpdate(0);
 		realTimeRenderUpdate(Qt::Checked);
+		renderSlice();
 }
 		
 SidePanel::~SidePanel() {
@@ -141,28 +157,31 @@ void SidePanel::sliceSliderUpdate(int value) {
 	sprintf(str, "Current slice : %i", value);
 	sliceSlider->setValue(value);
 	currentSliceLabel->setText(str);
+	renderSlice();
 }
 
 void SidePanel::axeUpdate(int axe_id) {
 	switch(axe_id) {
 		case 0:
 			qtgui::sidepanel::sliceAxe = Image::SliceAxe::AXE_X;
-			sliceSlider->setRange(0, qtgui::voxelGrid->width());
+			sliceSlider->setRange(0, qtgui::voxelGrid->width()-1);
 			sliceSlider->setValue(0);
 			break;
 		case 1:
 			qtgui::sidepanel::sliceAxe = Image::SliceAxe::AXE_Y;
-			sliceSlider->setRange(0, qtgui::voxelGrid->height());
+			sliceSlider->setRange(0, qtgui::voxelGrid->height()-1);
 			sliceSlider->setValue(0);
 			break;
 		case 2:
 			qtgui::sidepanel::sliceAxe = Image::SliceAxe::AXE_Z;
-			sliceSlider->setRange(0, qtgui::voxelGrid->length());
+			sliceSlider->setRange(0, qtgui::voxelGrid->length()-1);
 			sliceSlider->setValue(0);
 			break;
 		default:
 			assert(false);
 	}
+
+	renderSlice();
 }
 void SidePanel::realTimeRenderUpdate(int state) {
 	qtgui::viewer::drawViewerBool = (state == Qt::Checked);
@@ -179,4 +198,42 @@ void SidePanel::updateThreshold() {
 	sprintf(str, "Current voxel threshold : %i", qtgui::viewer::viewerThreshold);
 	thresholdSlider->setValue(qtgui::viewer::viewerThreshold);
 	thresholdLabel->setText(str);
+}
+
+void SidePanel::renderSlice() {
+	
+	if(sliceImage) {
+		delete sliceImage;
+	}
+	
+	sliceImage = Image::generateParallelSlice(
+				qtgui::sidepanel::sliceId, 
+				*qtgui::voxelGrid, 
+				qtgui::sidepanel::sliceAxe);
+	sliceImage->setColorCount(256);
+	sliceImage->setColorTable(grayScaleColorTable);
+	
+	slicePixMap->convertFromImage(*sliceImage);
+	resizeEvent(0);
+}
+
+void SidePanel::resizeEvent(QResizeEvent *event) {
+
+	unsigned int maxHeight = 0.6*this->height();
+	unsigned int maxWidth = 0.9*sliceGroupBox->width();
+	
+	float alpha_w = (float) (maxWidth)/slicePixMap->width();
+	float alpha_h = (float) (maxHeight)/slicePixMap->height();
+	
+	QPixmap pix;
+
+	if(alpha_w < alpha_h) {
+		pix = slicePixMap->scaledToWidth(maxWidth);
+	}
+	else {
+		pix = slicePixMap->scaledToHeight(maxHeight);
+	}
+
+	sliceLabel->setPixmap(pix);
+	sliceLabel->setFixedSize(pix.size());
 }

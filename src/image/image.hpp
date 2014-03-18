@@ -1,8 +1,10 @@
 #pragma once
+#include "grid/voxelGrid.hpp"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <list>
+#include <QImage>
 
 using namespace std;
 using namespace cv;
@@ -34,7 +36,6 @@ class Image {
 		static void filter1D(float *data, int nData, int size, float sigma);
 	
 		enum SliceAxe {AXE_X, AXE_Y, AXE_Z};
-		static void generateParellelSlices(unsigned char *data, unsigned int nSlices,
-				unsigned int gridWidth, unsigned int gridHeight, unsigned int gridLength,
-				SliceAxe axe = AXE_X, unsigned int pixelSize = 1);
+		static QImage *generateParallelSlice(unsigned int nSlice,
+							VoxelGrid &grid, SliceAxe axe);
 };

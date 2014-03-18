@@ -1,6 +1,8 @@
 
 #include "voxelGrid.hpp"
 #include <cmath>
+#include <cassert>
+#include <iostream>
 
 VoxelGrid::VoxelGrid(unsigned char *gridData_h,
 		unsigned char *gridData_d,
@@ -54,4 +56,12 @@ unsigned char *VoxelGrid::dataHost() const {
 }
 unsigned char *VoxelGrid::dataDevice() const {
 	return this->gridData_d;
+}
+	
+unsigned char VoxelGrid::operator()(unsigned int i, unsigned int j, unsigned int k) {
+	assert(i < gridWidth);
+	assert(j < gridHeight);
+	assert(k < gridLength);
+	
+	return gridData_h[k*gridWidth*gridHeight + j*gridWidth + i];
 }
