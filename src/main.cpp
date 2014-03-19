@@ -18,6 +18,7 @@
 #include "utils/cudaUtils.hpp"
 #include "image/image.hpp"
 #include "image/LocalizedUSImage.hpp"
+#include "image/MhdFile.hpp"
 #include "qtgui/mainApplication.hpp"
 #include "grid/voxelGrid.hpp"
 
@@ -30,6 +31,35 @@ int main( int argc, char** argv)
 {
 	initLogs();
 	XInitThreads();
+	
+	MhdFile test("data/irm_femur/","MRIm001_fine_registration_complete.mhd");
+	test.loadData();
+	cout << test << endl;
+
+	 //for (unsigned int i = 0; i < test.getLength(); i++) {
+		//Mat m(test.getHeight(), test.getWidth(), CV_16U, (signed short*) (test.getData()) +test.getWidth()*test.getHeight()*i);
+		//Image::displayImage(m);
+		//cvWaitKey(100);
+	 //}
+	
+	unsigned int height = test.getHeight(), width = test.getWidth(), length = test.getLength();
+	unsigned long size = height*width*length;
+	unsigned char *data = new unsigned char[size];
+	signed short *sdata = (signed short *) test.getData();
+
+	for (unsigned int i = 0; i < size; i++) {
+		data[i] = (signed char) (sdata[i]/127);
+	}
+	 
+	for (unsigned int i = 0; i < test.getLength(); i++) {
+		Mat m(test.getHeight(), test.getWidth(), CV_8U, data + test.getWidth()*test.getHeight()*i);
+		Image::displayImage(m);
+		cvWaitKey(100);
+	 }
+
+
+	return 0;
+
 
 
 	//default values
@@ -302,7 +332,7 @@ int main( int argc, char** argv)
 	VoxelGrid grid(voxel_data_h, voxel_data_d, voxelGridWidth, voxelGridHeight, voxelGridLength, deltaGrid);
 
 	log_console.info("Launching gui...");
-	MainApplication mainApplication(&grid,true,127);	
+	MainApplication mainApplication(&grid,true,viewerThreshold);	
 	return mainApplication.exec();
 }
 
