@@ -18,7 +18,7 @@ public:
 			const unsigned int gridLength, 
 			const float deltaGrid);
 	
-	~VoxelGrid ();
+	virtual ~VoxelGrid ();
 
 	unsigned int width() const;
 	unsigned int height() const;
@@ -30,7 +30,7 @@ public:
 
 	unsigned char operator()(unsigned int i, unsigned int j, unsigned int k);
 
-private:
+protected:
 	unsigned char *gridData_h, *gridData_d;
 	const unsigned int gridWidth, gridHeight, gridLength;
 	const float deltaGrid;

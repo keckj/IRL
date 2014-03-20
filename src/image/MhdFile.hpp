@@ -51,3 +51,4 @@ class MhdFile {
 std::ostream& operator<<(std::ostream& os, const MhdFile& obj);
 
 #endif /* end of include guard: MHDFILE_H */
+

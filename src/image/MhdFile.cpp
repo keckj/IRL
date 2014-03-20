@@ -159,7 +159,7 @@ void MhdFile::loadData() {
 
 	switch(elementType) {
 		case ElementType::MET_SHORT:
-			dataCharSize *= sizeof(short);
+			dataCharSize *= sizeof(signed short);
 			break;
 		case ElementType::MET_FLOAT:
 			dataCharSize *= sizeof(float);
@@ -296,3 +296,4 @@ unsigned long MhdFile::getSamplingFrequency() const {
 unsigned long MhdFile::getImagingFrequency() const {
 	return this->imagingFrequency;
 }
+
