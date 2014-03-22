@@ -12,8 +12,8 @@ CPUResource<T>(data, size, owner)
 
 template <typename T>
 PagedCPUResource<T>::~PagedCPUResource() {
-	if(this->_isOwner) {
-		delete [] this->_data;
+	if(this->_isCPUResource && this->_isOwner) {
+		CPUMemory::free<T>(this->_data, this->_size, false);
 	}
 }
 			

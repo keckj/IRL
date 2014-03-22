@@ -1,9 +1,11 @@
 
 #include <cassert>
 #include <iostream>
-#include "utils/cudaUtils.hpp"
 #include "cuda.h"
 #include "cuda_runtime.h"
+
+#include "utils/cudaUtils.hpp"
+#include "memoryManager/GPUMemory.hpp"
 
 template <typename T>
 GPUResource<T>::GPUResource() :
@@ -19,18 +21,8 @@ _data(data), _deviceId(deviceId), _size(size), _isOwner(owner), _isGPUResource(t
 
 template <typename T>
 GPUResource<T>::~GPUResource() {
-	if(_isOwner) {
-		int currentDevice;
-		CHECK_CUDA_ERRORS(cudaGetDevice(&currentDevice));
-		
-		if(currentDevice != _deviceId) {
-			CHECK_CUDA_ERRORS(cudaSetDevice(_deviceId));
-			CHECK_CUDA_ERRORS(cudaFree(_data));
-			CHECK_CUDA_ERRORS(cudaSetDevice(currentDevice));
-		}
-		else {
-			CHECK_CUDA_ERRORS(cudaFree(_data));
-		}
+	if(_isGPUResource && _isOwner) {
+		GPUMemory::free<T>(_data, _size, _deviceId);
 	}
 }
 

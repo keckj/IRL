@@ -15,7 +15,13 @@ T* GPUMemory::malloc(unsigned int nData, int deviceId) {
 
 template <typename T>
 void GPUMemory::free(T* data, unsigned int nData, int deviceId) {
+	int currentDevice;
+	CHECK_CUDA_ERRORS(cudaGetDevice(&currentDevice));
+
+	CHECK_CUDA_ERRORS(cudaSetDevice(deviceId));
 	CHECK_CUDA_ERRORS(cudaFree(data));
+	CHECK_CUDA_ERRORS(cudaSetDevice(currentDevice));
+
 	GPUMemory::_memoryLeft[deviceId] += nData*sizeof(T);
 }
 
