@@ -1,36 +1,49 @@
 
-#ifndef __CPU_MAX_MEMORY
-#define __CPU_MAX_MEMORY 16000000
+#ifndef __MIN_RUNTIME_MEMORY 
+#define __MIN_RUNTIME_MEMORY 200000000
 #endif
 
-#ifndef CPUMEMORY_H
-#define CPUMEMORY_H
+#include <ostream>
+#include <cassert>
+#include "cuda.h"
+#include "cuda_runtime.h"
 
-#include "CPUResource.hpp"
+#include "utils/cudaUtils.hpp"
 
-class CPUMemory {
+#ifndef GPUMEMORY_H
+#define GPUMEMORY_H
+
+class GPUMemory {
 	public:
-		static unsigned long memorySize(); //bytes
-		static unsigned long memoryLeft(); //bytes
+
+		static void init();
+
+		static unsigned long memorySize(int deviceId); //bytes
+		static unsigned long memoryLeft(int deviceId); //bytes
 
 		static bool canAllocateBytes(unsigned int nBytes);
 
 		template <typename T>
-		static bool canAllocate(unsigned int nData);
+		static bool canAllocate(unsigned int nData, int deviceId);
 
 		template <typename T>
-		static T *malloc(unsigned int nData, bool pinnedMemory=false);
+		static T *malloc(unsigned int nData, int deviceId);
 
 		template <typename T>
-		static void free(T *data, unsigned int nData, bool force=false);
+		static void free(T *data, unsigned int nData, int deviceId);
+
+		static void display(std::ostream &out);
 			
 
 	private:
-		CPUMemory();
-		static const unsigned long _memorySize;
-		static unsigned long _memoryLeft;
+		GPUMemory();
+		
+		static int _nDevice;
+		static const unsigned long * _memorySize;
+		static unsigned long * _memoryLeft;
+		static unsigned long * _memoryRuntime;
 };
 
-#include "CPUMemory.tpp"
+#include "GPUMemory.tpp"
 
-#endif /* end of include guard: CPUMEMORY_H */
+#endif /* end of include guard: GPUMEMORY_H */

@@ -1,7 +1,9 @@
-#pragma once
 
 #include <iostream>
 #include <string>
+
+#ifndef TYPES_H
+#define TYPES_H
 
 using namespace std;
 
@@ -26,3 +28,5 @@ string printVec4(vec4 v);
 
 string printMat3(mat3 m);
 string printMat4(mat4 m);
+
+#endif /* end of include guard: TYPES_H */

@@ -1,15 +1,17 @@
 
-#ifndef __CPU_MAX_MEMORY
-#define __CPU_MAX_MEMORY 16000000
+#ifndef __CPU_MIN_RESERVED_MEMORY
+#define __CPU_MIN_RESERVED_MEMORY 2000000000
 #endif
+
+#include <ostream>
 
 #ifndef CPUMEMORY_H
 #define CPUMEMORY_H
 
-#include "CPUResource.hpp"
-
 class CPUMemory {
 	public:
+		static void init();
+
 		static unsigned long memorySize(); //bytes
 		static unsigned long memoryLeft(); //bytes
 
@@ -23,11 +25,14 @@ class CPUMemory {
 
 		template <typename T>
 		static void free(T *data, unsigned int nData, bool force=false);
+
+		static void display(std::ostream &out);
 			
 
 	private:
 		CPUMemory();
-		static const unsigned long _memorySize;
+		static const volatile unsigned long _memorySize;
+		static const volatile unsigned long _memoryRuntime;
 		static unsigned long _memoryLeft;
 };
 

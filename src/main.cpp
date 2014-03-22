@@ -25,6 +25,8 @@
 #include "memoryManager/PinnedCPUResource.hpp"
 #include "memoryManager/PagedCPUResource.hpp"
 #include "memoryManager/GPUResource.hpp"
+#include "memoryManager/GPUMemory.hpp"
+#include "memoryManager/CPUMemory.hpp"
 
 using namespace std;
 using namespace cv;
@@ -34,6 +36,8 @@ int main( int argc, char** argv)
 {
 	initLogs();
 	XInitThreads();
+	GPUMemory::init();
+	CPUMemory::init();
 	
 	PagedCPUResource<double> test;
 	PagedCPUResource<float> test2((float*)malloc(3000), 3000,true);
@@ -44,36 +48,10 @@ int main( int argc, char** argv)
 
 	cout << test << endl << test2 << endl << test3 << endl;
 
+	GPUMemory::display(cout);
+	CPUMemory::display(cout);
+
 	return 0;
-	
-	//MhdFile test("data/irm_femur/","MRIm001_fine_registration_complete.mhd");
-	//test.loadData();
-	//cout << test << endl;
-
-	 //for (unsigned int i = 0; i < test.getLength(); i++) {
-		//Mat m(test.getHeight(), test.getWidth(), CV_16U, (signed short*) (test.getData()) +test.getWidth()*test.getHeight()*i);
-		//Image::displayImage(m);
-		//cvWaitKey(100);
-	 //}
-	
-	//unsigned int height = test.getHeight(), width = test.getWidth(), length = test.getLength();
-	//unsigned long size = height*width*length;
-	//unsigned char *data = new unsigned char[size];
-	//signed short *sdata = (signed short *) test.getData();
-
-	//for (unsigned int i = 0; i < size; i++) {
-		//data[i] = (signed char) (sdata[i]/127);
-	//}
-	 
-	//for (unsigned int i = 0; i < test.getLength(); i++) {
-		//Mat m(test.getHeight(), test.getWidth(), CV_8U, data + test.getWidth()*test.getHeight()*i);
-		//Image::displayImage(m);
-		//cvWaitKey(100);
-	 //}
-
-
-	//return 0;
-
 
 
 	//default values
@@ -424,3 +402,30 @@ int main( int argc, char** argv)
 	 //}
 	 //return 0;
 
+	//MhdFile test("data/irm_femur/","MRIm001_fine_registration_complete.mhd");
+	//test.loadData();
+	//cout << test << endl;
+
+	 //for (unsigned int i = 0; i < test.getLength(); i++) {
+		//Mat m(test.getHeight(), test.getWidth(), CV_16U, (signed short*) (test.getData()) +test.getWidth()*test.getHeight()*i);
+		//Image::displayImage(m);
+		//cvWaitKey(100);
+	 //}
+	
+	//unsigned int height = test.getHeight(), width = test.getWidth(), length = test.getLength();
+	//unsigned long size = height*width*length;
+	//unsigned char *data = new unsigned char[size];
+	//signed short *sdata = (signed short *) test.getData();
+
+	//for (unsigned int i = 0; i < size; i++) {
+		//data[i] = (signed char) (sdata[i]/127);
+	//}
+	 
+	//for (unsigned int i = 0; i < test.getLength(); i++) {
+		//Mat m(test.getHeight(), test.getWidth(), CV_8U, data + test.getWidth()*test.getHeight()*i);
+		//Image::displayImage(m);
+		//cvWaitKey(100);
+	 //}
+
+
+	//return 0;

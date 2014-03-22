@@ -1,36 +1,26 @@
 
+
 template <typename T>
-T* CPUMemory::malloc(unsigned int nData, bool pinnedMemory) {
+T* GPUMemory::malloc(unsigned int nData, int deviceId) {
 	
-	assert(CPUMemory::_memoryLeft >= nData * sizeof(T));
+	assert(GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
 
 	T *data;
-	if(pinnedMemory) {
-		CHECK_CUDA_ERRORS(cudaMallocHost(data, nData * sizeof(T)));
-	}
-	else {
-		data = new T[nData];		
-	}
+	CHECK_CUDA_ERRORS(cudaMalloc((void**) &data, nData * sizeof(T)));
 	
-	CPUMemory::_memoryLeft -= nData*sizeof(T);
+	GPUMemory::_memoryLeft[deviceId] -= nData*sizeof(T);
 
 	return data;
 }
 
 template <typename T>
-void CPUMemory::free(T* data, unsigned int nData, bool pinnedMemory) {
-	if(pinnedMemory) { 
-		CHECK_CUDA_ERRORS(cudaFreeHost(data));
-	}
-	else {
-		delete [] data;
-	}
-	
-	CPUMemory::_memoryLeft += nData*sizeof(T);
+void GPUMemory::free(T* data, unsigned int nData, int deviceId) {
+	CHECK_CUDA_ERRORS(cudaFree(data));
+	GPUMemory::_memoryLeft[deviceId] += nData*sizeof(T);
 }
 
 template <typename T>
-bool canAllocate(unsigned int nData) {
-	return (CPUMemory::_memoryLeft >= nData * sizeof(T));
+bool canAllocate(unsigned int nData, int deviceId) {
+	return (GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
 }
 
