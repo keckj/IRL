@@ -1,4 +1,6 @@
 
+#include "utils/cudaUtils.hpp"
+
 template <typename T>
 PinnedCPUResource<T>::PinnedCPUResource() : CPUResource<T>()
 {
@@ -13,7 +15,7 @@ CPUResource<T>(data, size, owner)
 template <typename T>
 PinnedCPUResource<T>::~PinnedCPUResource() {
 	if(this->_isOwner) {
-		cudaFreeHost(this->_data);
+		CHECK_CUDA_ERRORS(cudaFreeHost(this->_data));
 	}
 }
 			

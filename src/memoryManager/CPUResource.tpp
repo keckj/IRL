@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <typeinfo>
 
 template <typename T>
 CPUResource<T>::CPUResource() :
@@ -55,13 +56,13 @@ void CPUResource<T>::setData(T* data, unsigned int size, bool isOwner) {
 }
 
 template <typename T>
-ostream &operator<<(ostream &out, const CPUResource<T> &resource) {
-	out << "::CPURessource::" << endl;
-	out << "\t Is CPU Ressource : " << resource.isCPUResource() << endl;
-	out << "\t Ressource type : " << resource.getResourceType() << endl;
-	out << "\t Data : " << typeid(T).name() << endl;
-	out << "\t Size : " << resource.size() << endl;
-	out << "\t Bytes : " << resource.bytes() << endl;
+std::ostream &operator<<(std::ostream &out, const CPUResource<T> &resource) {
+	out << "::CPURessource::" << std::endl;
+	out << "\t Is CPU Ressource : " << resource.isCPUResource() << std::endl;
+	out << "\t Ressource type : " << resource.getResourceType() << std::endl;
+	out << "\t Data : " << typeid(T).name() << std::endl;
+	out << "\t Size : " << resource.size() << std::endl;
+	out << "\t Bytes : " << resource.bytes() << std::endl;
 
 	return out;
 }

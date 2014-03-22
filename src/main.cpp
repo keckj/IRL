@@ -24,6 +24,7 @@
 
 #include "memoryManager/PinnedCPUResource.hpp"
 #include "memoryManager/PagedCPUResource.hpp"
+#include "memoryManager/GPUResource.hpp"
 
 using namespace std;
 using namespace cv;
@@ -37,7 +38,11 @@ int main( int argc, char** argv)
 	PagedCPUResource<double> test;
 	PagedCPUResource<float> test2((float*)malloc(3000), 3000,true);
 
-	cout << test << endl << test2 << endl;
+	unsigned short *data;
+	cudaMalloc((void**) &data, 1000*sizeof(short));
+	GPUResource<unsigned short> test3(data, 1, 1000, true);
+
+	cout << test << endl << test2 << endl << test3 << endl;
 
 	return 0;
 	

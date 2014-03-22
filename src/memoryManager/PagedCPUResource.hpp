@@ -1,6 +1,12 @@
 
 
+#ifndef PAGEDCPURESOURCE_H
+#define PAGEDCPURESOURCE_H
+
 #include "CPUResource.hpp"
+
+
+
 
 template <typename T>
 class PagedCPUResource : public CPUResource<T> {
@@ -15,5 +21,4 @@ public:
 
 #include "PagedCPUResource.tpp"
 
-
-#endif /* end of include guard: PINNEDCPURESOURCE_H */
+#endif /* end of include guard: PAGEDCPURESOURCE_H */

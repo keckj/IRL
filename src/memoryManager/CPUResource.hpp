@@ -33,7 +33,7 @@ protected:
 };
 
 template <typename T>
-ostream &operator<<(ostream &out, const CPUResource<T> &resource);
+std::ostream &operator<<(std::ostream &out, const CPUResource<T> &resource);
 
 #include "CPUResource.tpp"
 

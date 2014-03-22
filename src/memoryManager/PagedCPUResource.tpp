@@ -13,7 +13,7 @@ CPUResource<T>(data, size, owner)
 template <typename T>
 PagedCPUResource<T>::~PagedCPUResource() {
 	if(this->_isOwner) {
-		cudaFreeHost(this->_data);
+		delete [] this->_data;
 	}
 }
 			
