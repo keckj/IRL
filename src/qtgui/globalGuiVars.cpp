@@ -6,7 +6,7 @@
 
 namespace qtgui {
 	
-	VoxelGrid *voxelGrid = 0;
+	VoxelGrid<unsigned char> *voxelGrid = 0;
 	QMainWindow *mainWindow = 0;
 
 	namespace viewer {

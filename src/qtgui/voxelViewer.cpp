@@ -9,7 +9,7 @@ VoxelViewer::VoxelViewer(float alpha, QWidget *parent) :
 {
 	qtgui::viewer::viewer = this;
 
-	VoxelGrid *grid = qtgui::voxelGrid;
+	VoxelGrid<unsigned char> *grid = qtgui::voxelGrid;
 
 	boundingBox = new BoundingBox(grid->width(), grid->height(), grid->length(),
 			alpha*grid->voxelSize());

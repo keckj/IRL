@@ -12,6 +12,12 @@ GPUResource<T>::GPUResource() :
 _data(0), _deviceId(0), _size(0), _isOwner(false), _isGPUResource(false)
 {
 }
+	
+template <typename T>
+GPUResource<T>::GPUResource(GPUResource<T> &original) :
+_data(original.data()), _deviceId(original.deviceId()), _size(original.size()), 
+_isOwner(false), _isGPUResource(original.isGPUResource()) {
+}
 
 template <typename T>
 GPUResource<T>::GPUResource(T *data, int deviceId, unsigned int size, bool owner) :
@@ -75,14 +81,14 @@ void GPUResource<T>::setData(T* data, int deviceId, unsigned int size, bool isOw
 }
 
 template <typename T>
-ostream &operator<<(ostream &out, const GPUResource<T> &resource) {
-	out << "::GPURessource::" << endl;
-	out << "\t Is GPU Ressource : " << resource.isGPUResource() << endl;
-	out << "\t Device ID : " << resource.deviceId() << endl;
-	out << "\t Ressource type : " << resource.getResourceType() << endl;
-	out << "\t Data : " << typeid(T).name() << endl;
-	out << "\t Size : " << resource.size() << endl;
-	out << "\t Bytes : " << resource.bytes() << endl;
+std::ostream &operator<<(std::ostream &out, const GPUResource<T> &resource) {
+	out << "::GPURessource::" << std::endl;
+	out << "\t Is GPU Ressource : " << resource.isGPUResource() << std::endl;
+	out << "\t Device ID : " << resource.deviceId() << std::endl;
+	out << "\t Ressource type : " << resource.getResourceType() << std::endl;
+	out << "\t Data : " << typeid(T).name() << std::endl;
+	out << "\t Size : " << resource.size() << std::endl;
+	out << "\t Bytes : " << resource.bytes() << std::endl;
 
 	return out;
 }

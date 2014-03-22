@@ -9,7 +9,7 @@
 class MainApplication : public QApplication {
 
 	public:
-		MainApplication(VoxelGrid *grid, bool drawVoxels, unsigned char viewerThreshold);
+		MainApplication(VoxelGrid<unsigned char> *grid, bool drawVoxels, unsigned char viewerThreshold);
 		~MainApplication();
 
 	private:

@@ -51,8 +51,6 @@ int main( int argc, char** argv)
 	GPUMemory::display(cout);
 	CPUMemory::display(cout);
 
-	return 0;
-
 
 	//default values
 	float dG = 0.5f;
@@ -321,7 +319,9 @@ int main( int argc, char** argv)
 	CHECK_CUDA_ERRORS(cudaFree(hit_counter_d));
 	CHECK_CUDA_ERRORS(cudaFreeHost(hit_counter_h));
 
-	VoxelGrid grid(voxel_data_h, voxel_data_d, voxelGridWidth, voxelGridHeight, voxelGridLength, deltaGrid);
+	PinnedCPUResource<unsigned char> hostGrid(voxel_data_h, voxelGridWidth*voxelGridHeight*voxelGridLength, true);
+	GPUResource<unsigned char> deviceGrid(voxel_data_d, 0, voxelGridWidth*voxelGridHeight*voxelGridLength, true);
+	VoxelGrid<unsigned char> grid(hostGrid, deviceGrid , voxelGridWidth, voxelGridHeight, voxelGridLength, deltaGrid);
 
 	log_console.info("Launching gui...");
 	MainApplication mainApplication(&grid,true,viewerThreshold);	

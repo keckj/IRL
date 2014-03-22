@@ -8,6 +8,7 @@ class GPUResource {
 public:
 	
 	GPUResource();
+	GPUResource(GPUResource<T> &original);
 	explicit GPUResource(T *data, int deviceId, unsigned int size, bool owner);
 	~GPUResource();
 
@@ -33,7 +34,7 @@ protected:
 };
 
 template <typename T>
-ostream &operator<<(ostream &out, const GPUResource<T> &resource);
+std::ostream &operator<<(std::ostream &out, const GPUResource<T> &resource);
 
 #include "GPUResource.tpp"
 

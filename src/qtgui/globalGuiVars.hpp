@@ -9,7 +9,7 @@
 
 namespace qtgui {
 	
-	extern VoxelGrid *voxelGrid;
+	extern VoxelGrid<unsigned char> *voxelGrid;
 	extern QMainWindow *mainWindow;
 
 	namespace viewer {

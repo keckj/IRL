@@ -22,5 +22,5 @@ PinnedCPUResource<T>::~PinnedCPUResource() {
 			
 template <typename T>
 const std::string PinnedCPUResource<T>::getResourceType() const {
-	return string("Pinned CPU Memory");
+	return std::string("Pinned CPU Memory");
 }
