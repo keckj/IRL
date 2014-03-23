@@ -1,6 +1,6 @@
 
 #ifndef __CPU_MIN_RESERVED_MEMORY
-#define __CPU_MIN_RESERVED_MEMORY 2000000000
+#define __CPU_MIN_RESERVED_MEMORY (2ul*1024*1024*1024)
 #endif
 
 #include <ostream>

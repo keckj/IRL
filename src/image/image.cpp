@@ -16,6 +16,7 @@
 #include <dirent.h>
 #include <opencv/cv.h>
 #include <QtGui>
+#include "memoryManager/CPUMemory.hpp"
 
 using namespace cv;
 using namespace std;
@@ -179,17 +180,21 @@ void Image::loadLocalizedUSImages(
 	*offsets = new float*[3];
 	for (int i = 0; i < 3; i++) {
 		if(pageLockedMemory)
-			cudaMallocHost((void**) (*offsets+i), (*nImage)*sizeof(float));
+			(*offsets)[i] = CPUMemory::malloc<float>(*nImage, true);
+			//cudaMallocHost((void**) (*offsets+i), (*nImage)*sizeof(float));
 		else
-			(*offsets)[i] = new float[(*nImage)];
+			(*offsets)[i] = CPUMemory::malloc<float>(*nImage, false);
+			//(*offsets)[i] = new float[(*nImage)];
 	}
 	
 	*rotations = new float*[9];
 	for (int i = 0; i < 9; i++) {
 		if(pageLockedMemory)
-			cudaMallocHost((void**) (*rotations+i), counter*sizeof(float));
+			(*rotations)[i] = CPUMemory::malloc<float>(counter, true);
+			//cudaMallocHost((void**) (*rotations+i), counter*sizeof(float));
 		else
-			(*rotations)[i] = new float[counter];
+			(*rotations)[i] = CPUMemory::malloc<float>(counter, false);
+			//(*rotations)[i] = new float[counter];
 	}
 	
 	unsigned int read_counter = 0;
@@ -208,9 +213,11 @@ void Image::loadLocalizedUSImages(
 				
 				//allocate data array
 				if(pageLockedMemory)
-					cudaMallocHost((void**) data, (*nImage)*img.getWidth()*img.getHeight()*sizeof(float));
+					*data = CPUMemory::malloc<float>((*nImage)*img.getWidth()*img.getHeight(), true);
+					//cudaMallocHost((void**) data, (*nImage)*img.getWidth()*img.getHeight()*sizeof(float));
 				else
-					*data = new float[(*nImage)*img.getWidth()*img.getHeight()];
+					*data = CPUMemory::malloc<float>((*nImage)*img.getWidth()*img.getHeight(), false);
+					//*data = new float[(*nImage)*img.getWidth()*img.getHeight()];
 
 				firstImg = false;
 			}

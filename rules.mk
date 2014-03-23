@@ -5,15 +5,12 @@ not_containing = $(foreach v,$2,$(if $(findstring $1,$v),,$v))
 subdirs = $(shell find $1 -type d)
 
 # Règles
+all: create_dirs $(TARGET)
 
-ifeq ($(LINK), NVCC)
-debug: LINKFLAGS = $(CUDADEBUGFLAGS) 
-else
-debug: LINKFLAGS = $(DEBUGFLAGS) 
-endif
-debug: CFLAGS += $(DEBUGFLAGS)
+debug: LINKFLAGS += $(DEBUGFLAGS) 
+debug: CFLAGS += $(DEBUGFLAGS) 
 debug: CXXFLAGS += $(DEBUGFLAGS) 
-debug : NVCCFLAGS = $(CUDADEBUGFLAGS)
+debug: NVCCFLAGS = $(CUDADEBUGFLAGS) 
 debug: all
 
 profile: LINKFLAGS += $(PROFILINGFLAGS)
@@ -28,9 +25,6 @@ endif
 release: CFLAGS += $(RELEASEFLAGS)
 release: CXXFLAGS += $(RELEASEFLAGS)
 release: all
-
-all: create_dirs
-	$(MAKE) $(TARGET)
 
 $(TARGET): $(MOCOUTPUT) $(OBJ)
 	@echo
@@ -75,7 +69,7 @@ $(OBJDIR)%.o: $(SRCDIR)%.cu
 
 # "-" pour enlever les messages d'erreurs
 # "@" pour silent
-.PHONY: clean cleanall create_dirs all
+.PHONY: clean cleanall debug profile release create_dirs
 
 clean:
 	-@rm -f $(OBJ) 

@@ -1,4 +1,8 @@
 
+#include "cuda.h"
+#include "cuda_runtime.h"
+#include "utils/cudaUtils.hpp"
+
 template <typename T>
 T* CPUMemory::malloc(unsigned int nData, bool pinnedMemory) {
 	
@@ -6,7 +10,7 @@ T* CPUMemory::malloc(unsigned int nData, bool pinnedMemory) {
 
 	T *data;
 	if(pinnedMemory) {
-		CHECK_CUDA_ERRORS(cudaMallocHost(data, nData * sizeof(T)));
+		CHECK_CUDA_ERRORS(cudaMallocHost((void **) &data, nData * sizeof(T)));
 	}
 	else {
 		data = new T[nData];		
@@ -33,4 +37,5 @@ template <typename T>
 bool canAllocate(unsigned int nData) {
 	return (CPUMemory::_memoryLeft >= nData * sizeof(T));
 }
+
 

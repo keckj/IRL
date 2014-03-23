@@ -1,6 +1,6 @@
 
 #ifndef __MIN_RUNTIME_MEMORY 
-#define __MIN_RUNTIME_MEMORY 200000000
+#define __MIN_RUNTIME_MEMORY (1024ul*1024*256) 
 #endif
 
 #include <ostream>

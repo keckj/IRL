@@ -1,24 +1,19 @@
 
 #include "utils.hpp"
+#include <cmath>
 
 const std::string toStringMemory(unsigned long bytes) {
 
 	std::stringstream ss;
-	
-	if(bytes < 1000) {
-		ss << bytes << "B";
-	}
-	else if(bytes < 1000000) {
-		ss << bytes/1000 << "KB";
-	}
-	else if(bytes < 1000000000) {
-		ss << bytes/1000000 << "MB";
-	}
-	else if(bytes < 1000000000000) {
-		ss << bytes/1000000000 << "GB";
-	}
-	else {
-		ss << bytes/1000000000000 << "TB";
+
+	const char prefix[] = {' ', 'K', 'M', 'G', 'T', 'P'};
+	unsigned long val = 1;
+	for (int i = 0; i < 6; i++) {
+		if(bytes < 1024*val) {
+			ss << round(100*(float)bytes/val)/100.0 << prefix[i] << 'B';
+			break;
+		}
+		val *= 1024;
 	}
 
 	const std::string str(ss.str());

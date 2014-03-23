@@ -36,21 +36,12 @@ int main( int argc, char** argv)
 {
 	initLogs();
 	XInitThreads();
+
 	GPUMemory::init();
 	CPUMemory::init();
 	
-	PagedCPUResource<double> test;
-	PagedCPUResource<float> test2((float*)malloc(3000), 3000,true);
-
-	unsigned short *data;
-	cudaMalloc((void**) &data, 1000*sizeof(short));
-	GPUResource<unsigned short> test3(data, 1, 1000, true);
-
-	cout << test << endl << test2 << endl << test3 << endl;
-
-	GPUMemory::display(cout);
 	CPUMemory::display(cout);
-
+	GPUMemory::display(cout);
 
 	//default values
 	float dG = 0.5f;
@@ -100,7 +91,7 @@ int main( int argc, char** argv)
 	//       X Y Z                     R0 ... R8
 	
 	im.loadLocalizedUSImages(dataSource, &nImages, &w, &h, &dx, &dy, &offsets_h, &rotations_h, &float_data_h, true);
-
+	
 	const unsigned char viewerThreshold = (unsigned char) thres;
 	const int imgWidth = w;
 	const int imgHeight = h;
@@ -287,9 +278,8 @@ int main( int argc, char** argv)
 
 	cudaDeviceSynchronize();
 
-	//TODO remove
+	//copy back voxelGrid
 	CHECK_CUDA_ERRORS(cudaMemcpy(voxel_data_h, voxel_data_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
-	
 
 	//copy back hit counter
 	log_console.info("Done. Copying hit counter data back to RAM...");

@@ -7,6 +7,11 @@ CPUResource<T>::CPUResource() :
 _data(0), _size(0), _isOwner(false), _isCPUResource(false)
 {
 }
+	
+template <typename T>
+CPUResource<T>::CPUResource(CPUResource &original) :
+_data(original.data()), _size(original.size()), _isOwner(false), _isCPUResource(true) {
+}
 
 template <typename T>
 CPUResource<T>::CPUResource(T *data, unsigned int size, bool owner) :

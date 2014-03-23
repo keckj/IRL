@@ -22,6 +22,7 @@ public:
 
 protected:
 	CPUResource();
+	CPUResource(CPUResource &original);
 	CPUResource(T *data, unsigned int size, bool owner = false);
 	virtual ~CPUResource();
 
