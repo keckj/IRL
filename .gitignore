@@ -4,5 +4,9 @@ tags
 types_c.taghl
 data/femur
 data/processedImages
+data/irm_femur
 img/data_1.avi
+img/irm.avi
+src/viewer/.qglviewer.xml
 program.log
+.exrc
