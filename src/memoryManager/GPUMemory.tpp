@@ -1,7 +1,7 @@
 
 
 template <typename T>
-T* GPUMemory::malloc(unsigned int nData, int deviceId) {
+T* GPUMemory::malloc(unsigned long nData, int deviceId) {
 	
 	assert(GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
 
@@ -14,7 +14,7 @@ T* GPUMemory::malloc(unsigned int nData, int deviceId) {
 }
 
 template <typename T>
-void GPUMemory::free(T* data, unsigned int nData, int deviceId) {
+void GPUMemory::free(T* data, unsigned long nData, int deviceId) {
 	int currentDevice;
 	CHECK_CUDA_ERRORS(cudaGetDevice(&currentDevice));
 
@@ -26,7 +26,7 @@ void GPUMemory::free(T* data, unsigned int nData, int deviceId) {
 }
 
 template <typename T>
-bool GPUMemory::canAllocate(unsigned int nData, int deviceId) {
+bool GPUMemory::canAllocate(unsigned long nData, int deviceId) {
 	return (GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
 }
 

@@ -68,26 +68,26 @@ float VoxelGrid<T>::voxelSize() const {
 	return this->_deltaGrid;
 }
 template <typename T>
-unsigned int VoxelGrid<T>::dataSize() const {
-	return this->_gridWidth * this->_gridHeight * this->_gridLength;
+unsigned long VoxelGrid<T>::dataSize() const {
+	return (unsigned long) this->_gridWidth * this->_gridHeight * this->_gridLength;
 }
 	
 template <typename T>
-unsigned int VoxelGrid<T>::dataBytes() const {
+unsigned long VoxelGrid<T>::dataBytes() const {
 	return this->dataSize()*sizeof(T);	
 }
 
 template <typename T>
-unsigned char *VoxelGrid<T>::dataHost() const {
+T *VoxelGrid<T>::dataHost() const {
 	return PinnedCPUResource<T>::_data;
 }
 template <typename T>
-unsigned char *VoxelGrid<T>::dataDevice() const {
+T *VoxelGrid<T>::dataDevice() const {
 	return GPUResource<T>::_data;
 }
 	
 template <typename T>
-unsigned char VoxelGrid<T>::operator()(unsigned int i, unsigned int j, unsigned int k) {
+T VoxelGrid<T>::operator()(unsigned int i, unsigned int j, unsigned int k) {
 	assert(i < _gridWidth);
 	assert(j < _gridHeight);
 	assert(k < _gridLength);

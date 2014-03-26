@@ -12,22 +12,22 @@ _childs(grids)
 }
 
 template <typename T>
-std::vector<PowerOfTwoVoxelGrid<T> *>::iterator VoxelGridTree<T>::begin() {
+typename std::vector<PowerOfTwoVoxelGrid<T> *>::iterator VoxelGridTree<T>::begin() {
 	return _childs.begin();
 }
 
 template <typename T>
-std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator VoxelGridTree<T>::begin() {
+typename std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator VoxelGridTree<T>::cbegin() {
 	return _childs.begin();
 }
 
 template <typename T>
-std::vector<PowerOfTwoVoxelGrid<T> *>::iterator VoxelGridTree<T>::end() {
+typename std::vector<PowerOfTwoVoxelGrid<T> *>::iterator VoxelGridTree<T>::end() {
 	return _childs.end();
 }
 
 template <typename T>
-std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator VoxelGridTree<T>::end() {
+typename std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator VoxelGridTree<T>::cend() {
 	return _childs.end();
 }
 

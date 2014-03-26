@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -9,10 +10,6 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 
-#include <QWidget>
-#include <QtGui>
-#include <X11/Xlib.h>
-
 #include "kernels/kernels.hpp"
 #include "utils/log.hpp"
 #include "utils/cudaUtils.hpp"
@@ -20,8 +17,10 @@
 #include "image/LocalizedUSImage.hpp"
 #include "image/MhdFile.hpp"
 #include "qtgui/mainApplication.hpp"
+
 #include "grid/voxelGrid.hpp"
 #include "grid/powerOfTwoVoxelGrid.hpp"
+#include "grid/voxelGridTree.hpp"
 
 #include "memoryManager/PinnedCPUResource.hpp"
 #include "memoryManager/PagedCPUResource.hpp"
@@ -36,35 +35,12 @@ using namespace kernel;
 int main( int argc, char** argv)
 {
 	initLogs();
-	XInitThreads();
 
 	GPUMemory::init();
 	CPUMemory::init();
 	
 	CPUMemory::display(cout);
 	GPUMemory::display(cout);
-	
-	VoxelGrid<unsigned char> g(100.f,200.f,300.f,0.1f);
-	cout << g.dataBytes() << " " << g.dataSize() << endl;
-	g.allocateOnHost();
-	g.allocateOnDevice(0);
-
-	PowerOfTwoVoxelGrid<unsigned char> gg(g);
-	cout << gg.dataBytes() << " " << gg.dataSize() << endl;
-	gg.allocateOnDevice(1);
-
-	CPUMemory::display(cout);
-	GPUMemory::display(cout);
-
-	g.GPUResource::free();
-	g.PinnedCPUResource::free();
-	gg.GPUResource::free();
-	gg.PinnedCPUResource::free();
-	
-	CPUMemory::display(cout);
-	GPUMemory::display(cout);
-
-	return 0;
 
 	//default values
 	float dG = 0.5f;
@@ -130,10 +106,6 @@ int main( int argc, char** argv)
 	log_console.infoStream() << "\tSensor precision : " << deltaX*1000 << " x " << deltaY*1000 << " (µm)";
 	log_console.infoStream() << "\tImages real size : " << imgRealWidth << " x " << imgRealHeight << " (mm)";
 
-	//filtering positions
-	//Image::filter1D(x, nImages, 5, 1.0f);	
-	//Image::filter1D(y, nImages, 5, 1.0f);	
-	//Image::filter1D(z, nImages, 5, 1.0f);	
 
 	//compute bounding box
 	float posX, posY, posZ;
@@ -148,6 +120,7 @@ int main( int argc, char** argv)
 
 
 	//centres des voxels des 4 coins d'une image US
+	// -> d'ou les dx/2, dy/2, dz/2
 	float vects[4][3] = {
 		{dx/2.0f,dy/2.0f,0.0f}, 
 		{imgRealWidth - dx/2.0f,dy/2.0f,0.0f}, 
@@ -181,14 +154,23 @@ int main( int argc, char** argv)
 	const unsigned int minVoxelGridWidth = ceil(boxWidth/deltaGrid);
 	const unsigned int minVoxelGridHeight = ceil(boxHeight/deltaGrid);
 	const unsigned int minVoxelGridLength = ceil(boxLentgh/deltaGrid);
-	//const unsigned int voxelGridWidth = pow(2, ceil(log2(boxWidth/deltaGrid)));
-	//const unsigned int voxelGridHeight = pow(2, ceil(log2(boxHeight/deltaGrid)));
-	//const unsigned int voxelGridLength = pow(2, ceil(log2(boxLentgh/deltaGrid)));
-	const unsigned int voxelGridWidth = minVoxelGridWidth;
-	const unsigned int voxelGridHeight = minVoxelGridHeight;
-	const unsigned int voxelGridLength = minVoxelGridLength;
-	const unsigned long gridSize = voxelGridWidth * voxelGridHeight * voxelGridLength;
+	const unsigned long minGridSize = minVoxelGridWidth * minVoxelGridHeight * minVoxelGridLength;
+	
+	VoxelGrid<unsigned char> minGrid(minVoxelGridWidth, minVoxelGridHeight, minVoxelGridLength, deltaGrid);
+	PowerOfTwoVoxelGrid<unsigned char> grid(minGrid);
+	VoxelGridTree<unsigned char> voxelGrid = grid.splitGridWithMaxMemory(8*8*9);
 
+		std::cout << grid.width() << " " << grid.height() << " " << grid.length() << std::endl;
+	for (auto it = voxelGrid.begin(); it != voxelGrid.end(); it++) {
+		std::cout << (*it)->width() << " " << (*it)->height() << " " << (*it)->length() << std::endl;
+	} 
+
+	
+	return 0;	
+
+	
+	/*
+	//logs
 	log_console.infoStream() << "\tpMin = (" << xMin << "," << yMin << "," << zMin << ")";
 	log_console.infoStream() << "\tpMax = (" << xMax << "," << yMax << "," << zMax << ")";
 	log_console.infoStream() << "\tBox Size : " << boxWidth << "x" << boxHeight << "x" << boxLentgh << " (mm)";
@@ -221,6 +203,7 @@ int main( int argc, char** argv)
 	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&maxDevice));
 	CHECK_CUDA_ERRORS(cudaSetDevice(maxDevice-1));	
 	CHECK_CUDA_ERRORS(cudaFree(0));	
+	
 
 	//image data
 	float *float_data_d;
@@ -333,11 +316,12 @@ int main( int argc, char** argv)
 	CHECK_CUDA_ERRORS(cudaFreeHost(hit_counter_h));
 
 
-	//log_console.info("Launching gui...");
-	//MainApplication mainApplication(&grid,true,viewerThreshold);	
-	//return mainApplication.exec();
-	return 0;
+	log_console.info("Launching gui...");
+	MainApplication mainApplication(&grid,true,viewerThreshold);	
+	return mainApplication.exec();
+	*/
 }
+
 
 	//////////////////////////////////////////////////
 	//LocalizedUSImage::initialize();

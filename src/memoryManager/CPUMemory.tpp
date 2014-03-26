@@ -4,7 +4,7 @@
 #include "utils/cudaUtils.hpp"
 
 template <typename T>
-T* CPUMemory::malloc(unsigned int nData, bool pinnedMemory) {
+T* CPUMemory::malloc(unsigned long nData, bool pinnedMemory) {
 	
 	assert(CPUMemory::_memoryLeft >= nData * sizeof(T));
 
@@ -22,7 +22,7 @@ T* CPUMemory::malloc(unsigned int nData, bool pinnedMemory) {
 }
 
 template <typename T>
-void CPUMemory::free(T* data, unsigned int nData, bool pinnedMemory) {
+void CPUMemory::free(T* data, unsigned long nData, bool pinnedMemory) {
 	if(pinnedMemory) { 
 		CHECK_CUDA_ERRORS(cudaFreeHost(data));
 	}
@@ -34,7 +34,7 @@ void CPUMemory::free(T* data, unsigned int nData, bool pinnedMemory) {
 }
 
 template <typename T>
-bool CPUMemory::canAllocate(unsigned int nData) {
+bool CPUMemory::canAllocate(unsigned long nData) {
 	return (CPUMemory::_memoryLeft >= nData * sizeof(T));
 }
 

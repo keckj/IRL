@@ -3,7 +3,9 @@
 #define VOXELGRIDTREE_H
 
 #include <vector>
-#include "PowerOfTwoVoxelGrid.hpp"
+#include "powerOfTwoVoxelGrid.hpp"
+
+template <typename T> class PowerOfTwoVoxelGrid;
 
 template <typename T>
 class VoxelGridTree {
@@ -12,11 +14,11 @@ class VoxelGridTree {
 			unsigned int subWidth, unsigned int subHeight, unsigned int subLength,
 			std::vector<PowerOfTwoVoxelGrid<T> *> grids);
 
-		std::vector<PowerOfTwoVoxelGrid<T> *>::iterator begin();
-		std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator begin();
+		typename std::vector<PowerOfTwoVoxelGrid<T> *>::iterator begin();
+		typename std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator cbegin();
 
-		std::vector<PowerOfTwoVoxelGrid<T> *>::iterator end();
-		std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator end();
+		typename std::vector<PowerOfTwoVoxelGrid<T> *>::iterator end();
+		typename std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator cend();
 
 		T operator()(unsigned int i, unsigned int j, unsigned int k); //getVal
 		//PowerOfTwoVoxelGrid<T>* operator(unsigned int i, unsigned int j, unsigned int k); //get subgrid containing

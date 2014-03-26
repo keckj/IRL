@@ -21,16 +21,16 @@ class GPUMemory {
 		static unsigned long memorySize(int deviceId); //bytes
 		static unsigned long memoryLeft(int deviceId); //bytes
 
-		static bool canAllocateBytes(unsigned int nBytes);
+		static bool canAllocateBytes(unsigned long nBytes);
 
 		template <typename T>
-		static bool canAllocate(unsigned int nData, int deviceId);
+		static bool canAllocate(unsigned long nData, int deviceId);
 
 		template <typename T>
-		static T *malloc(unsigned int nData, int deviceId);
+		static T *malloc(unsigned long nData, int deviceId);
 
 		template <typename T>
-		static void free(T *data, unsigned int nData, int deviceId);
+		static void free(T *data, unsigned long nData, int deviceId);
 
 		static void display(std::ostream &out);
 			

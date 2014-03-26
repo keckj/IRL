@@ -15,16 +15,16 @@ class CPUMemory {
 		static unsigned long memorySize(); //bytes
 		static unsigned long memoryLeft(); //bytes
 
-		static bool canAllocateBytes(unsigned int nBytes);
+		static bool canAllocateBytes(unsigned long nBytes);
 
 		template <typename T>
-		static bool canAllocate(unsigned int nData);
+		static bool canAllocate(unsigned long nData);
 
 		template <typename T>
-		static T *malloc(unsigned int nData, bool pinnedMemory=false);
+		static T *malloc(unsigned long nData, bool pinnedMemory=false);
 
 		template <typename T>
-		static void free(T *data, unsigned int nData, bool force=false);
+		static void free(T *data, unsigned long nData, bool force=false);
 
 		static void display(std::ostream &out);
 			
