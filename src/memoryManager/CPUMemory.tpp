@@ -34,7 +34,7 @@ void CPUMemory::free(T* data, unsigned int nData, bool pinnedMemory) {
 }
 
 template <typename T>
-bool canAllocate(unsigned int nData) {
+bool CPUMemory::canAllocate(unsigned int nData) {
 	return (CPUMemory::_memoryLeft >= nData * sizeof(T));
 }
 

@@ -19,3 +19,16 @@ const std::string toStringMemory(unsigned long bytes) {
 	const std::string str(ss.str());
 	return str;
 }
+
+bool isPow2(unsigned int n) {
+	
+	while(n>1) {
+		if(n%2==1)
+			return false;
+		n = n/2;
+	}
+
+	return true;
+}
+
+

@@ -12,6 +12,8 @@ public:
 	PinnedCPUResource(T *data, unsigned int size, bool owner = false);
 	~PinnedCPUResource();
 
+	void free();
+
 	const std::string getResourceType() const;
 };
 

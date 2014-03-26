@@ -26,7 +26,7 @@ void GPUMemory::free(T* data, unsigned int nData, int deviceId) {
 }
 
 template <typename T>
-bool canAllocate(unsigned int nData, int deviceId) {
+bool GPUMemory::canAllocate(unsigned int nData, int deviceId) {
 	return (GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
 }
 

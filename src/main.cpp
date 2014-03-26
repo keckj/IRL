@@ -21,6 +21,7 @@
 #include "image/MhdFile.hpp"
 #include "qtgui/mainApplication.hpp"
 #include "grid/voxelGrid.hpp"
+#include "grid/powerOfTwoVoxelGrid.hpp"
 
 #include "memoryManager/PinnedCPUResource.hpp"
 #include "memoryManager/PagedCPUResource.hpp"
@@ -42,6 +43,28 @@ int main( int argc, char** argv)
 	
 	CPUMemory::display(cout);
 	GPUMemory::display(cout);
+	
+	VoxelGrid<unsigned char> g(100.f,200.f,300.f,0.1f);
+	cout << g.dataBytes() << " " << g.dataSize() << endl;
+	g.allocateOnHost();
+	g.allocateOnDevice(0);
+
+	PowerOfTwoVoxelGrid<unsigned char> gg(g);
+	cout << gg.dataBytes() << " " << gg.dataSize() << endl;
+	gg.allocateOnDevice(1);
+
+	CPUMemory::display(cout);
+	GPUMemory::display(cout);
+
+	g.GPUResource::free();
+	g.PinnedCPUResource::free();
+	gg.GPUResource::free();
+	gg.PinnedCPUResource::free();
+	
+	CPUMemory::display(cout);
+	GPUMemory::display(cout);
+
+	return 0;
 
 	//default values
 	float dG = 0.5f;
@@ -309,13 +332,11 @@ int main( int argc, char** argv)
 	CHECK_CUDA_ERRORS(cudaFree(hit_counter_d));
 	CHECK_CUDA_ERRORS(cudaFreeHost(hit_counter_h));
 
-	PinnedCPUResource<unsigned char> hostGrid(voxel_data_h, voxelGridWidth*voxelGridHeight*voxelGridLength, true);
-	GPUResource<unsigned char> deviceGrid(voxel_data_d, 0, voxelGridWidth*voxelGridHeight*voxelGridLength, true);
-	VoxelGrid<unsigned char> grid(hostGrid, deviceGrid , voxelGridWidth, voxelGridHeight, voxelGridLength, deltaGrid);
 
-	log_console.info("Launching gui...");
-	MainApplication mainApplication(&grid,true,viewerThreshold);	
-	return mainApplication.exec();
+	//log_console.info("Launching gui...");
+	//MainApplication mainApplication(&grid,true,viewerThreshold);	
+	//return mainApplication.exec();
+	return 0;
 }
 
 	//////////////////////////////////////////////////

@@ -3,31 +3,34 @@
 #define VOXELGRIDTREE_H
 
 #include <vector>
+#include "PowerOfTwoVoxelGrid.hpp"
 
-class VoxelGridTree : {
-public:
-	VoxelGridTree(unsigned int NChild, std::list<PowerOfTwoVoxelGrid *> grids);
+template <typename T>
+class VoxelGridTree {
+	public:
+		VoxelGridTree(unsigned int nGridX, unsigned int nGridY, unsigned int nGridZ,
+			unsigned int subWidth, unsigned int subHeight, unsigned int subLength,
+			std::vector<PowerOfTwoVoxelGrid<T> *> grids);
 
-	unsigned int getNChild();
-	PowerOfTwoVoxelGrid* getChild(unsigned int childId);
+		std::vector<PowerOfTwoVoxelGrid<T> *>::iterator begin();
+		std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator begin();
 
-	std::vector<PowerOfTwoPowerOfTwoVoxelGrid *>::iterator begin();
-	std::vector<PowerOfTwoPowerOfTwoVoxelGrid *>::const_iterator begin();
-	
-	std::vector<PowerOfTwoPowerOfTwoVoxelGrid *>::iterator end();
-	std::vector<PowerOfTwoPowerOfTwoVoxelGrid *>::const_iterator end();
+		std::vector<PowerOfTwoVoxelGrid<T> *>::iterator end();
+		std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator end();
 
-	unsigned char operator()(unsigned int i, unsigned int j, unsigned int k);
-	signed int getChildID(unsigned int i, unsigned int j, unsigned int k);
+		T operator()(unsigned int i, unsigned int j, unsigned int k); //getVal
+		//PowerOfTwoVoxelGrid<T>* operator(unsigned int i, unsigned int j, unsigned int k); //get subgrid containing
 
-protected:
-	unsigned int width, height, length;
-	unsigned char powX, powY, powZ;
-
-	unsigned int NChild;
-	std::vector<PowerOfTwoVoxelGrid *> childs;	
+	protected:
+		unsigned int _nChild;
+		unsigned int _nGridX, _nGridY, _nGridZ;
+		unsigned int _width, _height, _length;
+		unsigned int _subWidth, _subHeight, _subLength;
+		
+		std::vector<PowerOfTwoVoxelGrid<T> *> _childs;	
 
 };
 
+#include "voxelGridTree.tpp"
 
 #endif /* end of include guard: VOXELGRIDTREE_H */

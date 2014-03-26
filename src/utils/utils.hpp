@@ -5,5 +5,6 @@
 #include <sstream>
 
 const std::string toStringMemory(unsigned long bytes);
+bool isPow2(unsigned int n);
 
 #endif /* end of include guard: UTILS_H */

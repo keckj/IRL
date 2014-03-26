@@ -13,6 +13,7 @@ public:
 	~GPUResource();
 
 	void setData(T* data, int deviceId, unsigned int size, bool isOwner);
+	void free();
 
 	T* data() const;
 	int deviceId() const;

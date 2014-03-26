@@ -27,9 +27,7 @@ _data(data), _deviceId(deviceId), _size(size), _isOwner(owner), _isGPUResource(t
 
 template <typename T>
 GPUResource<T>::~GPUResource() {
-	if(_isGPUResource && _isOwner) {
-		GPUMemory::free<T>(_data, _size, _deviceId);
-	}
+	this->free();
 }
 
 template <typename T>
@@ -91,4 +89,18 @@ std::ostream &operator<<(std::ostream &out, const GPUResource<T> &resource) {
 	out << "\t Bytes : " << resource.bytes() << std::endl;
 
 	return out;
+}
+	
+template <typename T>
+void GPUResource<T>::free() {
+
+	if(_isGPUResource && _isOwner) {
+		GPUMemory::free<T>(_data, _size, _deviceId);
+	}
+
+	_data = 0;
+	_deviceId = 0;
+	_size = 0;
+	_isOwner = false;
+	_isGPUResource = false;
 }
