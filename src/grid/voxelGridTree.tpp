@@ -49,6 +49,35 @@ T VoxelGridTree<T>::operator()(unsigned int i, unsigned int j, unsigned int k) {
 }
 
 template <typename T>
-unsigned int VoxelGridTree<T>::nChilds() {
+unsigned int VoxelGridTree<T>::nChilds() const {
 	return _nChild;
+}
+
+template <typename T>
+unsigned int VoxelGridTree<T>::subwidth() const {
+	return this->_subWidth;
+}
+
+template <typename T>
+unsigned int VoxelGridTree<T>::subheight() const {
+	return this->_subHeight;
+}
+
+template <typename T>
+unsigned int VoxelGridTree<T>::sublength() const {
+	return this->_subLength;
+}
+template <typename T>
+float VoxelGridTree<T>::voxelSize() const {
+	return this->_deltaGrid;
+}
+		
+template <typename T>
+unsigned long VoxelGridTree<T>::subgridSize() const {
+	return _subWidth * _subHeight * _subLength;
+}
+
+template <typename T>
+unsigned long VoxelGridTree<T>::subgridBytes() const {
+	return this->subgridSize() * sizeof(T);
 }

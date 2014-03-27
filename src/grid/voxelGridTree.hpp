@@ -23,7 +23,15 @@ class VoxelGridTree {
 		T operator()(unsigned int i, unsigned int j, unsigned int k); //getVal
 		//PowerOfTwoVoxelGrid<T>* operator(unsigned int i, unsigned int j, unsigned int k); //get subgrid containing
 		//
-		unsigned int nChilds();
+		unsigned int nChilds() const;
+		unsigned int subwidth() const;
+		unsigned int subheight() const;
+		unsigned int sublength() const;
+		float voxelSize() const;
+
+		unsigned long subgridSize() const;
+		unsigned long subgridBytes() const;
+		
 
 	protected:
 		unsigned int _nChild;

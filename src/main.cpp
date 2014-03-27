@@ -177,6 +177,7 @@ int main( int argc, char** argv)
 	const unsigned long rotationBytes = 9*nImages*sizeof(float);
 	const unsigned long offsetBytes = 3*nImages*sizeof(float);
 	const unsigned long reservedDataBytes = imageBytes + rotationBytes + offsetBytes;
+	
 
 	// needed memory on each GPU 
 	unsigned long gridBytes = 2*grid.dataBytes();//two grids to allow compute & mem transfers
@@ -197,56 +198,62 @@ int main( int argc, char** argv)
 	unsigned int cudaDevicesNeeded = maxCudaDevices;
 	unsigned int meanSubgridsToComputePerDevice = 0;
 	
-	assert(voxelGrid.nChilds() >= 2);
-	while(meanSubgridsToComputePerDevice < 2) {
+	assert(voxelGrid.nChilds() >= 1);
+	while(meanSubgridsToComputePerDevice < 1) {
 		meanSubgridsToComputePerDevice = voxelGrid.nChilds()/cudaDevicesNeeded;
 		cudaDevicesNeeded--;
 	}
 	cudaDevicesNeeded++;
 	
 	//compute how many grids should be computed on each device
-	unsigned int subgridsToComputePerDevice = new unsigned int[cudaDevicesNeeded];
+	unsigned int *subgridsToComputePerDevice = new unsigned int[cudaDevicesNeeded];
 	for (int i = 0; i < maxCudaDevices; i++) {
-		if(i<cudaDevicesNeeded - 1)
+		if(i < (int)cudaDevicesNeeded)
 			subgridsToComputePerDevice[i] = meanSubgridsToComputePerDevice;
 		else	
-			subgridsToComputePerDevice[i] = voxelGrid.nChilds % meanSubgridsToComputePerDevice;
+			subgridsToComputePerDevice[i] = voxelGrid.nChilds() % meanSubgridsToComputePerDevice;
 	}
-
-	//allocate two subgrids on each active devices, and a hitgrid
-	//and copy images, rotations, offsets
-
-
 	
-	log_console.infoStream() << "\tpMin = (" << xMin << "," << yMin << "," << zMin << ")";
-	log_console.infoStream() << "\tpMax = (" << xMax << "," << yMax << "," << zMax << ")";
-	log_console.infoStream() << "\tBox Size : " << boxWidth << "x" << boxHeight << "x" << boxLentgh << " (mm)";
-
 	log_console.infoStream() << "Voxel grid precision set to " << deltaGrid*1000 << " µm";
 	log_console.infoStream() << "Minimum grid size : " 
-		<< minVoxelGridWidth << "x" << minVoxelGridHeight << "x" << minVoxelGridLength;
+		<< minGrid.width() << "x" << minGrid.height() << "x" << minGrid.length();
 	log_console.infoStream() << "Effective grid size : " 
-		<< voxelGridWidth << "x" << voxelGridHeight << "x" << voxelGridLength;
+		<< grid.width() << "x" << grid.height() << "x" << grid.length();
+	log_console.infoStream() << "Number of subgrids : " 
+		<< voxelGrid.nChilds();
+	log_console.infoStream() << "Subgrid size : " 
+		<< voxelGrid.subwidth() << "x" << voxelGrid.subheight() << "x" << voxelGrid.sublength();
 	log_console.infoStream() << "Effective grid memory size (unsigned char) : " 
-		<< (gridSize > 1024*1024 ? gridSize/(1024*1024) * sizeof(unsigned char) : gridSize/1024 * sizeof(unsigned char))
-		<< (gridSize > 1024*1024 ? "MB" : "KB");
-	log_console.infoStream() << "Effective images memory size (float) : " 
-		<< (imageSize > 1024*1024 ? imageSize/(1024*1024) * sizeof(float) : imageSize/1024*sizeof(float))
-		<< (imageSize > 1024*1024 ? "MB" : "KB");
-	log_console.infoStream() << "Effective images memory size (unsigned char) : " 
-		<< (imageSize > 1024*1024 ? imageSize/(1024*1024) * sizeof(unsigned char) : imageSize/1024*sizeof(unsigned char))
-		<< (imageSize > 1024*1024 ? "MB" : "KB");
-	log_console.infoStream() << "The programm will need to use at least " 
-		<< max((gridSize + imageSize)*sizeof(unsigned char), (sizeof(float)+sizeof(unsigned char))*imageSize)/(1024*1024)
-		<< " MB of VRAM.";
-
-	if(max((gridSize + imageSize)*sizeof(unsigned char), (sizeof(float)+sizeof(unsigned char))*imageSize)/(1024*1024) >= 1024) {
-		log_console.warnStream() << "The programm will use more then 1GB of VRAM, please check if your GPU has enough memory !";
+		<< toStringMemory(grid.dataBytes());
+	log_console.infoStream() << "Subgrid memory size (unsigned char) : " 
+		<< toStringMemory(voxelGrid.subgridBytes());
+	log_console.infoStream() << "Images memory size (unsigned char) : " 
+		<< toStringMemory(imageBytes);
+	log_console.infoStream() << "Rotations memory size : " 
+		<< toStringMemory(rotationBytes);
+	log_console.infoStream() << "Offsets memory size : " 
+		<< toStringMemory(offsetBytes);
+	log_console.infoStream() << "Device memory needed : " 
+		<< toStringMemory(reservedDataBytes + 2*voxelGrid.subgridBytes() + voxelGrid.subgridSize() * sizeof(unsigned char)) 
+		<< " on " << cudaDevicesNeeded << " devices !"; 
+	log_console.infoStream() << "Grid affectation : ";
+	for (int i = 0; i < maxCudaDevices; i++) {
+		log_console.infoStream() << "Device " << i << " => " << subgridsToComputePerDevice[i];
 	}
-
-
-
+	log_console.infoStream() << "Number of inactive devices : " << maxCudaDevices - cudaDevicesNeeded;
 	
+	//allocate two subgrids on each active devices, and a hitgrid
+	//and copy images, rotations, offsets
+	int currentGrid = 0;
+	for (int i = 0; i < cudaDevicesNeeded ; i++) {
+		
+		unsigned char *subgrid1 = GPUMemory::malloc<unsigned char>();
+
+		for (j = 0; j < subgridsToComputePerDevice[i]; j++) {
+		}
+	}
+	
+
 	
 /*
 	//image data
