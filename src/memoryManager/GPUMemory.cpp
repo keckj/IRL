@@ -55,3 +55,13 @@ void GPUMemory::display(std::ostream &out) {
 	}
 
 }
+		
+unsigned long GPUMemory::getMinAvailableMemoryOnDevices() {
+
+	unsigned long minMemAvailable = memoryLeft(0);
+	for (i = 1; i < _nDevice; i++) {
+		minMemAvailable = (GPUMemory::memoryLeft(i) < minMemAvailable ? GPUMemory::memoryLeft(i) : minMemAvailable);
+	}
+
+	return minMemAvailable;
+}

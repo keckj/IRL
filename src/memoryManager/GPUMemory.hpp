@@ -31,6 +31,8 @@ class GPUMemory {
 
 		template <typename T>
 		static void free(T *data, unsigned long nData, int deviceId);
+		
+		static unsigned long getMinAvailableMemoryOnDevices();
 
 		static void display(std::ostream &out);
 			

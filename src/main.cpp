@@ -154,23 +154,70 @@ int main( int argc, char** argv)
 	const unsigned int minVoxelGridWidth = ceil(boxWidth/deltaGrid);
 	const unsigned int minVoxelGridHeight = ceil(boxHeight/deltaGrid);
 	const unsigned int minVoxelGridLength = ceil(boxLentgh/deltaGrid);
-	const unsigned long minGridSize = minVoxelGridWidth * minVoxelGridHeight * minVoxelGridLength;
 	
+	//create grids and compute upper power of two sides grid 
+	//no memory is allocated
 	VoxelGrid<unsigned char> minGrid(minVoxelGridWidth, minVoxelGridHeight, minVoxelGridLength, deltaGrid);
 	PowerOfTwoVoxelGrid<unsigned char> grid(minGrid);
-	VoxelGridTree<unsigned char> voxelGrid = grid.splitGridWithMaxMemory(8*8*9);
+	
+	//print devices informations
+	CudaUtils::logCudaDevices(log_console);
 
-		std::cout << grid.width() << " " << grid.height() << " " << grid.length() << std::endl;
+	//initialize && free all GPU memory
+	int maxCudaDevices;
+	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&maxCudaDevices));
+	for (int i = 0; i < maxCudaDevices; i++) {
+		CHECK_CUDA_ERRORS(cudaSetDevice(i));	
+		CHECK_CUDA_ERRORS(cudaFree(0));	
+	}
+	
+	//reserved memory on each GPU
+	//images, offsets, rotations (stack already taken into account)
+	const unsigned long imageBytes = imageSize * sizeof(unsigned char); 	
+	const unsigned long rotationBytes = 9*nImages*sizeof(float);
+	const unsigned long offsetBytes = 3*nImages*sizeof(float);
+	const unsigned long reservedDataBytes = imageBytes + rotationBytes + offsetBytes;
+
+	// needed memory on each GPU 
+	unsigned long gridBytes = 2*grid.dataBytes();//two grids to allow compute & mem transfers
+	unsigned long hitBytes = grid.dataSize()*sizeof(unsigned char); //the hitgrid is shared between the two device voxel grids
+	unsigned long sharedBytes = gridBytes + hitBytes;
+	float oneGridToNeededMemoryRatio = (float)grid.dataBytes()/sharedBytes;
+
+	//split in subgrids according to min of GPUs memory left, reserved data bytes, and grid size ratio
+	VoxelGridTree<unsigned char> voxelGrid = grid.splitGridWithMaxMemory(
+			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio);
+	
+	//allocate subgrids on host
 	for (auto it = voxelGrid.begin(); it != voxelGrid.end(); it++) {
-		std::cout << (*it)->width() << " " << (*it)->height() << " " << (*it)->length() << std::endl;
-	} 
+		(*it)->allocateOnHost();
+	}
+
+	//compute how many devices are needed
+	unsigned int cudaDevicesNeeded = maxCudaDevices;
+	unsigned int meanSubgridsToComputePerDevice = 0;
+	
+	assert(voxelGrid.nChilds() >= 2);
+	while(meanSubgridsToComputePerDevice < 2) {
+		meanSubgridsToComputePerDevice = voxelGrid.nChilds()/cudaDevicesNeeded;
+		cudaDevicesNeeded--;
+	}
+	cudaDevicesNeeded++;
+	
+	//compute how many grids should be computed on each device
+	unsigned int subgridsToComputePerDevice = new unsigned int[cudaDevicesNeeded];
+	for (int i = 0; i < maxCudaDevices; i++) {
+		if(i<cudaDevicesNeeded - 1)
+			subgridsToComputePerDevice[i] = meanSubgridsToComputePerDevice;
+		else	
+			subgridsToComputePerDevice[i] = voxelGrid.nChilds % meanSubgridsToComputePerDevice;
+	}
+
+	//allocate two subgrids on each active devices, and a hitgrid
+	//and copy images, rotations, offsets
+
 
 	
-	return 0;	
-
-	
-	/*
-	//logs
 	log_console.infoStream() << "\tpMin = (" << xMin << "," << yMin << "," << zMin << ")";
 	log_console.infoStream() << "\tpMax = (" << xMax << "," << yMax << "," << zMax << ")";
 	log_console.infoStream() << "\tBox Size : " << boxWidth << "x" << boxHeight << "x" << boxLentgh << " (mm)";
@@ -197,14 +244,11 @@ int main( int argc, char** argv)
 		log_console.warnStream() << "The programm will use more then 1GB of VRAM, please check if your GPU has enough memory !";
 	}
 
-	CudaUtils::logCudaDevices(log_console);
 
-	int maxDevice;
-	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&maxDevice));
-	CHECK_CUDA_ERRORS(cudaSetDevice(maxDevice-1));	
-	CHECK_CUDA_ERRORS(cudaFree(0));	
+
 	
-
+	
+/*
 	//image data
 	float *float_data_d;
 	unsigned char *char_data_d;

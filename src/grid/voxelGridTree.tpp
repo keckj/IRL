@@ -47,3 +47,8 @@ T VoxelGridTree<T>::operator()(unsigned int i, unsigned int j, unsigned int k) {
 
 	return _childs[i](x,y,z);
 }
+
+template <typename T>
+unsigned int VoxelGridTree<T>::nChilds() {
+	return _nChild;
+}
