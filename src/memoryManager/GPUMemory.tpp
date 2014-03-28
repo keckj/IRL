@@ -1,8 +1,12 @@
 
+#include "utils/cudaUtils.hpp"
+#include "utils/utils.hpp"
 
 template <typename T>
 T* GPUMemory::malloc(unsigned long nData, int deviceId) {
 	
+	log_console.infoStream() << "\tAllocating " << toStringMemory(nData*sizeof(T)) << " on device " << deviceId;  
+
 	assert(GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
 
 	T *data;
@@ -15,6 +19,8 @@ T* GPUMemory::malloc(unsigned long nData, int deviceId) {
 
 template <typename T>
 void GPUMemory::free(T* data, unsigned long nData, int deviceId) {
+	log_console.infoStream() << "\tFreeing " << toStringMemory(nData*sizeof(T)) << " on device " << deviceId;  
+	
 	int currentDevice;
 	CHECK_CUDA_ERRORS(cudaGetDevice(&currentDevice));
 

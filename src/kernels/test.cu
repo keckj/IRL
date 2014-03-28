@@ -1,4 +1,5 @@
 #include <cmath>
+
 #include "kernels.hpp"
 #include "utils/cudaUtils.hpp"
 
@@ -93,12 +94,13 @@ void VNNKernel(const int nImages, const int imgWidth, const int imgHeight,
 		const unsigned int voxelGridWidth, const unsigned int voxelGridHeight, const unsigned int voxelGridLength,
 		float **offsets_d,
 		float **rotations_d,
-		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter) {
+		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter,
+		cudaStream_t stream) {
 
 	dim3 dimBlock(32, 32, 1);
 	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f), nImages);
 
-	VNN<<<dimGrid,dimBlock>>>(nImages, imgWidth, imgHeight, 
+	VNN<<<dimGrid,dimBlock,0,stream>>>(nImages, imgWidth, imgHeight, 
 			deltaGrid,  deltaX,  deltaY,
 			xMin, yMin, zMin,
 			voxelGridWidth,  voxelGridHeight,  voxelGridLength,
