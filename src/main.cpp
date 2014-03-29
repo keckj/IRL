@@ -234,7 +234,8 @@ int main( int argc, char** argv)
 
 	//split in subgrids according to min of GPUs memory left, reserved data bytes, and grid size ratio
 	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> voxelGrid = grid.splitGridWithMaxMemory(
-			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio);
+			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, 
+			6);
 
 	//compute how many devices are needed
 	unsigned int cudaDevicesNeeded = maxCudaDevices;

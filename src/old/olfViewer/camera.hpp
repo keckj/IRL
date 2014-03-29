@@ -47,7 +47,7 @@ class Camera {
 		void translate(vec3 &vector);
 
 		void moveTo(float x, float y, float z);
-		void moveTo(vec3 &vector);
+		void moveTo(vec3 &vector)
 
 		void setAspectRatio(float aspectRatio);
 

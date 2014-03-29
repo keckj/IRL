@@ -108,7 +108,7 @@ void SharedResource<T, CPUResourceType, GPUResourceType>::copyToDevice(cudaStrea
 	assert(this->CPUResourceType<T>::isCPUResource());
 	assert(this->GPUResourceType<T>::isGPUResource());
 	cudaSetDevice(this->deviceId());
-	CHECK_CUDA_ERRORS(cudaMemcpyAsync(this->deviceData(), this->hostData(), this->dataSize(), cudaMemcpyHostToDevice, stream));
+	CHECK_CUDA_ERRORS(cudaMemcpyAsync(this->deviceData(), this->hostData(), this->dataBytes(), cudaMemcpyHostToDevice, stream));
 }
 
 template <typename T,
@@ -118,5 +118,5 @@ void SharedResource<T, CPUResourceType, GPUResourceType>::copyToHost(cudaStream_
 	assert(this->CPUResourceType<T>::isCPUResource());
 	assert(this->GPUResourceType<T>::isGPUResource());
 	cudaSetDevice(this->deviceId());
-	CHECK_CUDA_ERRORS(cudaMemcpyAsync(this->hostData(), this->deviceData(), this->dataSize(), cudaMemcpyDeviceToHost, stream));
+	CHECK_CUDA_ERRORS(cudaMemcpyAsync(this->hostData(), this->deviceData(), this->dataBytes(), cudaMemcpyDeviceToHost, stream));
 }
