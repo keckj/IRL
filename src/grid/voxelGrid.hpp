@@ -3,22 +3,30 @@
 
 #include "memoryManager/PinnedCPUResource.hpp"
 #include "memoryManager/GPUResource.hpp"
+#include "memoryManager/sharedResource.hpp"
 
-template <typename T>
-class VoxelGrid : public PinnedCPUResource<T>, public GPUResource<T> {
+template <typename T, 
+		 template <typename T> class CPUResourceType, 
+		 template <typename T> class GPUResourceType >
+class VoxelGrid : public SharedResource<T, CPUResourceType, GPUResourceType> {
 
 public:
 	explicit VoxelGrid(
 			float gridRealWidth, 
 			float gridRealHeight, 
 			float gridRealLength, 
-			float deltaGrid);
+			float deltaGrid,
+			int deviceId = 0);
 	
-	explicit VoxelGrid(unsigned int gridWidth, 
+	explicit VoxelGrid(
+			unsigned int gridWidth, 
 			unsigned int gridHeight, 
 			unsigned int gridLength, 
-			float deltaGrid);
+			float deltaGrid,
+			int deviceId = 0);
 	
+	VoxelGrid(VoxelGrid<T,CPUResourceType,GPUResource> &original);
+
 	virtual ~VoxelGrid();
 
 	unsigned int width() const;
@@ -26,15 +34,6 @@ public:
 	unsigned int length() const;
 	float voxelSize() const;
 	
-	unsigned long dataSize() const;
-	unsigned long dataBytes() const;
-
-	T *dataHost() const;
-	T *dataDevice() const;
-
-	void allocateOnHost();
-	void allocateOnDevice(int deviceId);
-
 	T operator()(unsigned int i, unsigned int j, unsigned int k);
 
 protected:

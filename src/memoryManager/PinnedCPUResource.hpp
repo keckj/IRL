@@ -8,11 +8,12 @@ template <typename T>
 class PinnedCPUResource : public CPUResource<T> {
 	
 public:
-	PinnedCPUResource();
+	PinnedCPUResource(unsigned long size = 0);
 	PinnedCPUResource(T *data, unsigned int size, bool owner = false);
 	~PinnedCPUResource();
 
 	void free();
+	void allocate();
 
 	const std::string getResourceType() const;
 };

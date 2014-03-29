@@ -3,19 +3,19 @@
 #include <typeinfo>
 
 template <typename T>
-CPUResource<T>::CPUResource() :
-_data(0), _size(0), _isOwner(false), _isCPUResource(false)
+CPUResource<T>::CPUResource(unsigned long size) :
+_data(0), _size(size), _isOwner(false), _isCPUResource(false)
 {
 }
 	
 template <typename T>
 CPUResource<T>::CPUResource(CPUResource &original) :
-_data(original.data()), _size(original.size()), _isOwner(false), _isCPUResource(true) {
+_data(original.data()), _size(original.size()), _isOwner(false), _isCPUResource(original.isCPUResource()) {
 }
 
 template <typename T>
 CPUResource<T>::CPUResource(T *data, unsigned int size, bool owner) :
-_data(data), _size(size), _isOwner(owner), _isCPUResource(true) {
+_data(data), _size(size), _isOwner(owner), _isCPUResource(size != 0) {
 	assert((data == 0 && size == 0) || (data != 0 && size != 0));
 }
 
@@ -29,12 +29,12 @@ T* CPUResource<T>::data() const {
 }
 
 template <typename T>
-unsigned int CPUResource<T>::size() const {
+unsigned long CPUResource<T>::size() const {
 	return _size;
 }
 
 template <typename T>
-unsigned int CPUResource<T>::bytes() const {
+unsigned long CPUResource<T>::bytes() const {
 	return _size * sizeof(T);
 }
 

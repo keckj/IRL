@@ -8,6 +8,7 @@
 const volatile unsigned long CPUMemory::_memorySize = 0;
 const volatile unsigned long CPUMemory::_memoryRuntime = 0;
 unsigned long CPUMemory::_memoryLeft = 0;
+bool CPUMemory::_verbose = false;
 
 CPUMemory::CPUMemory() {
 }
@@ -39,3 +40,8 @@ void CPUMemory::display(std::ostream &out) {
 		<< "\t " << 100*(float)(CPUMemory::_memorySize - CPUMemory::_memoryLeft)/CPUMemory::_memorySize << "%"
 		<< std::endl; 
 }
+
+void CPUMemory::setVerbose(bool verbose) {
+	CPUMemory::_verbose = verbose;
+}
+

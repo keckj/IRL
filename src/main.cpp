@@ -27,6 +27,7 @@
 #include "memoryManager/GPUResource.hpp"
 #include "memoryManager/GPUMemory.hpp"
 #include "memoryManager/CPUMemory.hpp"
+#include "memoryManager/sharedResource.hpp"
 
 using namespace std;
 using namespace cv;
@@ -35,7 +36,7 @@ using namespace kernel;
 int main( int argc, char** argv)
 {
 	initLogs();
-	
+
 	//initialize && free all GPU memory
 	int maxCudaDevices;
 	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&maxCudaDevices));
@@ -44,18 +45,18 @@ int main( int argc, char** argv)
 		CHECK_CUDA_ERRORS(cudaFree(0));	
 	}
 	log_console.infoStream() << "Initialized all devices !";
-	
+
 	//print devices informations
 	CudaUtils::logCudaDevices(log_console);
 
 	GPUMemory::init();
 	CPUMemory::init();
-	
+
 	//default values
 	float dG = 0.5f;
 	int thres = 128;
 	string dataSource("data/imagesUS/");
-	
+
 
 	//parsing input
 	if(argc >= 2) { 
@@ -71,35 +72,35 @@ int main( int argc, char** argv)
 		}
 	}
 	if(argc >= 3) { 
-			dG = atof(argv[2]);
+		dG = atof(argv[2]);
 	}
 	if(argc >= 4) { 
-			thres = atoi(argv[3]);
-			if(thres < 0 || thres > 255) {
-				log_console.critStream() << "Threshold must be set between 0 and 255 !";
-				exit(1);
-			}
+		thres = atoi(argv[3]);
+		if(thres < 0 || thres > 255) {
+			log_console.critStream() << "Threshold must be set between 0 and 255 !";
+			exit(1);
+		}
 	}
 	if(argc >= 5) {
-			log_console.critStream() << "Too much input arguments " << argv[3] << " !";
-			exit(1);
+		log_console.critStream() << "Too much input arguments " << argv[3] << " !";
+		exit(1);
 	}
-		
-	
+
+
 	//Loading data 
-	
+
 	Image im;
 	int nImages;
 	float **offsets_h, **rotations_h, *float_data_h;
 	float dx, dy;
 	int w, h;
-	
+
 	//Note sur le stockage
 	//offset[0-2][numImage] //rotation[0-8][numImage], //data[numImage] 
 	//       X Y Z                     R0 ... R8
-	
+
 	im.loadLocalizedUSImages(dataSource, &nImages, &w, &h, &dx, &dy, &offsets_h, &rotations_h, &float_data_h, true);
-	
+
 	const unsigned char viewerThreshold = (unsigned char) thres;
 	const int imgWidth = w;
 	const int imgHeight = h;
@@ -109,18 +110,22 @@ int main( int argc, char** argv)
 	const float imgRealWidth = imgWidth*dx;
 	const float imgRealHeight = imgHeight*dy;
 	const unsigned long imageSize = imgWidth * imgHeight * nImages;
-	
-	
+
+
 	log_console.infoStream() << "== Initial Host and Device Memory Report ==";
 	CPUMemory::display(cout);
 	GPUMemory::display(cout);
+
+	//log memory allocs and frees
+	CPUMemory::setVerbose(true);
+	GPUMemory::setVerbose(true);
 
 	log_console.infoStream() << "== US Images info == ";
 	log_console.infoStream() << "\tImage number : " << nImages;
 	log_console.infoStream() << "\tImages size : " << imgWidth << " x " << imgHeight << " (px)";
 	log_console.infoStream() << "\tSensor precision : " << deltaX*1000 << " x " << deltaY*1000 << " (µm)";
 	log_console.infoStream() << "\tImages real size : " << imgRealWidth << " x " << imgRealHeight << " (mm)";
-	
+
 
 
 	//compute bounding box
@@ -158,9 +163,9 @@ int main( int argc, char** argv)
 			xMax = (posX > xMax ? posX : xMax);
 			yMax = (posY > yMax ? posY : yMax);
 			zMax = (posZ > zMax ? posZ : zMax);
-		
+
 			//printf("\nCPU %f\t%f\t%f\n", posX, posY, posZ);
-			
+
 		}
 	}
 
@@ -170,12 +175,12 @@ int main( int argc, char** argv)
 	const unsigned int minVoxelGridWidth = ceil(boxWidth/deltaGrid);
 	const unsigned int minVoxelGridHeight = ceil(boxHeight/deltaGrid);
 	const unsigned int minVoxelGridLength = ceil(boxLentgh/deltaGrid);
-	
+
 	//create grids and compute upper power of two sides grid 
 	//no memory is allocated
-	VoxelGrid<unsigned char> minGrid(minVoxelGridWidth, minVoxelGridHeight, minVoxelGridLength, deltaGrid);
-	PowerOfTwoVoxelGrid<unsigned char> grid(minGrid);
-	
+	VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> minGrid(minVoxelGridWidth, minVoxelGridHeight, minVoxelGridLength, deltaGrid);
+	PowerOfTwoVoxelGrid<unsigned char,PinnedCPUResource,GPUResource> grid(minGrid);
+
 	log_console.infoStream() << "Voxel grid precision set to " << deltaGrid*1000 << " µm";
 	log_console.infoStream() << "Minimum grid size : " 
 		<< minGrid.width() << "x" << minGrid.height() << "x" << minGrid.length();
@@ -183,34 +188,43 @@ int main( int argc, char** argv)
 		<< grid.width() << "x" << grid.height() << "x" << grid.length();
 	log_console.infoStream() << "Effective grid memory size (unsigned char) : " 
 		<< toStringMemory(grid.dataBytes());
-	
-	
+
+
 	//cast float images to unsigned char
 	log_console.infoStream() << "Casting images to unsigned char !";
-	CHECK_CUDA_ERRORS(cudaSetDevice(0));
-	float *float_data_d = GPUMemory::malloc<float>(imageSize, 0);
-	unsigned char *char_data_d = GPUMemory::malloc<unsigned char>(imageSize, 0);
-	unsigned char *images_h = CPUMemory::malloc<unsigned char>(imageSize, true);
-	
-	CHECK_CUDA_ERRORS(cudaMemcpy(float_data_d, float_data_h, imageSize*sizeof(float), cudaMemcpyHostToDevice));
+	PinnedCPUResource<unsigned char> images_char_h(imageSize);
+	images_char_h.allocate();
 
-	castKernel(nImages, imgWidth, imgHeight, float_data_d, char_data_d);
-	checkKernelExecution();
+	{
+		CHECK_CUDA_ERRORS(cudaSetDevice(0));
 
-	CHECK_CUDA_ERRORS(cudaMemcpy(images_h, char_data_d, imageSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
-	
-	CPUMemory::free<float>(float_data_h, imageSize, true);	
-	GPUMemory::free<float>(float_data_d, imageSize, 0);
-	GPUMemory::free<unsigned char>(char_data_d, imageSize, 0);
+		PinnedCPUResource<float> images_float_h(float_data_h, imageSize, true); //will be freed at the end of the block
+		
+		SharedResource<float, PinnedCPUResource, GPUResource> images_float_s(images_float_h, 0);
+		SharedResource<unsigned char, PinnedCPUResource, GPUResource> images_char_s(images_char_h, 0);
+
+		images_float_s.allocateOnDevice();
+		images_char_s.allocateOnDevice();
+
+		images_float_s.copyToDevice();
+
+		castKernel(nImages, imgWidth, imgHeight, images_float_s.deviceData(), images_char_s.deviceData());
+		checkKernelExecution();
+
+		images_char_s.copyToHost();
+
+		float_data_h = 0;
+	}
 	log_console.infoStream() << "Freed device and host float image data !";
-	
+
+
 	//reserved memory on each GPU
 	//images, offsets, rotations (stack already taken into account)
 	const unsigned long imageBytes = imageSize * sizeof(unsigned char); 	
 	const unsigned long rotationBytes = 9*nImages*sizeof(float);
 	const unsigned long offsetBytes = 3*nImages*sizeof(float);
 	const unsigned long reservedDataBytes = imageBytes + rotationBytes + offsetBytes;
-	
+
 
 	// needed memory on each GPU 
 	unsigned long gridBytes = 2*grid.dataBytes();//two grids to allow compute & mem transfers
@@ -219,20 +233,20 @@ int main( int argc, char** argv)
 	float oneGridToNeededMemoryRatio = (float)grid.dataBytes()/sharedBytes;
 
 	//split in subgrids according to min of GPUs memory left, reserved data bytes, and grid size ratio
-	VoxelGridTree<unsigned char> voxelGrid = grid.splitGridWithMaxMemory(
+	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> voxelGrid = grid.splitGridWithMaxMemory(
 			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio);
-	
+
 	//compute how many devices are needed
 	unsigned int cudaDevicesNeeded = maxCudaDevices;
 	unsigned int meanSubgridsToComputePerDevice = 0;
-	
+
 	assert(voxelGrid.nChilds() >= 1);
 	while(meanSubgridsToComputePerDevice < 1) {
 		meanSubgridsToComputePerDevice = voxelGrid.nChilds()/cudaDevicesNeeded;
 		cudaDevicesNeeded--;
 	}
 	cudaDevicesNeeded++;
-	
+
 	//compute how many grids should be computed on each device
 	unsigned int *subgridsToComputePerDevice = new unsigned int[cudaDevicesNeeded];
 	for (int i = 0; i < maxCudaDevices; i++) {
@@ -241,7 +255,7 @@ int main( int argc, char** argv)
 		else	
 			subgridsToComputePerDevice[i] = voxelGrid.nChilds() % meanSubgridsToComputePerDevice;
 	}
-	
+
 	log_console.infoStream() << "Number of subgrids : " 
 		<< voxelGrid.nChilds();
 	log_console.infoStream() << "Subgrid size : " 
@@ -269,17 +283,18 @@ int main( int argc, char** argv)
 	for (int i = 0; i < 2; i++) {
 		streams[i] = new cudaStream_t[maxCudaDevices];
 		for (int j = 0; j < maxCudaDevices; j++) {
-			cudaStreamCreate(&streams[i][j]);
+			CHECK_CUDA_ERRORS(cudaSetDevice(j));
+			CHECK_CUDA_ERRORS(cudaStreamCreate(&streams[i][j]));
 		}
 	}
-	
+
 	log_console.infoStream() << "Allocating grid data on host !";
 	//allocate subgrids on host
 	for (auto it = voxelGrid.begin(); it != voxelGrid.end(); it++) {
 		(*it)->allocateOnHost();
 	}
 
-	
+
 	//allocate two subgrids on each active devices, and a hitgrid
 	//and copy images, rotations, offsets
 	log_console.infoStream() << "Allocating data on devices !";
@@ -288,21 +303,21 @@ int main( int argc, char** argv)
 		grid_d[i] = new unsigned char *[cudaDevicesNeeded];
 	}
 	unsigned char **hitgrid_d = new unsigned char *[cudaDevicesNeeded];
-	
+
 	unsigned char **images_d = new unsigned char*[cudaDevicesNeeded]; 
 	float ***rotations_d = new float**[cudaDevicesNeeded]; 
 	float ***offsets_d = new float**[cudaDevicesNeeded]; 
 	for (unsigned int i = 0; i < cudaDevicesNeeded ; i++) {
 		CHECK_CUDA_ERRORS(cudaSetDevice(i));	
-		
+
 		images_d[i] = GPUMemory::malloc<unsigned char>(imageSize, i);
-		
+
 		offsets_d[i] = new float*[3];
 		for (int j = 0; j < 3; j++) offsets_d[i][j] = GPUMemory::malloc<float>(nImages, i);
 
 		rotations_d[i] = new float*[9];
 		for (int j = 0; j < 9; j++) rotations_d[i][j] = GPUMemory::malloc<float>(nImages, i);
-		
+
 		hitgrid_d[i] = GPUMemory::malloc<unsigned char>(voxelGrid.subgridSize(), i);
 		grid_d[0][i] = GPUMemory::malloc<unsigned char>(voxelGrid.subgridSize(), i);
 		grid_d[1][i] = GPUMemory::malloc<unsigned char>(voxelGrid.subgridSize(), i);
@@ -312,8 +327,8 @@ int main( int argc, char** argv)
 	log_console.infoStream() << "Copying offsets, rotations and images to devices !";
 	for (unsigned int i = 0; i < cudaDevicesNeeded ; i++) {
 		CHECK_CUDA_ERRORS(cudaSetDevice(i));	
-		CHECK_CUDA_ERRORS(cudaMemcpyAsync(images_d[i], images_h, imageBytes, cudaMemcpyHostToDevice, streams[0][i]));
-		
+		CHECK_CUDA_ERRORS(cudaMemcpyAsync(images_d[i], images_char_h.data(), imageBytes, cudaMemcpyHostToDevice, streams[0][i]));
+
 		for (int j = 0; j < 3; j++) {
 			CHECK_CUDA_ERRORS(cudaMemcpyAsync(offsets_d[i][j], offsets_h[j], nImages*sizeof(float), cudaMemcpyHostToDevice, streams[0][i]));
 		}
@@ -323,51 +338,56 @@ int main( int argc, char** argv)
 		}
 	}
 	CHECK_CUDA_ERRORS(cudaDeviceSynchronize());
-	
+
 	log_console.infoStream() << "== Device Memory Report ==";
 	GPUMemory::display(cout);
 
 	//bin filling
-	const unsigned int subgridWidth = voxelGrid.subwidth();
-	const unsigned int subgridHeight = voxelGrid.subheight();
-	const unsigned int subgridLength = voxelGrid.sublength();
-	
+	unsigned int nGrid = 0;
 	for (int i = 0; i < (int)cudaDevicesNeeded; i++) {
 		CHECK_CUDA_ERRORS(cudaSetDevice(i));
-	
+
 		for (int j = 0; j < (int)subgridsToComputePerDevice[i]; j++) {
+		
+			//compute subgrid
 			VNNKernel(nImages, imgWidth, imgHeight, 
 					deltaGrid, deltaX, deltaY,
 					xMin, yMin, zMin,
-					subgridWidth, subgridHeight, subgridLength,
+					voxelGrid.subwidth(), voxelGrid.subheight(), voxelGrid.sublength(),
 					offsets_d[i],
 					rotations_d[i],
 					images_d[i],
 					grid_d[j%2][i], hitgrid_d[i],
 					streams[j%2][i]);
 
-			checkKernelExecution();
+			//copy back subgrid
+			CHECK_CUDA_ERRORS(cudaMemcpyAsync(voxelGrid(nGrid)->hostData(), grid_d[j%2][i], voxelGrid.subgridBytes(), cudaMemcpyDeviceToHost, streams[j%2][i]));
+
+			nGrid++;
 		}
+
 	}
 
-	
-/*
-	
+	cudaDeviceSynchronize();
+	checkKernelExecution();
+
+	/*
+
 	//set voxels anb hit counter to 0
 	log_console.info("Setting memory to 0...");
 	CHECK_CUDA_ERRORS(cudaMemset(voxel_data_d, 0, gridSize*sizeof(unsigned char)));
 	CHECK_CUDA_ERRORS(cudaMemset(hit_counter_d, 0, gridSize*sizeof(unsigned char)));
-	
+
 	//compute VNN
 	log_console.info("[KERNEL] Computing BIN FILLING using VNN method...");
 	VNNKernel(nImages, imgWidth, imgHeight, 
-			deltaGrid, deltaX, deltaY,
-			xMin, yMin, zMin,
-			voxelGridWidth,  voxelGridHeight,  voxelGridLength,
-			offsets_d,
-			rotations_d,
-			char_data_d, voxel_data_d, hit_counter_d);
-	
+	deltaGrid, deltaX, deltaY,
+	xMin, yMin, zMin,
+	voxelGridWidth,  voxelGridHeight,  voxelGridLength,
+	offsets_d,
+	rotations_d,
+	char_data_d, voxel_data_d, hit_counter_d);
+
 
 	cudaDeviceSynchronize();
 
@@ -377,20 +397,20 @@ int main( int argc, char** argv)
 	//copy back hit counter
 	log_console.info("Done. Copying hit counter data back to RAM...");
 	CHECK_CUDA_ERRORS(cudaMemcpy(hit_counter_h, hit_counter_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
-	
+
 	log_console.info("Free image char data on GPU.");
 	CHECK_CUDA_ERRORS(cudaFree(char_data_d));
-	
+
 	long nHit = 0, sumHitRate = 0;
 	unsigned char maxHitRate = 0, currentHitRate;
 	for (unsigned int i = 0; i < gridSize; i++) {
-		currentHitRate = hit_counter_h[i];
+	currentHitRate = hit_counter_h[i];
 
-		if(currentHitRate != 0) {
-			nHit++;
-			sumHitRate += currentHitRate;
-			maxHitRate = (currentHitRate > maxHitRate ? currentHitRate : maxHitRate);
-		}
+	if(currentHitRate != 0) {
+	nHit++;
+	sumHitRate += currentHitRate;
+	maxHitRate = (currentHitRate > maxHitRate ? currentHitRate : maxHitRate);
+	}
 	}
 
 	log_console.infoStream() << "Theorical filling rate : " << (float)nImages*imgWidth*imgHeight/gridSize;
@@ -410,104 +430,104 @@ int main( int argc, char** argv)
 }
 
 
-	//////////////////////////////////////////////////
-	//LocalizedUSImage::initialize();
-	//LocalizedUSImage img("data/processedImages/" , "IQ[data #123 (RF Grid).mhd");
+//////////////////////////////////////////////////
+//LocalizedUSImage::initialize();
+//LocalizedUSImage img("data/processedImages/" , "IQ[data #123 (RF Grid).mhd");
 
-	//Mat m(img.getHeight(), img.getWidth(), CV_64F, img.getImageData());
+//Mat m(img.getHeight(), img.getWidth(), CV_64F, img.getImageData());
 
-	//double min, max;
-	//minMaxIdx(m, &min, &max);
-	//cout << "\nvals \t" << min << "\t" << max << endl;
-	//Mat hist;
-	//int hist_size = 128;
-	//float range[] = {(float) min, (float) max};
-	//const float *hist_range = {range};
-	//calcHist(&m, 1, 0, Mat(), hist, 1, &hist_size, &hist_range, true, false);
+//double min, max;
+//minMaxIdx(m, &min, &max);
+//cout << "\nvals \t" << min << "\t" << max << endl;
+//Mat hist;
+//int hist_size = 128;
+//float range[] = {(float) min, (float) max};
+//const float *hist_range = {range};
+//calcHist(&m, 1, 0, Mat(), hist, 1, &hist_size, &hist_range, true, false);
 
-	//int hist_w = 512; int hist_h = 400;
-	//int bin_w = cvRound( (double) hist_w/hist_size );
-	//Mat histImage( hist_h, hist_w, CV_8UC1, Scalar( 0,0,0) );
-	//normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+//int hist_w = 512; int hist_h = 400;
+//int bin_w = cvRound( (double) hist_w/hist_size );
+//Mat histImage( hist_h, hist_w, CV_8UC1, Scalar( 0,0,0) );
+//normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
 
-	//for( int i = 1; i < hist_size; i++ )
-	//{
-		//line( histImage, Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
-				//Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
-				//Scalar( 255, 0, 0), 2, 8, 0  );
-	//}
-
-	/// Display
-	//namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
-	//imshow("calcHist Demo", histImage );
-
-	//cout << img;
-	//Mat m2,m3;
-	//m.convertTo(m2, CV_8UC1);
-	//m.convertTo(m3, CV_8UC1);
-	//GaussianBlur(m2, m2, Size(9,9), 5.0);
-	//int lowThreshold = 30;
-	//int kernel_size = 3;
-	//Canny(m2, m2, lowThreshold, lowThreshold*3, kernel_size);
-	//m2.copyTo(m3, m2);
-	//Image::displayImage(m3);
-
-	//log_console.info("END OF MAIN PROGRAMM");
-
-	//return EXIT_SUCCESS;
+//for( int i = 1; i < hist_size; i++ )
+//{
+//line( histImage, Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
+//Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
+//Scalar( 255, 0, 0), 2, 8, 0  );
 //}
 
-	//CHECK_CUDA_ERRORS(cudaMemcpy(host_char_data, device_char_data, nImages*imgWidth*imgHeight, cudaMemcpyDeviceToHost));
-	
-	//show results
-	//Mat m0(imgHeight, imgWidth, CV_32F, data[40]);
-	//m0.convertTo(m0, CV_8UC1);
-	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+40*imgWidth*imgHeight);
-	//Image::displayImage(m0);
-	//Image::displayImage(m1);
+/// Display
+//namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
+//imshow("calcHist Demo", histImage );
 
-	//namedWindow( "Display window", CV_WINDOW_AUTOSIZE );
-	//for (int i = 0; i < nImages; i++) {
-		//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
-		//Mat m0(imgHeight, imgWidth, CV_32F, host_float_data+i*imgWidth*imgHeight);
-		//m0.convertTo(m0, CV_8UC1);
-		//imshow("Display window", m1);
-		//cvWaitKey(100);
-		//cout << i << "/" << nImages << endl;
-	//}
-	
-	//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data);
-	//VideoWriter writer("img/data_0.avi", CV_FOURCC('M','J','P','G'), 12, m1.size(), false);
-	 //for (int i = 0; i < nImages; i++) {
-		//Mat m0(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
-		//writer << m0;
-	 //}
-	 //return 0;
+//cout << img;
+//Mat m2,m3;
+//m.convertTo(m2, CV_8UC1);
+//m.convertTo(m3, CV_8UC1);
+//GaussianBlur(m2, m2, Size(9,9), 5.0);
+//int lowThreshold = 30;
+//int kernel_size = 3;
+//Canny(m2, m2, lowThreshold, lowThreshold*3, kernel_size);
+//m2.copyTo(m3, m2);
+//Image::displayImage(m3);
 
-	//MhdFile test("data/irm_femur/","MRIm001_fine_registration_complete.mhd");
-	//test.loadData();
-	//cout << test << endl;
+//log_console.info("END OF MAIN PROGRAMM");
 
-	 //for (unsigned int i = 0; i < test.getLength(); i++) {
-		//Mat m(test.getHeight(), test.getWidth(), CV_16U, (signed short*) (test.getData()) +test.getWidth()*test.getHeight()*i);
-		//Image::displayImage(m);
-		//cvWaitKey(100);
-	 //}
-	
-	//unsigned int height = test.getHeight(), width = test.getWidth(), length = test.getLength();
-	//unsigned long size = height*width*length;
-	//unsigned char *data = new unsigned char[size];
-	//signed short *sdata = (signed short *) test.getData();
+//return EXIT_SUCCESS;
+//}
 
-	//for (unsigned int i = 0; i < size; i++) {
-		//data[i] = (signed char) (sdata[i]/127);
-	//}
-	 
-	//for (unsigned int i = 0; i < test.getLength(); i++) {
-		//Mat m(test.getHeight(), test.getWidth(), CV_8U, data + test.getWidth()*test.getHeight()*i);
-		//Image::displayImage(m);
-		//cvWaitKey(100);
-	 //}
+//CHECK_CUDA_ERRORS(cudaMemcpy(host_char_data, device_char_data, nImages*imgWidth*imgHeight, cudaMemcpyDeviceToHost));
+
+//show results
+//Mat m0(imgHeight, imgWidth, CV_32F, data[40]);
+//m0.convertTo(m0, CV_8UC1);
+//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+40*imgWidth*imgHeight);
+//Image::displayImage(m0);
+//Image::displayImage(m1);
+
+//namedWindow( "Display window", CV_WINDOW_AUTOSIZE );
+//for (int i = 0; i < nImages; i++) {
+//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
+//Mat m0(imgHeight, imgWidth, CV_32F, host_float_data+i*imgWidth*imgHeight);
+//m0.convertTo(m0, CV_8UC1);
+//imshow("Display window", m1);
+//cvWaitKey(100);
+//cout << i << "/" << nImages << endl;
+//}
+
+//Mat m1(imgHeight, imgWidth, CV_8UC1, host_char_data);
+//VideoWriter writer("img/data_0.avi", CV_FOURCC('M','J','P','G'), 12, m1.size(), false);
+//for (int i = 0; i < nImages; i++) {
+//Mat m0(imgHeight, imgWidth, CV_8UC1, host_char_data+i*imgWidth*imgHeight);
+//writer << m0;
+//}
+//return 0;
+
+//MhdFile test("data/irm_femur/","MRIm001_fine_registration_complete.mhd");
+//test.loadData();
+//cout << test << endl;
+
+//for (unsigned int i = 0; i < test.getLength(); i++) {
+//Mat m(test.getHeight(), test.getWidth(), CV_16U, (signed short*) (test.getData()) +test.getWidth()*test.getHeight()*i);
+//Image::displayImage(m);
+//cvWaitKey(100);
+//}
+
+//unsigned int height = test.getHeight(), width = test.getWidth(), length = test.getLength();
+//unsigned long size = height*width*length;
+//unsigned char *data = new unsigned char[size];
+//signed short *sdata = (signed short *) test.getData();
+
+//for (unsigned int i = 0; i < size; i++) {
+//data[i] = (signed char) (sdata[i]/127);
+//}
+
+//for (unsigned int i = 0; i < test.getLength(); i++) {
+//Mat m(test.getHeight(), test.getWidth(), CV_8U, data + test.getWidth()*test.getHeight()*i);
+//Image::displayImage(m);
+//cvWaitKey(100);
+//}
 
 
-	//return 0;
+//return 0;

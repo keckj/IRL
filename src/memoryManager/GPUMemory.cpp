@@ -9,7 +9,8 @@ int GPUMemory::_nDevice = 0;
 const unsigned long * GPUMemory::_memorySize = 0;
 unsigned long * GPUMemory::_memoryLeft = 0;
 unsigned long * GPUMemory::_memoryRuntime = 0;
-		
+bool GPUMemory::_verbose = false;
+
 GPUMemory::GPUMemory() {
 }
 
@@ -72,4 +73,8 @@ unsigned long GPUMemory::getMinAvailableMemoryOnDevices() {
 	}
 
 	return minMemAvailable;
+}
+
+void GPUMemory::setVerbose(bool verbose) {
+	GPUMemory::_verbose = verbose;
 }

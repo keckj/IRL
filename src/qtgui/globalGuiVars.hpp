@@ -6,10 +6,12 @@
 #include "image/image.hpp"
 #include <QObject>
 #include <QMainWindow>
+#include "memoryManager/PinnedCPUResource.hpp"
+#include "memoryManager/GPUResource.hpp"
 
 namespace qtgui {
 	
-	extern VoxelGrid<unsigned char> *voxelGrid;
+	extern VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> *voxelGrid;
 	extern QMainWindow *mainWindow;
 
 	namespace viewer {

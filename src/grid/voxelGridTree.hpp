@@ -5,24 +5,29 @@
 #include <vector>
 #include "powerOfTwoVoxelGrid.hpp"
 
-template <typename T> class PowerOfTwoVoxelGrid;
+template <typename T, 
+		 template <typename T> class CPUResourceType, 
+		 template <typename T> class GPUResourceType >
+class PowerOfTwoVoxelGrid;
 
-template <typename T>
+template <typename T, 
+		 template <typename T> class CPUResourceType, 
+		 template <typename T> class GPUResourceType >
 class VoxelGridTree {
 	public:
 		VoxelGridTree(unsigned int nGridX, unsigned int nGridY, unsigned int nGridZ,
 			unsigned int subWidth, unsigned int subHeight, unsigned int subLength,
-			std::vector<PowerOfTwoVoxelGrid<T> *> grids);
+			std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *> grids);
 
-		typename std::vector<PowerOfTwoVoxelGrid<T> *>::iterator begin();
-		typename std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator cbegin();
+		typename std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *>::iterator begin();
+		typename std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *>::const_iterator cbegin();
 
-		typename std::vector<PowerOfTwoVoxelGrid<T> *>::iterator end();
-		typename std::vector<PowerOfTwoVoxelGrid<T> *>::const_iterator cend();
+		typename std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *>::iterator end();
+		typename std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *>::const_iterator cend();
 
 		T operator()(unsigned int i, unsigned int j, unsigned int k); //getVal
-		//PowerOfTwoVoxelGrid<T>* operator(unsigned int i, unsigned int j, unsigned int k); //get subgrid containing
-		//
+		PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>* operator()(unsigned int i); //get subgrid i 
+
 		unsigned int nChilds() const;
 		unsigned int subwidth() const;
 		unsigned int subheight() const;
@@ -39,7 +44,7 @@ class VoxelGridTree {
 		unsigned int _width, _height, _length;
 		unsigned int _subWidth, _subHeight, _subLength;
 		
-		std::vector<PowerOfTwoVoxelGrid<T> *> _childs;	
+		std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *> _childs;	
 
 };
 

@@ -1,6 +1,6 @@
 
 template <typename T>
-PagedCPUResource<T>::PagedCPUResource() : CPUResource<T>()
+PagedCPUResource<T>::PagedCPUResource(unsigned long size) : CPUResource<T>(size)
 {
 }
 
@@ -20,4 +20,24 @@ PagedCPUResource<T>::~PagedCPUResource() {
 template <typename T>
 const std::string PagedCPUResource<T>::getResourceType() const {
 	return string("Paged CPU Memory");
+}
+
+template <typename T>
+void PagedCPUResource<T>::free() {
+	
+	if(this->_isCPUResource && this->_isOwner) {
+		delete [] this->_data;
+	}
+
+	this->_data = 0;
+	this->_size = 0;
+	this->_isOwner = false;
+	this->_isCPUResource = false;
+}
+
+template <typename T>
+void PagedCPUResource<T>::allocate() {
+	this->_data = CPUMemory::malloc<T>(this->_size, false);
+	this->_isCPUResource = true;
+	this->_isOwner = true;
 }

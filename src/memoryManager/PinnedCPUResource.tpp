@@ -3,7 +3,7 @@
 #include "memoryManager/CPUMemory.hpp"
 
 template <typename T>
-PinnedCPUResource<T>::PinnedCPUResource() : CPUResource<T>()
+PinnedCPUResource<T>::PinnedCPUResource(unsigned long size) : CPUResource<T>(size)
 {
 }
 
@@ -11,18 +11,24 @@ template <typename T>
 PinnedCPUResource<T>::PinnedCPUResource(T *data, unsigned int size, bool owner) :
 CPUResource<T>(data, size, owner)
 {
-	this->free();
 }
 
 template <typename T>
 PinnedCPUResource<T>::~PinnedCPUResource() {
+	this->free();
 }
 			
 template <typename T>
 const std::string PinnedCPUResource<T>::getResourceType() const {
-	return std::string("Pinned CPU Memory");
+	return std::string("Pinned (pagelocked) CPU Memory");
 }
 
+template <typename T>
+void PinnedCPUResource<T>::allocate() {
+	this->_data = CPUMemory::malloc<T>(this->_size, true);
+	this->_isCPUResource = true;
+	this->_isOwner = true;
+}
 
 template <typename T>
 void PinnedCPUResource<T>::free() {
@@ -36,3 +42,4 @@ void PinnedCPUResource<T>::free() {
 	this->_isOwner = false;
 	this->_isCPUResource = false;
 }
+

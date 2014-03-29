@@ -8,27 +8,27 @@ template <typename T>
 class CPUResource {
 public:
 	
-
 	void setData(T* data, unsigned int size, bool isOwner);
 
 	T* data() const;
-	unsigned int size() const;
-	unsigned int bytes() const;
+	unsigned long size() const; //desired size
+	unsigned long bytes() const; //desired bytes
 	bool isOwner() const;
 	
-	bool isCPUResource() const;
+	bool isCPUResource() const; //is it allocated ?
 	
+	virtual void free() = 0;
 	virtual const std::string getResourceType() const = 0;
 
 protected:
-	CPUResource();
+	CPUResource(unsigned long size = 0); //wont be allocated
 	CPUResource(CPUResource &original);
 	CPUResource(T *data, unsigned int size, bool owner = false);
 	virtual ~CPUResource();
 
 
 	T* _data;
-	unsigned int _size;
+	unsigned long _size;
 	bool _isOwner;
 	bool _isCPUResource;
 };

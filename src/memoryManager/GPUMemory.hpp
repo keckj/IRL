@@ -36,6 +36,7 @@ class GPUMemory {
 
 		static void display(std::ostream &out);
 			
+		static void setVerbose(bool verbose);
 
 	private:
 		GPUMemory();
@@ -44,6 +45,7 @@ class GPUMemory {
 		static const unsigned long * _memorySize;
 		static unsigned long * _memoryLeft;
 		static unsigned long * _memoryRuntime;
+		static bool _verbose;
 };
 
 #include "GPUMemory.tpp"

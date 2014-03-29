@@ -37,5 +37,5 @@ class Image {
 	
 		enum SliceAxe {AXE_X, AXE_Y, AXE_Z};
 		static QImage *generateParallelSlice(unsigned int nSlice,
-							VoxelGrid<unsigned char> &grid, SliceAxe axe);
+							VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> &grid, SliceAxe axe);
 };

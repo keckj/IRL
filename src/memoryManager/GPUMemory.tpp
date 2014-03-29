@@ -4,14 +4,23 @@
 
 template <typename T>
 T* GPUMemory::malloc(unsigned long nData, int deviceId) {
-	
-	log_console.infoStream() << "\tAllocating " << toStringMemory(nData*sizeof(T)) << " on device " << deviceId;  
+
+	if(_verbose) {
+		if(nData == 0) {
+			log_console.warn("Trying to allocate a 0 size block !");
+		}
+		else {
+			log_console.infoStream() << "\tAllocating " << toStringMemory(nData*sizeof(T)) << " on device " << deviceId;  
+		}
+	}
 
 	assert(GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
 
+	CHECK_CUDA_ERRORS(cudaSetDevice(deviceId));
+
 	T *data;
 	CHECK_CUDA_ERRORS(cudaMalloc((void**) &data, nData * sizeof(T)));
-	
+
 	GPUMemory::_memoryLeft[deviceId] -= nData*sizeof(T);
 
 	return data;
@@ -19,8 +28,16 @@ T* GPUMemory::malloc(unsigned long nData, int deviceId) {
 
 template <typename T>
 void GPUMemory::free(T* data, unsigned long nData, int deviceId) {
-	log_console.infoStream() << "\tFreeing " << toStringMemory(nData*sizeof(T)) << " on device " << deviceId;  
-	
+
+	if(_verbose) {
+		if(nData == 0) {
+			log_console.warn("Trying to allocate a 0 size block !");
+		}
+		else {
+			log_console.infoStream() << "\tFreeing " << toStringMemory(nData*sizeof(T)) << " on device " << deviceId;  
+		}
+	}
+
 	int currentDevice;
 	CHECK_CUDA_ERRORS(cudaGetDevice(&currentDevice));
 

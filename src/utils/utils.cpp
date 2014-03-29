@@ -31,4 +31,11 @@ bool isPow2(unsigned int n) {
 	return true;
 }
 
+const std::string toStringDim(dim3 d) {
+	std::stringstream ss;
+	ss << "(" << d.x << "," << d.y << "," << d.z << ")";
+	const std::string str(ss.str());
+	return str;
+}
+
 

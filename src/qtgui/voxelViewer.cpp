@@ -4,12 +4,14 @@
 #include "qtgui/globalGuiVars.hpp"
 #include "utils/log.hpp"
 
+#include "memoryManager/sharedResource.hpp"
+
 VoxelViewer::VoxelViewer(float alpha, QWidget *parent) :
 	Viewer(parent), alpha(alpha), voxelRenderer(0), boundingBox(0)
 {
 	qtgui::viewer::viewer = this;
 
-	VoxelGrid<unsigned char> *grid = qtgui::voxelGrid;
+	VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> *grid = qtgui::voxelGrid;
 
 	boundingBox = new BoundingBox(grid->width(), grid->height(), grid->length(),
 			alpha*grid->voxelSize());
@@ -17,7 +19,7 @@ VoxelViewer::VoxelViewer(float alpha, QWidget *parent) :
 
 #ifdef _CUDA_VIEWER 
 	voxelRenderer = new VoxelRenderer(grid->width(), grid->height(), grid->length(),
-			grid->dataDevice(),
+			grid->deviceData(),
 			alpha*grid->voxelSize(), alpha*grid->voxelSize(), alpha*grid->voxelSize(),
 			&qtgui::viewer::drawViewerBool, &qtgui::viewer::drawOneTime, &qtgui::viewer::viewerThreshold);
 #else

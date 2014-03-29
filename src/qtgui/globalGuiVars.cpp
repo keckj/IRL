@@ -3,10 +3,12 @@
 #include "image/image.hpp"
 #include <QObject>
 #include <QMainWindow>
+#include "memoryManager/PinnedCPUResource.hpp"
+#include "memoryManager/GPUResource.hpp"
 
 namespace qtgui {
 	
-	VoxelGrid<unsigned char> *voxelGrid = 0;
+	VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> *voxelGrid = 0;
 	QMainWindow *mainWindow = 0;
 
 	namespace viewer {

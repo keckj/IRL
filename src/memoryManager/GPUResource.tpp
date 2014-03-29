@@ -8,8 +8,8 @@
 #include "memoryManager/GPUMemory.hpp"
 
 template <typename T>
-GPUResource<T>::GPUResource() :
-_data(0), _deviceId(0), _size(0), _isOwner(false), _isGPUResource(false)
+GPUResource<T>::GPUResource(int device, unsigned long size) :
+_data(0), _deviceId(device), _size(size), _isOwner(false), _isGPUResource(false)
 {
 }
 	
@@ -36,12 +36,12 @@ T* GPUResource<T>::data() const {
 }
 
 template <typename T>
-unsigned int GPUResource<T>::size() const {
+unsigned long GPUResource<T>::size() const {
 	return _size;
 }
 
 template <typename T>
-unsigned int GPUResource<T>::bytes() const {
+unsigned long GPUResource<T>::bytes() const {
 	return _size * sizeof(T);
 }
 
@@ -103,4 +103,13 @@ void GPUResource<T>::free() {
 	_size = 0;
 	_isOwner = false;
 	_isGPUResource = false;
+}
+
+template <typename T>
+void GPUResource<T>::allocate() {
+	assert(!(_isGPUResource && _isOwner));
+	_data = GPUMemory::malloc<T>(_size, _deviceId);
+
+	_isOwner = true;
+	_isGPUResource = true;
 }

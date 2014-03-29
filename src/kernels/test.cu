@@ -2,6 +2,8 @@
 
 #include "kernels.hpp"
 #include "utils/cudaUtils.hpp"
+#include "utils/log.hpp"
+#include "utils/utils.hpp"
 
 namespace kernel {
 
@@ -20,7 +22,7 @@ __global__ void cast(const int nImages, const int imgWidth, const int imgHeight,
 void castKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data) {
 	dim3 dimBlock(32, 32, 1);
 	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f), nImages);
-
+	log_console.infoStream() << "[KERNEL::Cast] <<<" << toStringDim(dimBlock) << ", " << toStringDim(dimGrid) << ">>>";
 	cast<<<dimGrid,dimBlock>>>(nImages, imgWidth, imgHeight, float_data, char_data);
 }
 
@@ -42,12 +44,14 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 	if(idx >= imgWidth || idy >= imgHeight)
 		return;
 
-	float vx = (idx+0.5f)*deltaX;	
-	float vy = (idy+0.5f)*deltaY;
+	return;
+
+	/*float vx = (idx+0.5f)*deltaX;	*/
+	/*float vy = (idy+0.5f)*deltaY;*/
 	
-	float px = r1[n]*vx + r2[n]*vy + r3[n]*0.0f + offsetX[n] - xMin;
-	float py = r4[n]*vx + r5[n]*vy + r6[n]*0.0f + offsetY[n] - yMin;
-	float pz = r7[n]*vx + r8[n]*vy + r9[n]*0.0f + offsetZ[n] - zMin;
+	/*float px = r1[n]*vx + r2[n]*vy + r3[n]*0.0f + offsetX[n] - xMin;*/
+	/*float py = r4[n]*vx + r5[n]*vy + r6[n]*0.0f + offsetY[n] - yMin;*/
+	/*float pz = r7[n]*vx + r8[n]*vy + r9[n]*0.0f + offsetZ[n] - zMin;*/
 
 	/*if ((idx == 0 && idy == 0) ||*/
 		/*(idx == 0 && idy == imgHeight - 1) ||*/
@@ -56,35 +60,35 @@ __global__ void VNN(const int nImages, const int imgWidth, const int imgHeight,
 		/*printf("\nGPU %f\t%f\t%f", px+xMin, py+yMin, pz+zMin);*/
 	/*}*/
 	
-	unsigned int ix = __float2uint_rd(px/deltaGrid);
-	unsigned int iy = __float2uint_rd(py/deltaGrid);
-	unsigned int iz = __float2uint_rd(pz/deltaGrid);
+	/*unsigned int ix = __float2uint_rd(px/deltaGrid);*/
+	/*unsigned int iy = __float2uint_rd(py/deltaGrid);*/
+	/*unsigned int iz = __float2uint_rd(pz/deltaGrid);*/
 	
-	unsigned long i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;
+	/*unsigned long i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;*/
 
-	unsigned char value = char_image_data[id];
+	/*unsigned char value = char_image_data[id];*/
 	
-#ifdef _VOXEL_MEAN_VALUE
-	unsigned char hit = hit_counter[i];
-	__syncthreads();
-	float mean;
-	if(hit == 255) {
-		return;
-	}
-	else if(hit == 0) {
-		voxel_data[i] = value;
-		hit_counter[i] = 1;
-	}
-	else {
-		mean = ((int)hit*(int)voxel_data[i] + value)/(hit + 1);
-		voxel_data[i] = (unsigned char) mean;
-		atomicAdd(hit_counter + i, 1);
-	}
-#else
-	if (value > voxel_data[i]) {
-		voxel_data[i] = value;
-	}
-#endif
+/*#ifdef _VOXEL_MEAN_VALUE*/
+	/*unsigned char hit = hit_counter[i];*/
+	/*__syncthreads();*/
+	/*float mean;*/
+	/*if(hit == 255) {*/
+		/*return;*/
+	/*}*/
+	/*else if(hit == 0) {*/
+		/*voxel_data[i] = value;*/
+		/*hit_counter[i] = 1;*/
+	/*}*/
+	/*else {*/
+		/*mean = ((int)hit*(int)voxel_data[i] + value)/(hit + 1);*/
+		/*voxel_data[i] = (unsigned char) mean;*/
+		/*atomicAdd(hit_counter + i, 1);*/
+	/*}*/
+/*#else*/
+	/*if (value > voxel_data[i]) {*/
+		/*voxel_data[i] = value;*/
+	/*}*/
+/*#endif*/
 
 }
 
@@ -99,6 +103,8 @@ void VNNKernel(const int nImages, const int imgWidth, const int imgHeight,
 
 	dim3 dimBlock(32, 32, 1);
 	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f), nImages);
+	
+	log_console.infoStream() << "[KERNEL::VNN] <<<" << toStringDim(dimBlock) << ", " << toStringDim(dimGrid) << ", " << 0 << ", " << stream << ">>>";
 
 	VNN<<<dimGrid,dimBlock,0,stream>>>(nImages, imgWidth, imgHeight, 
 			deltaGrid,  deltaX,  deltaY,

@@ -7,18 +7,19 @@ template <typename T>
 class GPUResource {
 public:
 	
-	GPUResource();
+	GPUResource(int device = 0, unsigned long size = 0);
 	GPUResource(GPUResource<T> &original);
 	explicit GPUResource(T *data, int deviceId, unsigned int size, bool owner);
 	~GPUResource();
 
 	void setData(T* data, int deviceId, unsigned int size, bool isOwner);
 	void free();
+	void allocate();
 
 	T* data() const;
 	int deviceId() const;
-	unsigned int size() const;
-	unsigned int bytes() const;
+	unsigned long size() const;
+	unsigned long bytes() const;
 
 	bool isOwner() const;
 	bool isGPUResource() const;
@@ -28,7 +29,7 @@ public:
 protected:
 	T* _data;
 	int _deviceId;
-	unsigned int _size;
+	unsigned long _size;
 	bool _isOwner;
 	bool _isGPUResource;
 

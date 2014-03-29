@@ -5,22 +5,24 @@
 #include "voxelGridTree.hpp"
 #include "voxelGrid.hpp"
 
-template <typename T>
-class PowerOfTwoVoxelGrid : public VoxelGrid<T> {
+template <typename T, 
+		 template <typename T> class CPUResourceType, 
+		 template <typename T> class GPUResourceType >
+class PowerOfTwoVoxelGrid : public VoxelGrid<T, CPUResourceType, GPUResourceType> {
 
 
 	public:
 		//Crée la grille enveloppante de taille puissance de 2 sur chaque axe
-		explicit PowerOfTwoVoxelGrid(VoxelGrid<T> &originalGrid);
+		explicit PowerOfTwoVoxelGrid(VoxelGrid<T, CPUResourceType, GPUResourceType> &originalGrid);
 
 		//Crée une grille de taille 2^powX x 2^powY x 2^powZ
-		explicit PowerOfTwoVoxelGrid(unsigned int powX, unsigned int powY, unsigned int powZ, float deltaGrid);
+		explicit PowerOfTwoVoxelGrid(unsigned int powX, unsigned int powY, unsigned int powZ, float deltaGrid, int deviceId = 0);
 
 		//Decoupe la grille en sous grilles 
-		VoxelGridTree<T> splitGrid(unsigned int NSliceX, unsigned int NSliceY, unsigned int NSliceZ);
+		VoxelGridTree<T,CPUResourceType,GPUResourceType> splitGrid(unsigned int NSliceX, unsigned int NSliceY, unsigned int NSliceZ);
 
 		//Decoupe la grille en fonction de la mémoire disponible
-		VoxelGridTree<T> splitGridWithMaxMemory(unsigned long maxMemoryPerSubgrid);
+		VoxelGridTree<T,CPUResourceType,GPUResourceType> splitGridWithMaxMemory(unsigned long maxMemoryPerSubgrid);
 
 		unsigned int powX();
 		unsigned int powY();

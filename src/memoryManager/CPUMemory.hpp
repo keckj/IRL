@@ -27,6 +27,8 @@ class CPUMemory {
 		static void free(T *data, unsigned long nData, bool force=false);
 
 		static void display(std::ostream &out);
+
+		static void setVerbose(bool verbose);
 			
 
 	private:
@@ -34,6 +36,7 @@ class CPUMemory {
 		static const volatile unsigned long _memorySize;
 		static const volatile unsigned long _memoryRuntime;
 		static unsigned long _memoryLeft;
+		static bool _verbose;
 };
 
 #include "CPUMemory.tpp"
