@@ -8,26 +8,37 @@
 
 using namespace std;
 
-VoxelRenderer::VoxelRenderer( 
-		unsigned int width, unsigned int height, unsigned int length, 
-		unsigned char *data,
-		float cube_w, float cube_h, float cube_d, 
-		bool *drawGrid, bool *drawGridOnce, unsigned char *threshold) 
-:	width(width), height(height), length(length), data(data),
-	cube_w(cube_w), cube_h(cube_h), cube_d(cube_d), 
+
+
+VoxelRenderer::VoxelRenderer( VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> cpuGrid,
+		bool *drawGrid, bool *drawGridOnce, unsigned char *threshold) :
+	cpuGrid(cpuGrid),
+	width(cpuGrid.width()), height(cpuGrid.height()), length(cpuGrid.length()),
+	cube_w(cpuGrid.voxelSize()), cube_h(cpuGrid.voxelSize()), cube_d(cpuGrid.voxelSize()), 
 	drawGrid(*drawGrid), drawGridOnce(*drawGridOnce), threshold(*threshold),
 	nQuads(0), quads(0), normals(0), colors(0)
 {
-#ifdef _CUDA_VIEWER
 	log_console.info("Created a CUDA Voxel Renderer !");
-#else
-	log_console.info("Created a CPU Voxel Renderer !");
-#endif
-
 	log_console.infoStream() << "Current threshold set to " << (unsigned int &) threshold << " !";
-
 	computeGeometry();
 }
+
+//VoxelRenderer::VoxelRenderer( 
+//unsigned int width, unsigned int height, unsigned int length, 
+//unsigned char *data,
+//float cube_w, float cube_h, float cube_d, 
+//bool *drawGrid, bool *drawGridOnce, unsigned char *threshold) 
+//:	width(width), height(height), length(length), data(data),
+//cube_w(cube_w), cube_h(cube_h), cube_d(cube_d), 
+//drawGrid(*drawGrid), drawGridOnce(*drawGridOnce), threshold(*threshold),
+//nQuads(0), quads(0), normals(0), colors(0)
+//{
+//log_console.info("Created a CPU Voxel Renderer !");
+
+//log_console.infoStream() << "Current threshold set to " << (unsigned int &) threshold << " !";
+
+//computeGeometry();
+//}
 
 void VoxelRenderer::draw() {
 
@@ -54,13 +65,13 @@ void VoxelRenderer::draw() {
 
 }
 
-bool inline VoxelRenderer::isVisible(unsigned char voxel) {
-	return (voxel > threshold);
-}
+//bool inline VoxelRenderer::isVisible(unsigned char voxel) {
+//return (voxel > threshold);
+//}
 
-unsigned char VoxelRenderer::getData(unsigned int x, unsigned int y, unsigned int z) {
-	return data[z*width*height + y*width + x];
-}
+//unsigned char VoxelRenderer::getData(unsigned int x, unsigned int y, unsigned int z) {
+//return data[z*width*height + y*width + x];
+//}
 
 void VoxelRenderer::drawWireFrame() {
 
@@ -71,9 +82,9 @@ void VoxelRenderer::drawWireFrame() {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glColor3f(1.0f, 1.0f, 1.0f);
 
-	for (unsigned int z = 0; z <= length; z++) {
+	for (unsigned int z = 0; z <= cpuGrid.length(); z++) {
 
-		for (unsigned int y = 0; y <= height; y++) {
+		for (unsigned int y = 0; y <= cpuGrid.height(); y++) {
 
 			v1[0] = 0; v1[1] = y*cube_h; v1[2] = z*cube_d;
 			v2[0] = width*cube_w; v2[1] = y*cube_h; v2[2] = z*cube_d;
