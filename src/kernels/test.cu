@@ -1,6 +1,5 @@
 #include <cmath>
 
-#include "kernels.hpp"
 #include "utils/cudaUtils.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"

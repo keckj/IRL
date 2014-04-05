@@ -19,7 +19,7 @@ PagedCPUResource<T>::~PagedCPUResource() {
 			
 template <typename T>
 const std::string PagedCPUResource<T>::getResourceType() const {
-	return string("Paged CPU Memory");
+	return std::string("Paged CPU Memory");
 }
 
 template <typename T>

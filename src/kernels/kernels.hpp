@@ -5,6 +5,10 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 
+#include "grid/voxelGridTree.hpp"
+#include "memoryManager/PinnedCPUResource.hpp"
+#include "memoryManager/GPUResource.hpp"
+
 namespace kernel {
 
 void castKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data);
@@ -23,11 +27,9 @@ enum NormalType { NORMAL_PER_QUAD, NORMAL_PER_VERTEX};
 enum ColorType { COLOR_PER_QUAD, COLOR_PER_VERTEX};
 
 unsigned int computeQuads(float **h_quads, float **h_normals, float **h_colors, 
-		unsigned char* d_voxel_grid,
-		const unsigned int gridWidth, const unsigned int gridHeight, const unsigned int gridLength,
-		const float cube_w, const float cube_h, const float cube_d,
-		const unsigned char threshold, 
-		const NormalType nt=NORMAL_PER_QUAD, const ColorType ct=COLOR_PER_QUAD);
+		VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid,
+		unsigned char threshold, 
+		NormalType nt=NORMAL_PER_QUAD, ColorType ct=COLOR_PER_QUAD);
 }
 
 #endif

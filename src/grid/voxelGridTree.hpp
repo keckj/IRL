@@ -6,17 +6,18 @@
 #include "powerOfTwoVoxelGrid.hpp"
 
 template <typename T, 
-		 template <typename T> class CPUResourceType, 
-		 template <typename T> class GPUResourceType >
+		 template <typename> class CPUResourceType, 
+		 template <typename> class GPUResourceType >
 class PowerOfTwoVoxelGrid;
 
 template <typename T, 
-		 template <typename T> class CPUResourceType, 
-		 template <typename T> class GPUResourceType >
+		 template <typename> class CPUResourceType, 
+		 template <typename> class GPUResourceType >
 class VoxelGridTree {
 	public:
 		VoxelGridTree(unsigned int nGridX, unsigned int nGridY, unsigned int nGridZ,
 			unsigned int subWidth, unsigned int subHeight, unsigned int subLength,
+			float deltaGrid,
 			std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *> grids);
 
 		typename std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *>::iterator begin();
@@ -49,11 +50,11 @@ class VoxelGridTree {
 		unsigned int _width, _height, _length;
 		unsigned int _subWidth, _subHeight, _subLength;
 
-		float 
-		
+		float _deltaGrid;
+
 		std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *> _childs;	
 
-}
+};
 
 #include "voxelGridTree.tpp"
 

@@ -234,7 +234,7 @@ int main( int argc, char** argv)
 
 	//split in subgrids according to min of GPUs memory left, reserved data bytes, and grid size ratio
 	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> voxelGrid = grid.splitGridWithMaxMemory(
-			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, 6);
+			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, 2);
 
 	//compute how many devices are needed
 	unsigned int cudaDevicesNeeded = maxCudaDevices;
@@ -381,11 +381,14 @@ int main( int argc, char** argv)
 		GPUMemory::free<unsigned char>(grid_d[1][i], voxelGrid.subgridSize(), i);
 		GPUMemory::free<unsigned char>(hitgrid_d[i], voxelGrid.subgridSize(), i);
 	}
+	
+	CPUMemory::display(cout);
+	GPUMemory::display(cout);
 
-	//log_console.info("Launching gui...");
-	//MainApplication mainApplication(&voxelGrid,true,viewerThreshold);	
+	log_console.info("Launching gui...");
+	MainApplication mainApplication(&voxelGrid,true,viewerThreshold);	
 
-	//return mainApplication.exec();
+	return mainApplication.exec();
 }
 
 

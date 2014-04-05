@@ -1,11 +1,11 @@
 
 #Makefile @Darkvador
-NARCH=20
-MAKE=make
+#NARCH=20
+#MAKE=make
 
 #Makefile @Poulpy
-#NARCH=30
-#MAKE=make
+NARCH=30
+MAKE=make
 
 ####################
 ### LIB EXTERNES ###
@@ -35,7 +35,7 @@ VIEWER_DEFINES = -D_REENTRANT -DQT_NO_DEBUG -DQT_XML_LIB -DQT_OPENGL_LIB -DQT_GU
 
 #Compilateurs
 LINK= g++
-LINKFLAGS= -W -Wall -Wextra -pedantic -std=c++11
+LINKFLAGS= -W -Wall -Wextra -std=c++11
 LDFLAGS= $(OPENGL_LIBS) $(OPENCV_LIBS) $(CUDA_LIBS) $(VIEWER_LIBS) -llog4cpp -pthread -lX11
 
 LOCAL=/home/GMCAO/keckjb/local
@@ -47,7 +47,7 @@ CC=gcc
 CFLAGS= -W -Wall -Wextra -pedantic -std=c99 -m64
 
 CXX=g++
-CXXFLAGS= -W -Wall -Wextra -pedantic -std=c++11 -m64
+CXXFLAGS= -W -Wall -Wextra -std=c++11 -m64 -pedantic
 #-Wshadow -Wstrict-aliasing -Weffc++ -Werror
 
 MOC=moc

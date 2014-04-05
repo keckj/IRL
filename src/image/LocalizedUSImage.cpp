@@ -20,7 +20,7 @@ LocalizedUSImage::LocalizedUSImage(string const & dataFolder, string const & mhd
 LocalizedUSImage::~LocalizedUSImage() {
 	delete[] rotationMatrix;
 	delete[] offset;
-	delete[] imageData;
+	free(imageData);
 }
 
 int LocalizedUSImage::getWidth() const {

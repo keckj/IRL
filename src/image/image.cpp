@@ -285,7 +285,7 @@ void Image::filter1D(float *data, int nData, int size, float sigma) {
 
 	float *kernel = new float[size/2 + 1];
 
-	float coef, sum;
+	float coef, sum=0;
 	int i;
 
 	for (i = 0; i <= size/2; i++) {

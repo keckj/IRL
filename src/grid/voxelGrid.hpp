@@ -6,8 +6,8 @@
 #include "memoryManager/sharedResource.hpp"
 
 template <typename T, 
-		 template <typename T> class CPUResourceType, 
-		 template <typename T> class GPUResourceType >
+		 template <typename> class CPUResourceType, 
+		 template <typename> class GPUResourceType >
 class VoxelGrid : public SharedResource<T, CPUResourceType, GPUResourceType> {
 
 public:

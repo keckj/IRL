@@ -22,7 +22,7 @@ class VoxelRenderer : public Renderable
 				//float cube_w, float cube_h, float cube_d, 
 				//bool *drawGrid, bool *drawGridOnce, unsigned char *threshold);
 
-		VoxelRenderer( VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> cpuGrid,
+		VoxelRenderer( VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid,
 				bool *drawGrid, bool *drawGridOnce, unsigned char *threshold);
 
 		void computeGeometry();
@@ -30,7 +30,7 @@ class VoxelRenderer : public Renderable
 	
 
 	private:
-		VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> cpuGrid;
+		VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid;
 		
 		//unsigned char *data;
 		unsigned int width, height, length;
@@ -41,40 +41,40 @@ class VoxelRenderer : public Renderable
 		unsigned int nQuads;
 		GLfloat *quads, *normals, *colors;
 
-		enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		
+		//enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		
 
-		void drawWireFrame();
+		//void drawWireFrame();
 
-		unsigned char getData(unsigned int x, unsigned int y, unsigned int z);
+		//unsigned char getData(unsigned int x, unsigned int y, unsigned int z);
 
-		bool inline isVisible(unsigned char voxel);
+		//bool inline isVisible(unsigned char voxel);
 
-		void writeVectAndIncr(GLfloat *array, unsigned int &offset, GLfloat x, GLfloat y, GLfloat z);
-		void writeVect(GLfloat *array, unsigned int offset, GLfloat x, GLfloat y, GLfloat z);
+		//void writeVectAndIncr(GLfloat *array, unsigned int &offset, GLfloat x, GLfloat y, GLfloat z);
+		//void writeVect(GLfloat *array, unsigned int offset, GLfloat x, GLfloat y, GLfloat z);
 
 
-		unsigned int inline countQuads();
+		//unsigned int inline countQuads();
 
-		unsigned char inline countFaces(
-				unsigned char current, 
-				unsigned char right, unsigned char left, 
-				unsigned char up, unsigned char down, 
-				unsigned char front, unsigned char back);
+		//unsigned char inline countFaces(
+				//unsigned char current, 
+				//unsigned char right, unsigned char left, 
+				//unsigned char up, unsigned char down, 
+				//unsigned char front, unsigned char back);
 
-		void inline computeQuadsAndNormals();
+		//void inline computeQuadsAndNormals();
 
-		void inline computeVoxel(
-				unsigned char current, 
-				unsigned char right, unsigned char left, 
-				unsigned char up, unsigned char down, 
-				unsigned char front, unsigned char back,
-				int x, int y, int z, 
-				unsigned int& offset);
+		//void inline computeVoxel(
+				//unsigned char current, 
+				//unsigned char right, unsigned char left, 
+				//unsigned char up, unsigned char down, 
+				//unsigned char front, unsigned char back,
+				//int x, int y, int z, 
+				//unsigned int& offset);
 
-		void inline computeQuads(
-				Side side, unsigned char current, 
-				unsigned int &offset,
-				int x, int y, int z);
+		//void inline computeQuads(
+				//Side side, unsigned char current, 
+				//unsigned int &offset,
+				//int x, int y, int z);
 
 };
 #endif

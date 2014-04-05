@@ -5,8 +5,8 @@
 #include <iostream>
 
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 VoxelGrid<T,CPUResourceType,GPUResourceType>::VoxelGrid(
 		const float gridRealWidth, 
 		const float gridRealHeight, 
@@ -26,15 +26,15 @@ VoxelGrid<T,CPUResourceType,GPUResourceType>::VoxelGrid(
 
 
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 VoxelGrid<T,CPUResourceType,GPUResourceType>::VoxelGrid(
 		const unsigned int gridWidth, 
 		const unsigned int gridHeight, 
 		const unsigned int gridLength, 
 		const float deltaGrid,
 		int deviceId) :
-	SharedResource<T,CPUResourceType,GPUResourceType>(gridWidth*gridHeight*gridLength, deviceId),
+	SharedResource<T,CPUResourceType,GPUResourceType>(deviceId, gridWidth*gridHeight*gridLength),
 	_gridWidth(gridWidth),
 	_gridHeight(gridHeight),
 	_gridLength(gridLength),
@@ -44,8 +44,8 @@ VoxelGrid<T,CPUResourceType,GPUResourceType>::VoxelGrid(
 	
 
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 VoxelGrid<T,CPUResourceType,GPUResourceType>::VoxelGrid(VoxelGrid<T,CPUResourceType,GPUResource> &original) :
 	SharedResource<T,CPUResourceType,GPUResourceType>(original),
 	_gridWidth(original.width()),
@@ -56,39 +56,39 @@ VoxelGrid<T,CPUResourceType,GPUResourceType>::VoxelGrid(VoxelGrid<T,CPUResourceT
 }
 	
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 VoxelGrid<T,CPUResourceType,GPUResourceType>::~VoxelGrid() {
 }
 
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 unsigned int VoxelGrid<T,CPUResourceType,GPUResourceType>::width() const {
 	return this->_gridWidth;
 }
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 unsigned int VoxelGrid<T,CPUResourceType,GPUResourceType>::height() const {
 	return this->_gridHeight;
 }
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 unsigned int VoxelGrid<T,CPUResourceType,GPUResourceType>::length() const {
 	return this->_gridLength;
 }
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 float VoxelGrid<T,CPUResourceType,GPUResourceType>::voxelSize() const {
 	return this->_deltaGrid;
 }
 	
 template <typename T,
-	template <typename T> class CPUResourceType,
-	template <typename T> class GPUResourceType>
+	template <typename> class CPUResourceType,
+	template <typename> class GPUResourceType>
 T VoxelGrid<T,CPUResourceType,GPUResourceType>::operator()(unsigned int i, unsigned int j, unsigned int k) {
 	assert(i < _gridWidth);
 	assert(j < _gridHeight);

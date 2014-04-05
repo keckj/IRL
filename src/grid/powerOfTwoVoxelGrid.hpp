@@ -6,13 +6,13 @@
 #include "voxelGrid.hpp"
 
 template <typename T, 
-		 template <typename T> class CPUResourceType, 
-		 template <typename T> class GPUResourceType >
+		 template <typename> class CPUResourceType, 
+		 template <typename> class GPUResourceType >
 class VoxelGridTree;
 
 template <typename T, 
-		 template <typename T> class CPUResourceType, 
-		 template <typename T> class GPUResourceType >
+		 template <typename> class CPUResourceType, 
+		 template <typename> class GPUResourceType >
 class PowerOfTwoVoxelGrid : public VoxelGrid<T, CPUResourceType, GPUResourceType> {
 
 	public:

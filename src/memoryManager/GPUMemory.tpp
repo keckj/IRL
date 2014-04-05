@@ -15,7 +15,7 @@ T* GPUMemory::malloc(unsigned long nData, int deviceId) {
 	}
 
 	assert(GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
-
+	
 	CHECK_CUDA_ERRORS(cudaSetDevice(deviceId));
 
 	T *data;

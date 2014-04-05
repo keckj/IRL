@@ -17,17 +17,15 @@ VoxelViewer::VoxelViewer(float alpha, QWidget *parent) :
 			alpha*grid->voxelSize());
 
 
-#ifdef _CUDA_VIEWER 
-	voxelRenderer = new VoxelRenderer(
-			grid,
-			alpha*grid->voxelSize(), alpha*grid->voxelSize(), alpha*grid->voxelSize(),
+//#ifdef _CUDA_VIEWER 
+	voxelRenderer = new VoxelRenderer(grid,
 			&qtgui::viewer::drawViewerBool, &qtgui::viewer::drawOneTime, &qtgui::viewer::viewerThreshold);
-#else
-	voxelRenderer = new VoxelRenderer(grid->width(), grid->height(), grid->length(),
-			grid->dataHost(),
-			alpha*grid->voxelSize(), alpha*grid->voxelSize(), alpha*grid->voxelSize(),
-			&qtgui::viewer::drawViewerBool, &qtgui::viewer::drawOneTime, &qtgui::viewer::viewerThreshold);
-#endif
+//#else
+	//voxelRenderer = new VoxelRenderer(grid->width(), grid->height(), grid->length(),
+			//grid->dataHost(),
+			//alpha*grid->voxelSize(), alpha*grid->voxelSize(), alpha*grid->voxelSize(),
+			//&qtgui::viewer::drawViewerBool, &qtgui::viewer::drawOneTime, &qtgui::viewer::viewerThreshold);
+//#endif
 
 	this->addRenderable(boundingBox);
 	this->addRenderable(voxelRenderer);

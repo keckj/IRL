@@ -5,8 +5,8 @@
 #include <cassert>
 
 template <typename T,
-		 template <typename T> class CPUResourceType,
-		 template <typename T> class GPUResourceType>
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
 		 PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::PowerOfTwoVoxelGrid(VoxelGrid<T,CPUResourceType,GPUResourceType> &originalGrid) :
 			 VoxelGrid<T,CPUResourceType,GPUResourceType>(originalGrid),
 			 _powX(ceil(log2(originalGrid.width()))),
@@ -23,8 +23,8 @@ template <typename T,
 
 //Crée une grille de taille 2^powX x 2^powY x 2^powZ
 template <typename T,
-		 template <typename T> class CPUResourceType,
-		 template <typename T> class GPUResourceType>
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
 		 PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::PowerOfTwoVoxelGrid(unsigned int powX, unsigned int powY, unsigned int powZ, float deltaGrid, int deviceId) :
 			 VoxelGrid<T,CPUResourceType,GPUResourceType>(1u<<powX,1u<<powY,1u<<powZ,deltaGrid,deviceId),
 			 _powX(powX), _powY(powY), _powZ(powZ)
@@ -33,8 +33,8 @@ template <typename T,
 
 //Decoupe la grille en sous grilles
 template <typename T,
-		 template <typename T> class CPUResourceType,
-		 template <typename T> class GPUResourceType>
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
 		 VoxelGridTree<T,CPUResourceType,GPUResourceType> PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::splitGrid(unsigned int splitX, unsigned int splitY, unsigned int splitZ) {
 			 assert(splitX <= _powX);
 			 assert(splitY <= _powY);
@@ -53,12 +53,13 @@ template <typename T,
 
 			 return VoxelGridTree<T,CPUResourceType,GPUResourceType>(1<<splitX,1<<splitY,1<<splitZ, 
 					 subGrids[0]->width(), subGrids[0]->height(), subGrids[0]->length(),
+					 subGrids[0]->voxelSize(),
 					 subGrids);
 		 }
 
 template <typename T,
-		 template <typename T> class CPUResourceType,
-		 template <typename T> class GPUResourceType>
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
 		 VoxelGridTree<T,CPUResourceType,GPUResourceType> PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::splitGridWithMaxMemory(unsigned long maxMemoryPerSubgrid, unsigned int minSplits) {
 			 unsigned int pow = this->_powX + this->_powY + this->_powZ;
 			 unsigned int maxPow = floor(log2(maxMemoryPerSubgrid));
@@ -94,22 +95,22 @@ template <typename T,
 		 }
 
 template <typename T,
-		 template <typename T> class CPUResourceType,
-		 template <typename T> class GPUResourceType>
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
 		 unsigned int PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::powX() {
 			 return _powX;
 		 }
 
 template <typename T,
-		 template <typename T> class CPUResourceType,
-		 template <typename T> class GPUResourceType>
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
 		 unsigned int PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::powY() {
 			 return _powY;
 		 }
 
 template <typename T,
-		 template <typename T> class CPUResourceType,
-		 template <typename T> class GPUResourceType>
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
 		 unsigned int PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::powZ() {
 			 return _powZ;
 		 }
