@@ -1,6 +1,7 @@
 *.o
 *.moc
 tags
+main
 types_c.taghl
 data/femur
 data/processedImages

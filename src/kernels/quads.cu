@@ -11,14 +11,10 @@ namespace kernel {
 			const unsigned int gridWidth, const unsigned int gridHeight, const unsigned int gridLength,
 			const unsigned char threshold) {
 
-		*d_counter = 0;
-		__syncthreads();
-
 		unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
 		unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;
 		unsigned int idz = blockIdx.z;
 		unsigned int id = idz*gridWidth*gridHeight + idy*gridWidth + idx;
-
 
 		if(idx >= gridWidth || idy >= gridHeight) {
 			return;
@@ -67,8 +63,9 @@ namespace kernel {
 				unsigned int *d_counter,
 				float *d_quads, float *d_normals, float *d_colors,
 				unsigned char *d_voxel_grid,
+				const unsigned int gridIdx, const unsigned int gridIdy, const unsigned int gridIdz,
 				const unsigned int gridWidth, const unsigned int gridHeight, const unsigned int gridLength,
-				const float cube_w, const float cube_h, const float cube_d,
+				const float voxelWidth,
 				const unsigned char threshold,
 				const unsigned char normalStride, const unsigned char colorStride) {
 
@@ -77,7 +74,6 @@ namespace kernel {
 			unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;
 			unsigned int idz = blockIdx.z % gridLength;
 			unsigned int id = idz*gridWidth*gridHeight + idy*gridWidth + idx;
-
 
 			if(idx >= gridWidth || idy >= gridHeight) {
 				return;
@@ -89,7 +85,6 @@ namespace kernel {
 
 			unsigned char face = blockIdx.z/gridLength;
 			bool draw = false;
-
 
 			switch(face) {
 				case(0): 
@@ -132,9 +127,9 @@ namespace kernel {
 			const unsigned int arrayID = atomicAdd(d_counter, 1);
 
 			//compute real position
-			const float tx = idx*cube_w;
-			const float ty = idy*cube_h;
-			const float tz = idz*cube_d;
+			const float tx = (gridIdx*gridWidth + idx) * voxelWidth;
+			const float ty = (gridIdy*gridHeight + idy) * voxelWidth;
+			const float tz = (gridIdz*gridLength + idz) * voxelWidth;
 
 			/*write colors*/
 			writeVec3f(d_colors, arrayID, colorStride, voxelValue/255.0f, voxelValue/255.0f, voxelValue/255.0f);
@@ -144,68 +139,100 @@ namespace kernel {
 					{ //left
 						writeVec3f(d_normals, arrayID, normalStride, -1.0f, 0.0f, 0.0f);
 						writeVec3f(d_quads, 4*arrayID, 1, 0.0f + tx, 0.0f + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 1, 1, 0.0f + tx, cube_h + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 2, 1, 0.0f + tx, cube_h + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 3, 1, 0.0f + tx, 0.0f + ty, cube_d + tz);
+						writeVec3f(d_quads, 4*arrayID + 1, 1, 0.0f + tx, voxelWidth + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID + 2, 1, 0.0f + tx, voxelWidth + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 3, 1, 0.0f + tx, 0.0f + ty, voxelWidth + tz);
 						break;
 					}
 				case(1):
 					{ //right
 						writeVec3f(d_normals, arrayID, normalStride, +1.0f, 0.0f, 0.0f);
-						writeVec3f(d_quads, 4*arrayID, 1, cube_w + tx, 0.0f + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 1, 1, cube_w + tx, cube_h + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 2, 1, cube_w + tx, cube_h + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 3, 1, cube_w + tx, 0.0f + ty, cube_d + tz);
+						writeVec3f(d_quads, 4*arrayID, 1, voxelWidth + tx, 0.0f + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID + 1, 1, voxelWidth + tx, voxelWidth + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID + 2, 1, voxelWidth + tx, voxelWidth + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 3, 1, voxelWidth + tx, 0.0f + ty, voxelWidth + tz);
 						break;
 					}
 				case(2):
 					{ //down
 						writeVec3f(d_normals, arrayID, normalStride, 0.0f, -1.0f, 0.0f);
 						writeVec3f(d_quads, 4*arrayID, 1, 0.0f + tx, 0.0f + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 1, 1, 0.0f + tx, 0.0f + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 2, 1, cube_w + tx, 0.0f + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 3, 1, cube_w + tx, 0.0f + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID + 1, 1, 0.0f + tx, 0.0f + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 2, 1, voxelWidth + tx, 0.0f + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 3, 1, voxelWidth + tx, 0.0f + ty, 0.0f + tz);
 						break;
 					}
 				case(3):
 					{ //up
 						writeVec3f(d_normals, arrayID, normalStride, 0.0f, 1.0f, 0.0f);
-						writeVec3f(d_quads, 4*arrayID, 1, 0.0f + tx, cube_h + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 1, 1, 0.0f + tx, cube_h + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 2, 1, cube_w + tx, cube_h + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 3, 1, cube_w + tx, cube_h + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID, 1, 0.0f + tx, voxelWidth + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID + 1, 1, 0.0f + tx, voxelWidth + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 2, 1, voxelWidth + tx, voxelWidth + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 3, 1, voxelWidth + tx, voxelWidth + ty, 0.0f + tz);
 						break;
 					}
 				case(4):
 					{ //back
 						writeVec3f(d_normals, arrayID, normalStride, 0.0f, 0.0f, -1.0f);
 						writeVec3f(d_quads, 4*arrayID, 1, 0.0f + tx, 0.0f + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 1, 1, cube_w + tx, 0.0f + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 2, 1, cube_w + tx, cube_h + ty, 0.0f + tz);
-						writeVec3f(d_quads, 4*arrayID + 3, 1, 0.0f + tx, cube_h + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID + 1, 1, voxelWidth + tx, 0.0f + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID + 2, 1, voxelWidth + tx, voxelWidth + ty, 0.0f + tz);
+						writeVec3f(d_quads, 4*arrayID + 3, 1, 0.0f + tx, voxelWidth + ty, 0.0f + tz);
 						break;
 					}
 				case(5):
 					{ //front
 						writeVec3f(d_normals, arrayID, normalStride, 0.0f, 0.0f, 1.0f);
-						writeVec3f(d_quads, 4*arrayID, 1, 0.0f + tx, 0.0f + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 1, 1, cube_w + tx, 0.0f + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 2, 1, cube_w + tx, cube_h + ty, cube_d + tz);
-						writeVec3f(d_quads, 4*arrayID + 3, 1, 0.0f + tx, cube_h + ty, cube_d + tz);
+						writeVec3f(d_quads, 4*arrayID, 1, 0.0f + tx, 0.0f + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 1, 1, voxelWidth + tx, 0.0f + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 2, 1, voxelWidth + tx, voxelWidth + ty, voxelWidth + tz);
+						writeVec3f(d_quads, 4*arrayID + 3, 1, 0.0f + tx, voxelWidth + ty, voxelWidth + tz);
 						break;
 					}
 			}
 		}
 
-	
-	void call_countVisibleQuads(dim3 dimGrid, dim3 dimBlock, unsigned int* nQuads_d, unsigned char *grid_d, unsigned int width, unsigned int height, unsigned int length, unsigned char threshold) {
-			assert(nQuads_d);
-			assert(grid_d);
-			assert(width != 0);
-			assert(height != 0);
-			assert(length != 0);
-			countVisibleQuads<<<dimGrid,dimBlock>>>(nQuads_d, grid_d, width, height, length, threshold);
-			checkKernelExecution();
+
+	void call_countVisibleQuads(dim3 dimGrid, dim3 dimBlock, 
+			unsigned int* nQuads_d, unsigned char *grid_d, 
+			unsigned int width, unsigned int height, unsigned int length, 
+			unsigned char threshold) {
+		assert(nQuads_d);
+		assert(grid_d);
+		assert(width != 0);
+		assert(height != 0);
+		assert(length != 0);
+
+		countVisibleQuads<<<dimGrid,dimBlock>>>(nQuads_d, grid_d, width, height, length, threshold);
+		checkKernelExecution();
+	}
+
+
+	void call_computeVisibleQuads(dim3 dimGrid, dim3 dimBlock,
+			unsigned int *d_counter,
+			float *d_quads, float *d_normals, float *d_colors,
+			unsigned char *d_voxel_grid,
+			const unsigned int gridIdx, const unsigned int gridIdy, const unsigned int gridIdz,
+			const unsigned int gridWidth, const unsigned int gridHeight, const unsigned int gridLength,
+			const float voxelWidth,
+			const unsigned char threshold,
+			const unsigned char normalStride, const unsigned char colorStride) {
+		assert(d_counter);
+		assert(d_quads);
+		assert(d_normals);
+		assert(d_colors);
+		assert(d_voxel_grid);
+		assert(gridWidth != 0);
+		assert(gridHeight != 0);
+		assert(gridLength != 0);
+		assert(voxelWidth >= 0.0f);
+		assert(normalStride == 1 || normalStride == 4); 
+		assert(colorStride == 1 || colorStride == 4); 
+
+		computeVisibleQuads<<<dimGrid,dimBlock>>>(d_counter, d_quads, d_normals, d_colors, d_voxel_grid, 
+				gridIdx, gridIdy, gridIdz, gridWidth, gridHeight, gridLength,
+				voxelWidth, threshold, normalStride, colorStride);
+		checkKernelExecution();
 	}
 
 }

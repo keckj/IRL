@@ -17,6 +17,7 @@ void VNNKernel(
 		int nImages, int imgWidth, int imgHeight, 
 		float deltaGrid, float deltaX, float deltaY,
 		float xMin, float yMin, float zMin,
+		unsigned int gridIdx, unsigned int gridIdy, unsigned int gridIdz,
 		unsigned int voxelGridWidth, unsigned int voxelGridHeight, unsigned int voxelGridLength,
 		float **offsets_d,
 		float **rotations_d,
@@ -28,6 +29,7 @@ enum ColorType { COLOR_PER_QUAD, COLOR_PER_VERTEX};
 
 unsigned int computeQuads(float **h_quads, float **h_normals, float **h_colors, 
 		VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid,
+		float alpha, 
 		unsigned char threshold, 
 		NormalType nt=NORMAL_PER_QUAD, ColorType ct=COLOR_PER_QUAD);
 }

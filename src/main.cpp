@@ -234,7 +234,7 @@ int main( int argc, char** argv)
 
 	//split in subgrids according to min of GPUs memory left, reserved data bytes, and grid size ratio
 	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> voxelGrid = grid.splitGridWithMaxMemory(
-			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, 2);
+			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, 1);
 
 	//compute how many devices are needed
 	unsigned int cudaDevicesNeeded = maxCudaDevices;
@@ -344,15 +344,22 @@ int main( int argc, char** argv)
 
 	//bin filling
 	unsigned int nGrid = 0;
+	unsigned int gridIdx = 0, gridIdy = 0,  gridIdz = 0;
 	for (int i = 0; i < (int)cudaDevicesNeeded; i++) {
 		CHECK_CUDA_ERRORS(cudaSetDevice(i));
 
 		for (int j = 0; j < (int)subgridsToComputePerDevice[i]; j++) {
 
+			//printf(">GRID %i <=> (%i,%i,%i) ", nGrid, gridIdx, gridIdy, gridIdz);
+
+			//put zeroes
+			CHECK_CUDA_ERRORS(cudaMemsetAsync(grid_d[j%2][i], 0, voxelGrid.subgridSize(), streams[j%2][i]));
+			
 			//compute subgrid
 			VNNKernel(nImages, imgWidth, imgHeight, 
 					deltaGrid, deltaX, deltaY,
 					xMin, yMin, zMin,
+					gridIdx, gridIdy, gridIdz,
 					voxelGrid.subwidth(), voxelGrid.subheight(), voxelGrid.sublength(),
 					offsets_d[i],
 					rotations_d[i],
@@ -363,7 +370,14 @@ int main( int argc, char** argv)
 			//copy back subgrid
 			CHECK_CUDA_ERRORS(cudaMemcpyAsync(voxelGrid(nGrid)->hostData(), grid_d[j%2][i], voxelGrid.subgridBytes(), cudaMemcpyDeviceToHost, streams[j%2][i]));
 
+			//switch to next subgrid
 			nGrid++;
+			gridIdx = (gridIdx + 1) % voxelGrid.nGridX();
+			if(gridIdx == 0)
+				gridIdy = (gridIdy + 1) % voxelGrid.nGridY();
+			if(gridIdx == 0 && gridIdy == 0)
+				gridIdz = (gridIdz + 1) % voxelGrid.nGridZ();
+	
 		}
 
 	}
@@ -384,6 +398,9 @@ int main( int argc, char** argv)
 	
 	CPUMemory::display(cout);
 	GPUMemory::display(cout);
+	
+	CPUMemory::setVerbose(false);
+	GPUMemory::setVerbose(false);
 
 	log_console.info("Launching gui...");
 	MainApplication mainApplication(&voxelGrid,true,viewerThreshold);	

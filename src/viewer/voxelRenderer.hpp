@@ -23,6 +23,7 @@ class VoxelRenderer : public Renderable
 				//bool *drawGrid, bool *drawGridOnce, unsigned char *threshold);
 
 		VoxelRenderer( VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid,
+				float alpha, 
 				bool *drawGrid, bool *drawGridOnce, unsigned char *threshold);
 
 		void computeGeometry();
@@ -31,7 +32,7 @@ class VoxelRenderer : public Renderable
 
 	private:
 		VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid;
-		
+		float alpha;	
 		//unsigned char *data;
 		unsigned int width, height, length;
 		float cube_w, cube_h, cube_d;

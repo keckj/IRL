@@ -11,8 +11,9 @@ using namespace std;
 
 
 VoxelRenderer::VoxelRenderer( VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid,
-		bool *drawGrid, bool *drawGridOnce, unsigned char *threshold) :
+		float alpha, bool *drawGrid, bool *drawGridOnce, unsigned char *threshold) :
 	cpuGrid(cpuGrid),
+	alpha(alpha), 
 	width(cpuGrid->width()), height(cpuGrid->height()), length(cpuGrid->length()),
 	cube_w(cpuGrid->voxelSize()), cube_h(cpuGrid->voxelSize()), cube_d(cpuGrid->voxelSize()), 
 	drawGrid(*drawGrid), drawGridOnce(*drawGridOnce), threshold(*threshold),
@@ -137,6 +138,7 @@ void VoxelRenderer::computeGeometry() {
 		nQuads = kernel::computeQuads(
 				&quads, &normals, &colors, 
 				cpuGrid,
+				alpha, 
 				threshold,
 				kernel::NORMAL_PER_VERTEX, kernel::COLOR_PER_VERTEX);
 

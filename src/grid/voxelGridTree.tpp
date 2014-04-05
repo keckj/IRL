@@ -139,3 +139,24 @@ template <typename T,
 		 unsigned long VoxelGridTree<T,CPUResourceType,GPUResourceType>::subgridBytes() const {
 			 return this->subgridSize() * sizeof(T);
 		 }
+		
+template <typename T,
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
+		 unsigned int VoxelGridTree<T,CPUResourceType,GPUResourceType>::nGridX() const {
+			 return this->_nGridX;
+	}
+
+template <typename T,
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
+		 unsigned int VoxelGridTree<T,CPUResourceType,GPUResourceType>::nGridY() const {
+			 return this->_nGridY;
+	}
+
+template <typename T,
+		 template <typename> class CPUResourceType,
+		 template <typename> class GPUResourceType>
+		 unsigned int VoxelGridTree<T,CPUResourceType,GPUResourceType>::nGridZ() const {
+			 return this->_nGridZ;
+	}

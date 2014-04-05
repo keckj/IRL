@@ -30,6 +30,9 @@ class VoxelGridTree {
 		PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>* operator()(unsigned int i); //get subgrid i 
 
 		unsigned int nChilds() const;
+		unsigned int nGridX() const;
+		unsigned int nGridY() const;
+		unsigned int nGridZ() const;
 
 		unsigned int width() const;
 		unsigned int height() const;

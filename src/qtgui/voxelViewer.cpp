@@ -13,21 +13,32 @@ VoxelViewer::VoxelViewer(float alpha, QWidget *parent) :
 
 	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> *grid = qtgui::voxelGrid;
 
+	voxelRenderer = new VoxelRenderer(grid, alpha, 
+			&qtgui::viewer::drawViewerBool, &qtgui::viewer::drawOneTime, &qtgui::viewer::viewerThreshold);
+	
 	boundingBox = new BoundingBox(grid->width(), grid->height(), grid->length(),
 			alpha*grid->voxelSize());
 
+	unsigned int gridIdx = 0, gridIdy = 0,  gridIdz = 0;
+	float dl = alpha*grid->voxelSize();
+	for (unsigned int i = 0; i < grid->nChilds(); i++) {
 
-//#ifdef _CUDA_VIEWER 
-	voxelRenderer = new VoxelRenderer(grid,
-			&qtgui::viewer::drawViewerBool, &qtgui::viewer::drawOneTime, &qtgui::viewer::viewerThreshold);
-//#else
-	//voxelRenderer = new VoxelRenderer(grid->width(), grid->height(), grid->length(),
-			//grid->dataHost(),
-			//alpha*grid->voxelSize(), alpha*grid->voxelSize(), alpha*grid->voxelSize(),
-			//&qtgui::viewer::drawViewerBool, &qtgui::viewer::drawOneTime, &qtgui::viewer::viewerThreshold);
-//#endif
+			this->addRenderable(
+					new BoundingBox(
+						grid->subwidth(), grid->subheight(), grid->sublength(), 
+						dl,
+						gridIdx*grid->subwidth()*dl, gridIdy*grid->subheight()*dl, gridIdz*grid->sublength()*dl,
+						(float)gridIdx/grid->nGridX(), (float)gridIdy/grid->nGridY(), (float)gridIdz/grid->nGridZ())
+						);
 
-	this->addRenderable(boundingBox);
+			gridIdx = (gridIdx + 1) % grid->nGridX();
+			if(gridIdx == 0)
+				gridIdy = (gridIdy + 1) % grid->nGridY();
+			if(gridIdx == 0 && gridIdy == 0)
+				gridIdz = (gridIdz + 1) % grid->nGridZ();
+	}
+
+	//this->addRenderable(boundingBox);
 	this->addRenderable(voxelRenderer);
 }
 
