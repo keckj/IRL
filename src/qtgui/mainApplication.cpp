@@ -2,7 +2,7 @@
 #include "mainApplication.hpp"
 #include "qtgui/globalGuiVars.hpp"
 
-MainApplication::MainApplication(VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> *grid, bool drawVoxels, unsigned char viewerThreshold) 
+MainApplication::MainApplication(VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> *grid, bool drawVoxels, unsigned char viewerThreshold) 
 	: QApplication(0,0), mainWindow(0) {
 
 		qtgui::voxelGrid = grid;

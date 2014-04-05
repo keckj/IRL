@@ -79,6 +79,27 @@ template <typename T,
 template <typename T,
 		 template <typename T> class CPUResourceType,
 		 template <typename T> class GPUResourceType>
+		 unsigned int VoxelGridTree<T,CPUResourceType,GPUResourceType>::width() const {
+			 return this->_width;
+		 }
+
+template <typename T,
+		 template <typename T> class CPUResourceType,
+		 template <typename T> class GPUResourceType>
+		 unsigned int VoxelGridTree<T,CPUResourceType,GPUResourceType>::height() const {
+			 return this->_height;
+		 }
+
+template <typename T,
+		 template <typename T> class CPUResourceType,
+		 template <typename T> class GPUResourceType>
+		 unsigned int VoxelGridTree<T,CPUResourceType,GPUResourceType>::length() const {
+			 return this->_length;
+		 }
+
+template <typename T,
+		 template <typename T> class CPUResourceType,
+		 template <typename T> class GPUResourceType>
 		 unsigned int VoxelGridTree<T,CPUResourceType,GPUResourceType>::subwidth() const {
 			 return this->_subWidth;
 		 }
@@ -90,12 +111,12 @@ template <typename T,
 			 return this->_subHeight;
 		 }
 
-template <typename T,
-		 template <typename T> class CPUResourceType,
+template <typename T> class CPUResourceType,
 		 template <typename T> class GPUResourceType>
 		 unsigned int VoxelGridTree<T,CPUResourceType,GPUResourceType>::sublength() const {
 			 return this->_subLength;
 		 }
+
 template <typename T,
 		 template <typename T> class CPUResourceType,
 		 template <typename T> class GPUResourceType>

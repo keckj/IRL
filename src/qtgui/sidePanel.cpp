@@ -237,3 +237,4 @@ void SidePanel::resizeEvent(QResizeEvent *event) {
 	sliceLabel->setPixmap(pix);
 	sliceLabel->setFixedSize(pix.size());
 }
+

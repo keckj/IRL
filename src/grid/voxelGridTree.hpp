@@ -29,6 +29,11 @@ class VoxelGridTree {
 		PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>* operator()(unsigned int i); //get subgrid i 
 
 		unsigned int nChilds() const;
+
+		unsigned int width() const;
+		unsigned int height() const;
+		unsigned int length() const;
+
 		unsigned int subwidth() const;
 		unsigned int subheight() const;
 		unsigned int sublength() const;
@@ -43,10 +48,12 @@ class VoxelGridTree {
 		unsigned int _nGridX, _nGridY, _nGridZ;
 		unsigned int _width, _height, _length;
 		unsigned int _subWidth, _subHeight, _subLength;
+
+		float 
 		
 		std::vector<PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType> *> _childs;	
 
-};
+}
 
 #include "voxelGridTree.tpp"
 

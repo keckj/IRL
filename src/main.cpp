@@ -199,7 +199,7 @@ int main( int argc, char** argv)
 		CHECK_CUDA_ERRORS(cudaSetDevice(0));
 
 		PinnedCPUResource<float> images_float_h(float_data_h, imageSize, true); //will be freed at the end of the block
-		
+
 		SharedResource<float, PinnedCPUResource, GPUResource> images_float_s(images_float_h, 0);
 		SharedResource<unsigned char, PinnedCPUResource, GPUResource> images_char_s(images_char_h, 0);
 
@@ -234,8 +234,7 @@ int main( int argc, char** argv)
 
 	//split in subgrids according to min of GPUs memory left, reserved data bytes, and grid size ratio
 	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> voxelGrid = grid.splitGridWithMaxMemory(
-			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, 
-			6);
+			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, 6);
 
 	//compute how many devices are needed
 	unsigned int cudaDevicesNeeded = maxCudaDevices;
@@ -349,7 +348,7 @@ int main( int argc, char** argv)
 		CHECK_CUDA_ERRORS(cudaSetDevice(i));
 
 		for (int j = 0; j < (int)subgridsToComputePerDevice[i]; j++) {
-		
+
 			//compute subgrid
 			VNNKernel(nImages, imgWidth, imgHeight, 
 					deltaGrid, deltaX, deltaY,
@@ -372,63 +371,81 @@ int main( int argc, char** argv)
 	cudaDeviceSynchronize();
 	checkKernelExecution();
 
-	/*
-
-	//set voxels anb hit counter to 0
-	log_console.info("Setting memory to 0...");
-	CHECK_CUDA_ERRORS(cudaMemset(voxel_data_d, 0, gridSize*sizeof(unsigned char)));
-	CHECK_CUDA_ERRORS(cudaMemset(hit_counter_d, 0, gridSize*sizeof(unsigned char)));
-
-	//compute VNN
-	log_console.info("[KERNEL] Computing BIN FILLING using VNN method...");
-	VNNKernel(nImages, imgWidth, imgHeight, 
-	deltaGrid, deltaX, deltaY,
-	xMin, yMin, zMin,
-	voxelGridWidth,  voxelGridHeight,  voxelGridLength,
-	offsets_d,
-	rotations_d,
-	char_data_d, voxel_data_d, hit_counter_d);
-
-
-	cudaDeviceSynchronize();
-
-	//copy back voxelGrid
-	CHECK_CUDA_ERRORS(cudaMemcpy(voxel_data_h, voxel_data_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
-
-	//copy back hit counter
-	log_console.info("Done. Copying hit counter data back to RAM...");
-	CHECK_CUDA_ERRORS(cudaMemcpy(hit_counter_h, hit_counter_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
-
-	log_console.info("Free image char data on GPU.");
-	CHECK_CUDA_ERRORS(cudaFree(char_data_d));
-
-	long nHit = 0, sumHitRate = 0;
-	unsigned char maxHitRate = 0, currentHitRate;
-	for (unsigned int i = 0; i < gridSize; i++) {
-	currentHitRate = hit_counter_h[i];
-
-	if(currentHitRate != 0) {
-	nHit++;
-	sumHitRate += currentHitRate;
-	maxHitRate = (currentHitRate > maxHitRate ? currentHitRate : maxHitRate);
-	}
+	//free memory
+	log_console.infoStream() << "Freeing all remaining device memory !";
+	for (int i = 0; i < (int)cudaDevicesNeeded; i++) {
+		for (int j = 0; j < 3; j++) GPUMemory::free<float>(offsets_d[i][j], nImages, i);
+		for (int j = 0; j < 9; j++) GPUMemory::free<float>(rotations_d[i][j], nImages, i);
+		GPUMemory::free<unsigned char>(images_d[i], imageSize, i);
+		GPUMemory::free<unsigned char>(grid_d[0][i], voxelGrid.subgridSize(), i);
+		GPUMemory::free<unsigned char>(grid_d[1][i], voxelGrid.subgridSize(), i);
+		GPUMemory::free<unsigned char>(hitgrid_d[i], voxelGrid.subgridSize(), i);
 	}
 
-	log_console.infoStream() << "Theorical filling rate : " << (float)nImages*imgWidth*imgHeight/gridSize;
-	log_console.infoStream() << "Actual filling rate : " << (float)nHit/gridSize;
-	log_console.infoStream() << "Mean hit rate : " << (float)sumHitRate/nHit;
-	log_console.infoStream() << "MaxHitRate hit rate : " << (unsigned int) maxHitRate;
+	//log_console.info("Launching gui...");
+	//MainApplication mainApplication(&voxelGrid,true,viewerThreshold);	
 
-	log_console.info("Free hit data on CPU and GPU.");
-	CHECK_CUDA_ERRORS(cudaFree(hit_counter_d));
-	CHECK_CUDA_ERRORS(cudaFreeHost(hit_counter_h));
-
-
-	log_console.info("Launching gui...");
-	MainApplication mainApplication(&grid,true,viewerThreshold);	
-	return mainApplication.exec();
-	*/
+	//return mainApplication.exec();
 }
+
+
+/*
+
+//set voxels anb hit counter to 0
+log_console.info("Setting memory to 0...");
+CHECK_CUDA_ERRORS(cudaMemset(voxel_data_d, 0, gridSize*sizeof(unsigned char)));
+CHECK_CUDA_ERRORS(cudaMemset(hit_counter_d, 0, gridSize*sizeof(unsigned char)));
+
+//compute VNN
+log_console.info("[KERNEL] Computing BIN FILLING using VNN method...");
+VNNKernel(nImages, imgWidth, imgHeight, 
+deltaGrid, deltaX, deltaY,
+xMin, yMin, zMin,
+voxelGridWidth,  voxelGridHeight,  voxelGridLength,
+offsets_d,
+rotations_d,
+char_data_d, voxel_data_d, hit_counter_d);
+
+
+cudaDeviceSynchronize();
+
+//copy back voxelGrid
+CHECK_CUDA_ERRORS(cudaMemcpy(voxel_data_h, voxel_data_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+
+//copy back hit counter
+log_console.info("Done. Copying hit counter data back to RAM...");
+CHECK_CUDA_ERRORS(cudaMemcpy(hit_counter_h, hit_counter_d, gridSize*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+
+log_console.info("Free image char data on GPU.");
+CHECK_CUDA_ERRORS(cudaFree(char_data_d));
+
+long nHit = 0, sumHitRate = 0;
+unsigned char maxHitRate = 0, currentHitRate;
+for (unsigned int i = 0; i < gridSize; i++) {
+currentHitRate = hit_counter_h[i];
+
+if(currentHitRate != 0) {
+nHit++;
+sumHitRate += currentHitRate;
+maxHitRate = (currentHitRate > maxHitRate ? currentHitRate : maxHitRate);
+}
+}
+
+log_console.infoStream() << "Theorical filling rate : " << (float)nImages*imgWidth*imgHeight/gridSize;
+log_console.infoStream() << "Actual filling rate : " << (float)nHit/gridSize;
+log_console.infoStream() << "Mean hit rate : " << (float)sumHitRate/nHit;
+log_console.infoStream() << "MaxHitRate hit rate : " << (unsigned int) maxHitRate;
+
+log_console.info("Free hit data on CPU and GPU.");
+CHECK_CUDA_ERRORS(cudaFree(hit_counter_d));
+CHECK_CUDA_ERRORS(cudaFreeHost(hit_counter_h));
+
+
+log_console.info("Launching gui...");
+MainApplication mainApplication(&grid,true,viewerThreshold);	
+return mainApplication.exec();
+*/
+
 
 
 //////////////////////////////////////////////////

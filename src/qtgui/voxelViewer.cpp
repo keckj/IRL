@@ -11,15 +11,15 @@ VoxelViewer::VoxelViewer(float alpha, QWidget *parent) :
 {
 	qtgui::viewer::viewer = this;
 
-	VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> *grid = qtgui::voxelGrid;
+	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> *grid = qtgui::voxelGrid;
 
 	boundingBox = new BoundingBox(grid->width(), grid->height(), grid->length(),
 			alpha*grid->voxelSize());
 
 
 #ifdef _CUDA_VIEWER 
-	voxelRenderer = new VoxelRenderer(grid->width(), grid->height(), grid->length(),
-			grid->deviceData(),
+	voxelRenderer = new VoxelRenderer(
+			grid,
 			alpha*grid->voxelSize(), alpha*grid->voxelSize(), alpha*grid->voxelSize(),
 			&qtgui::viewer::drawViewerBool, &qtgui::viewer::drawOneTime, &qtgui::viewer::viewerThreshold);
 #else

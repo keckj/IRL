@@ -59,14 +59,16 @@ template <typename T,
 template <typename T,
 		 template <typename T> class CPUResourceType,
 		 template <typename T> class GPUResourceType>
-		 VoxelGridTree<T,CPUResourceType,GPUResourceType> PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::splitGridWithMaxMemory(unsigned long maxMemoryPerSubgrid, unsigned minSplits) {
+		 VoxelGridTree<T,CPUResourceType,GPUResourceType> PowerOfTwoVoxelGrid<T,CPUResourceType,GPUResourceType>::splitGridWithMaxMemory(unsigned long maxMemoryPerSubgrid, unsigned int minSplits) {
 			 unsigned int pow = this->_powX + this->_powY + this->_powZ;
 			 unsigned int maxPow = floor(log2(maxMemoryPerSubgrid));
+			 unsigned int minPow = minSplits;
 			 unsigned int nSplit = ((int)pow - (int)maxPow >= 1 ? pow - maxPow : 0); //on split mini en un
+			 nSplit = (minPow > nSplit ? minPow : nSplit);
 
-			 nSplit = max(minSplits, nSplit);
 
 			 assert(nSplit <= pow);
+			 //std::cout << "\n"<<nSplit << " "<<pow << " " << maxPow << " POW" << std::endl;
 
 			 unsigned int powX = this->_powX, powY = this->_powY, powZ = this->_powZ;
 			 unsigned int splitX=0, splitY=0, splitZ=0;

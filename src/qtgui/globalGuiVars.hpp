@@ -2,7 +2,7 @@
 #ifndef GLOBALGUIVARS_H
 #define GLOBALGUIVARS_H
 
-#include "grid/voxelGrid.hpp"
+#include "grid/voxelGridTree.hpp"
 #include "image/image.hpp"
 #include <QObject>
 #include <QMainWindow>
@@ -11,7 +11,7 @@
 
 namespace qtgui {
 	
-	extern VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> *voxelGrid;
+	extern VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> *voxelGrid;
 	extern QMainWindow *mainWindow;
 
 	namespace viewer {

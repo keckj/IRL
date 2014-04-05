@@ -330,7 +330,7 @@ void Image::filter1D(float *data, int nData, int size, float sigma) {
 }
 
 QImage *Image::generateParallelSlice(unsigned int nSlice,
-	VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> &grid, SliceAxe axe) {
+	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> &grid, SliceAxe axe) {
 
 	
 	unsigned int sliceWidth=0, sliceHeight=0;

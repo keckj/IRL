@@ -8,8 +8,12 @@
 template <typename T, 
 		 template <typename T> class CPUResourceType, 
 		 template <typename T> class GPUResourceType >
-class PowerOfTwoVoxelGrid : public VoxelGrid<T, CPUResourceType, GPUResourceType> {
+class VoxelGridTree;
 
+template <typename T, 
+		 template <typename T> class CPUResourceType, 
+		 template <typename T> class GPUResourceType >
+class PowerOfTwoVoxelGrid : public VoxelGrid<T, CPUResourceType, GPUResourceType> {
 
 	public:
 		//Crée la grille enveloppante de taille puissance de 2 sur chaque axe
@@ -22,8 +26,7 @@ class PowerOfTwoVoxelGrid : public VoxelGrid<T, CPUResourceType, GPUResourceType
 		VoxelGridTree<T,CPUResourceType,GPUResourceType> splitGrid(unsigned int NSliceX, unsigned int NSliceY, unsigned int NSliceZ);
 
 		//Decoupe la grille en fonction de la mémoire disponible
-		//nb de split = max(minmemorySplit, 2^(minSplit))
-		VoxelGridTree<T,CPUResourceType,GPUResourceType> splitGridWithMaxMemory(unsigned long maxMemoryPerSubgrid, unsigned int minSplits = 0); 
+		VoxelGridTree<T,CPUResourceType,GPUResourceType> splitGridWithMaxMemory(unsigned long maxMemoryPerSubgrid, unsigned int minSplits = 0);
 
 		unsigned int powX();
 		unsigned int powY();

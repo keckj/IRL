@@ -1,5 +1,5 @@
 #pragma once
-#include "grid/voxelGrid.hpp"
+#include "grid/voxelGridTree.hpp"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -37,5 +37,5 @@ class Image {
 	
 		enum SliceAxe {AXE_X, AXE_Y, AXE_Z};
 		static QImage *generateParallelSlice(unsigned int nSlice,
-							VoxelGrid<unsigned char,PinnedCPUResource,GPUResource> &grid, SliceAxe axe);
+							VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> &grid, SliceAxe axe);
 };
