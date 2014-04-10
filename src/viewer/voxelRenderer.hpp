@@ -40,7 +40,7 @@ class VoxelRenderer : public Renderable
 		unsigned char &threshold;
 
 		unsigned int nQuads;
-		GLfloat *quads, *normals, *colors;
+		GLfloat *quads, *colors;
 
 		//enum Side { UP, DOWN, LEFT, RIGHT, FRONT, BACK };		
 

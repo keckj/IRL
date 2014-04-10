@@ -17,7 +17,7 @@ VoxelRenderer::VoxelRenderer( VoxelGridTree<unsigned char, PinnedCPUResource, GP
 	width(cpuGrid->width()), height(cpuGrid->height()), length(cpuGrid->length()),
 	cube_w(cpuGrid->voxelSize()), cube_h(cpuGrid->voxelSize()), cube_d(cpuGrid->voxelSize()), 
 	drawGrid(*drawGrid), drawGridOnce(*drawGridOnce), threshold(*threshold),
-	nQuads(0), quads(0), normals(0), colors(0)
+	nQuads(0), quads(0), colors(0)
 {
 	log_console.info("Created a CUDA Voxel Renderer !");
 	log_console.infoStream() << "Current threshold set to " << (unsigned int) *threshold << " !";
@@ -47,12 +47,10 @@ void VoxelRenderer::draw() {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
 
 	// activate the use of GL_VERTEX_ARRAY, GL_NORMAL_ARRAY and GL_COLOR_ARRAY
-	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 
 	// specify the arrays to use
-	glNormalPointer(GL_FLOAT, 0, normals);
 	glVertexPointer(3, GL_FLOAT, 0 , quads);
 	glColorPointer(3, GL_FLOAT, 0 , colors);
 
@@ -61,7 +59,6 @@ void VoxelRenderer::draw() {
 
 	// disable the use of arrays (do not forget!)
 	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 
 }
@@ -133,10 +130,9 @@ void VoxelRenderer::computeGeometry() {
 		//#ifdef _CUDA_VIEWER
 		cudaFreeHost(quads);
 		cudaFreeHost(colors);
-		cudaFreeHost(normals);
 
 		nQuads = kernel::computeQuads(
-				&quads, &normals, &colors, 
+				&quads, &colors, 
 				cpuGrid,
 				alpha, 
 				threshold,

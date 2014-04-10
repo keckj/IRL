@@ -13,8 +13,11 @@ T* GPUMemory::malloc(unsigned long nData, int deviceId) {
 			log_console.infoStream() << "\tAllocating " << toStringMemory(nData*sizeof(T)) << " on device " << deviceId;  
 		}
 	}
-
-	assert(GPUMemory::_memoryLeft[deviceId] >= nData * sizeof(T));
+	
+	if(_memoryLeft[deviceId] < nData * sizeof(T)) {
+		log_console.errorStream() << "Trying to allocate " << toStringMemory(nData*sizeof(T))	<< " on device " << deviceId << " which has only " << toStringMemory(_memoryLeft[deviceId]) << " left !";
+		exit(1);
+	}
 	
 	CHECK_CUDA_ERRORS(cudaSetDevice(deviceId));
 

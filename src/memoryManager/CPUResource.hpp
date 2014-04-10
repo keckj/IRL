@@ -16,6 +16,8 @@ public:
 	bool isOwner() const;
 	
 	bool isCPUResource() const; //is it allocated ?
+
+	void setSize(unsigned int size);
 	
 	virtual void free() = 0;
 	virtual const std::string getResourceType() const = 0;

@@ -71,3 +71,9 @@ std::ostream &operator<<(std::ostream &out, const CPUResource<T> &resource) {
 
 	return out;
 }
+
+
+template <typename T>
+void CPUResource<T>::setSize(unsigned int size) {
+	this->_size = size;
+}

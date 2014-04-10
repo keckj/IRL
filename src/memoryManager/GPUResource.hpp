@@ -16,6 +16,8 @@ public:
 	void free();
 	void allocate();
 
+	void setSize(unsigned long size);
+
 	T* data() const;
 	int deviceId() const;
 	unsigned long size() const;

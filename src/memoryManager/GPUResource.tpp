@@ -113,3 +113,8 @@ void GPUResource<T>::allocate() {
 	_isOwner = true;
 	_isGPUResource = true;
 }
+	
+template <typename T>
+void GPUResource<T>::setSize(unsigned long size) {
+	this->_size = size;
+}

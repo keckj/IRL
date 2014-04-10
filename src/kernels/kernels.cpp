@@ -14,6 +14,7 @@
 
 namespace kernel {
 
+	extern void castKernel(unsigned long dataSize, float *float_data, unsigned char *char_data);
 
 	extern void call_countVisibleQuads(dim3 dimGrid, dim3 dimBlock, 
 			unsigned int* nQuads_d, unsigned char *grid_d, 
@@ -22,21 +23,23 @@ namespace kernel {
 
 	extern void call_computeVisibleQuads(dim3 dimGrid, dim3 dimBlock,
 			unsigned int *d_counter,
-			float *d_quads, float *d_normals, float *d_colors,
+			float *d_quads, float *d_colors,
 			unsigned char *d_voxel_grid,
 			const unsigned int gridIdx, const unsigned int gridIdy, const unsigned int gridIdz,
 			const unsigned int gridWidth, const unsigned int gridHeight, const unsigned int gridLength,
 			const float voxelWidth,
 			const unsigned char threshold,
-			const unsigned char normalStride, const unsigned char colorStride);
+			const unsigned char colorStride);
 
 
-	unsigned int computeQuads(float **th_quads, float **th_normals, float **th_colors, 
+	unsigned int computeQuads(float **th_quads, float **th_colors, 
 			VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid,
 			float alpha, 
 			const unsigned char threshold, 
 			const NormalType nt, const ColorType ct) {
 
+		
+		GPUMemory::setVerbose(1);
 
 		cudaSetDevice(0);
 		dim3 dimBlock(32, 32, 1);
@@ -79,28 +82,23 @@ namespace kernel {
 		if(totalQuads == 0) {
 			*th_quads = 0;
 			*th_colors = 0;
-			*th_normals = 0;
 			return 0;
 		}
 
 
 		//compute quads
 
-		const unsigned char normalStride = (nt == NORMAL_PER_QUAD ? 1 : 4);
 		const unsigned char colorStride = (ct == COLOR_PER_QUAD ? 1 : 4);
 
 		const unsigned int quadSize = totalQuads*4*3*sizeof(float);
-		const unsigned int normalSize = normalStride*totalQuads*3*sizeof(float);
 		const unsigned int colorSize = colorStride*totalQuads*3*sizeof(float);
 
-		//CPU quads normals and colors
+		//CPU quads colors
 		CHECK_CUDA_ERRORS(cudaMallocHost((void**) th_quads, quadSize));
-		CHECK_CUDA_ERRORS(cudaMallocHost((void**) th_normals, normalSize));
 		CHECK_CUDA_ERRORS(cudaMallocHost((void**) th_colors, colorSize));
 
 		//pointers
 		float *p_quads = *th_quads;
-		float *p_normals = *th_normals;
 		float *p_colors = *th_colors;
 
 		//counters
@@ -115,6 +113,8 @@ namespace kernel {
 		unsigned int gridIdx = 0, gridIdy = 0,  gridIdz = 0;
 		for (auto it = cpuGrid->begin(); it != cpuGrid->end(); ++it) {
 
+			log_console.infoStream() << counts[nGrid];
+
 			if(counts[nGrid] != 0) {
 
 				PinnedCPUResource<unsigned char> subgrid_h(**it);
@@ -124,25 +124,22 @@ namespace kernel {
 				CHECK_CUDA_ERRORS(cudaMemset(nQuads_s.deviceData(), 0, nQuads_s.dataBytes()));
 
 				PinnedCPUResource<float> h_quads(p_quads, counts[nGrid]*4*3);
-				PinnedCPUResource<float> h_normals(p_normals, counts[nGrid]*normalStride*3);
 				PinnedCPUResource<float> h_colors(p_colors, counts[nGrid]*colorStride*3);
 				SharedResource<float, PinnedCPUResource, GPUResource> s_quads(h_quads, 0);
-				SharedResource<float, PinnedCPUResource, GPUResource> s_normals(h_normals, 0);
 				SharedResource<float, PinnedCPUResource, GPUResource> s_colors(h_colors, 0);
 				s_quads.allocateOnDevice();
-				s_normals.allocateOnDevice();
 				s_colors.allocateOnDevice();
 
 				call_computeVisibleQuads(
 						dimGrid, dimBlock,
 						nQuads_s.deviceData(), 
-						s_quads.deviceData(), s_normals.deviceData(), s_colors.deviceData(),
+						s_quads.deviceData(), s_colors.deviceData(),
 						subgrid_s.deviceData(),
 						gridIdx, gridIdy, gridIdz, 
 						cpuGrid->subwidth(), cpuGrid->subheight(), cpuGrid->sublength(),
 						alpha*cpuGrid->voxelSize(), 
 						threshold,
-						normalStride, colorStride);
+						colorStride);
 
 				nQuads_s.copyToHost();
 				CHECK_CUDA_ERRORS(cudaDeviceSynchronize());
@@ -156,12 +153,10 @@ namespace kernel {
 
 				//copy back data and actualize pointers
 				s_quads.copyToHost();
-				s_normals.copyToHost();
 				s_colors.copyToHost();
 				CHECK_CUDA_ERRORS(cudaDeviceSynchronize());
 
 				p_quads += s_quads.dataSize();
-				p_normals += s_normals.dataSize();
 				p_colors += s_colors.dataSize();
 
 			}

@@ -11,7 +11,7 @@
 
 namespace kernel {
 
-void castKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data);
+void castKernel(unsigned long dataSize, float *float_data, unsigned char *char_data);
 
 void VNNKernel(
 		int nImages, int imgWidth, int imgHeight, 
@@ -27,7 +27,7 @@ void VNNKernel(
 enum NormalType { NORMAL_PER_QUAD, NORMAL_PER_VERTEX};
 enum ColorType { COLOR_PER_QUAD, COLOR_PER_VERTEX};
 
-unsigned int computeQuads(float **h_quads, float **h_normals, float **h_colors, 
+unsigned int computeQuads(float **h_quads, float **h_colors, 
 		VoxelGridTree<unsigned char, PinnedCPUResource, GPUResource> *cpuGrid,
 		float alpha, 
 		unsigned char threshold, 

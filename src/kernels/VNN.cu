@@ -6,23 +6,21 @@
 
 namespace kernel {
 
-__global__ void cast(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data) {
+__global__ void cast(const long dataSize, float *float_data, unsigned char *char_data) {
 	
-	unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;    // this thread handles the data at its thread id
-	unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;    // this thread handles the data at its thread id
-	unsigned int id = blockIdx.z*imgWidth*imgHeight + idy*imgWidth + idx;
+	unsigned int id = blockIdx.y*65535*512 + blockIdx.x*512 + threadIdx.x;
 
-	if(idx >= imgWidth || idy >= imgHeight)
+	if(id > dataSize)
 		return;
 	
 	char_data[id] = (unsigned char) float_data[id];
 }
 
-void castKernel(const int nImages, const int imgWidth, const int imgHeight, float *float_data, unsigned char *char_data) {
-	dim3 dimBlock(32, 32, 1);
-	dim3 dimGrid(ceil(imgWidth/32.0f), ceil(imgHeight/32.0f), nImages);
+void castKernel(unsigned long dataSize, float *float_data, unsigned char *char_data) {
+	dim3 dimBlock(512);
+	dim3 dimGrid((dataSize/512) % 65535, ceil(dataSize/(512*65535.0f)));
 	log_console.infoStream() << "[KERNEL::Cast] <<<" << toStringDim(dimBlock) << ", " << toStringDim(dimGrid) << ">>>";
-	cast<<<dimGrid,dimBlock>>>(nImages, imgWidth, imgHeight, float_data, char_data);
+	cast<<<dimGrid,dimBlock>>>(dataSize, float_data, char_data);
 }
 
 

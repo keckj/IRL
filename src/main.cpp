@@ -29,6 +29,11 @@
 #include "memoryManager/CPUMemory.hpp"
 #include "memoryManager/sharedResource.hpp"
 
+#ifndef _SPLITS
+#define _SPLITS 1
+#endif
+
+
 using namespace std;
 using namespace cv;
 using namespace kernel;
@@ -192,30 +197,71 @@ int main( int argc, char** argv)
 
 	//cast float images to unsigned char
 	log_console.infoStream() << "Casting images to unsigned char !";
-	PinnedCPUResource<unsigned char> images_char_h(imageSize);
+
+
+
+	unsigned long maxBytes = GPUMemory::getMinAvailableMemoryOnDevices()/1.5f;
+	unsigned int passes = ceil((float)(imageSize*5)/maxBytes);
+
+	unsigned int subSize= maxBytes/5;
+	unsigned int lastSize = imageSize % subSize; 
+	unsigned int totSize = passes*subSize;
+	if(passes == 1) {
+		subSize = imageSize;
+		totSize = imageSize;
+	}
+	
+	log_console.infoStream() << "Spliting " << nImages << " images in " << passes 
+		<< " groups of size " << toStringMemory(subSize*sizeof(float)) << " !";
+
+	PinnedCPUResource<unsigned char> images_char_h(totSize);
 	images_char_h.allocate();
 
 	{
+		PinnedCPUResource<float> image_float_h(float_data_h, subSize, true); //will be freed at the end of the block
+		
+		cudaSetDevice(0);
+		GPUResource<float> sub_img_float_d(0,subSize);
+		GPUResource<unsigned char> sub_img_char_d(0,subSize);
+		sub_img_float_d.allocate();
+		sub_img_char_d.allocate();
+
 		CHECK_CUDA_ERRORS(cudaSetDevice(0));
+		for (unsigned int i = 0; i < passes - 1; i++) {
+			PinnedCPUResource<unsigned char> sub_img_char_h(images_char_h.data() + i*subSize, subSize, false);
+			SharedResource<unsigned char, PinnedCPUResource, GPUResource> sub_img_char_s(sub_img_char_h, sub_img_char_d);		
 
-		PinnedCPUResource<float> images_float_h(float_data_h, imageSize, true); //will be freed at the end of the block
+			PinnedCPUResource<float> sub_img_float_h(float_data_h + i*subSize, subSize, false);
+			SharedResource<float, PinnedCPUResource, GPUResource> sub_img_float_s(sub_img_float_h, sub_img_float_d);		
 
-		SharedResource<float, PinnedCPUResource, GPUResource> images_float_s(images_float_h, 0);
-		SharedResource<unsigned char, PinnedCPUResource, GPUResource> images_char_s(images_char_h, 0);
+			sub_img_float_s.copyToDevice();
+			castKernel(subSize, sub_img_float_d.data(), sub_img_char_d.data());
+			sub_img_char_s.copyToHost();
 
-		images_float_s.allocateOnDevice();
-		images_char_s.allocateOnDevice();
+			checkKernelExecution();
+		}
 
-		images_float_s.copyToDevice();
+		//last pass
+		sub_img_char_d.setSize(lastSize);		
+		sub_img_float_d.setSize(lastSize);		
 
-		castKernel(nImages, imgWidth, imgHeight, images_float_s.deviceData(), images_char_s.deviceData());
+		PinnedCPUResource<unsigned char> sub_img_char_h(images_char_h.data() + (passes-1)*subSize, lastSize, false);
+		SharedResource<unsigned char, PinnedCPUResource, GPUResource> sub_img_char_s(sub_img_char_h, sub_img_char_d);		
+
+		PinnedCPUResource<float> sub_img_float_h(float_data_h + (passes-1)*subSize, lastSize, false);
+		SharedResource<float, PinnedCPUResource, GPUResource> sub_img_float_s(sub_img_float_h, sub_img_float_d);		
+
+		sub_img_float_s.copyToDevice();
+		castKernel(subSize, sub_img_float_d.data(), sub_img_char_d.data());
+		sub_img_char_s.copyToHost();
+
 		checkKernelExecution();
-
-		images_char_s.copyToHost();
 
 		float_data_h = 0;
 	}
 	log_console.infoStream() << "Freed device and host float image data !";
+
+	images_char_h.setSize(imageSize);
 
 
 	//reserved memory on each GPU
@@ -234,7 +280,7 @@ int main( int argc, char** argv)
 
 	//split in subgrids according to min of GPUs memory left, reserved data bytes, and grid size ratio
 	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> voxelGrid = grid.splitGridWithMaxMemory(
-			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, 1);
+			(GPUMemory::getMinAvailableMemoryOnDevices() - reservedDataBytes)*oneGridToNeededMemoryRatio, _SPLITS);
 
 	//compute how many devices are needed
 	unsigned int cudaDevicesNeeded = maxCudaDevices;
@@ -354,7 +400,7 @@ int main( int argc, char** argv)
 
 			//put zeroes
 			CHECK_CUDA_ERRORS(cudaMemsetAsync(grid_d[j%2][i], 0, voxelGrid.subgridSize(), streams[j%2][i]));
-			
+
 			//compute subgrid
 			VNNKernel(nImages, imgWidth, imgHeight, 
 					deltaGrid, deltaX, deltaY,
@@ -377,7 +423,7 @@ int main( int argc, char** argv)
 				gridIdy = (gridIdy + 1) % voxelGrid.nGridY();
 			if(gridIdx == 0 && gridIdy == 0)
 				gridIdz = (gridIdz + 1) % voxelGrid.nGridZ();
-	
+
 		}
 
 	}
@@ -395,10 +441,10 @@ int main( int argc, char** argv)
 		GPUMemory::free<unsigned char>(grid_d[1][i], voxelGrid.subgridSize(), i);
 		GPUMemory::free<unsigned char>(hitgrid_d[i], voxelGrid.subgridSize(), i);
 	}
-	
+
 	CPUMemory::display(cout);
 	GPUMemory::display(cout);
-	
+
 	CPUMemory::setVerbose(false);
 	GPUMemory::setVerbose(false);
 
