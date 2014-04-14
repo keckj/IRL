@@ -21,7 +21,10 @@ void VNNKernel(
 		unsigned int voxelGridWidth, unsigned int voxelGridHeight, unsigned int voxelGridLength,
 		float **offsets_d,
 		float **rotations_d,
-		unsigned char *char_image_data, unsigned char *voxel_data, unsigned char *hit_counter, 
+		unsigned char *char_image_data, 
+		unsigned char *voxel_data, 
+		unsigned short *mean_grid,
+		unsigned char *hit_counter, 
 		cudaStream_t stream);
 
 enum NormalType { NORMAL_PER_QUAD, NORMAL_PER_VERTEX};
