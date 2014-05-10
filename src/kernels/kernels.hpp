@@ -13,6 +13,12 @@ namespace kernel {
 
 void castKernel(unsigned long dataSize, float *float_data, unsigned char *char_data);
 
+extern void computeMeanKernel(unsigned char *grid, 
+		unsigned char *hit_counter, 
+		unsigned short *sum, 
+		const unsigned long nData, 
+		cudaStream_t stream);
+
 void VNNKernel(
 		int nImages, int imgWidth, int imgHeight, 
 		float deltaGrid, float deltaX, float deltaY,

@@ -403,6 +403,7 @@ int main( int argc, char** argv)
 
 			//put zeroes
 			CHECK_CUDA_ERRORS(cudaMemsetAsync(grid_d[j%2][i], 0, voxelGrid.subgridSize()*sizeof(unsigned char), streams[j%2][i]));
+			CHECK_CUDA_ERRORS(cudaMemsetAsync(hitgrid_d[i], 0, voxelGrid.subgridSize()*sizeof(unsigned char), streams[j%2][i]));
 			CHECK_CUDA_ERRORS(cudaMemsetAsync(meangrid_d[i], 0, voxelGrid.subgridSize()*sizeof(unsigned short), streams[j%2][i]));
 
 			//compute subgrid
@@ -416,6 +417,9 @@ int main( int argc, char** argv)
 					images_d[i],
 					grid_d[j%2][i], meangrid_d[i], hitgrid_d[i],
 					streams[j%2][i]);
+
+			//compute mean
+			computeMeanKernel(grid_d[j%2][i], hitgrid_d[i], meangrid_d[i], voxelGrid.subgridSize(), streams[j%2][i]);
 
 			//copy back subgrid
 			CHECK_CUDA_ERRORS(cudaMemcpyAsync(voxelGrid(nGrid)->hostData(), grid_d[j%2][i], voxelGrid.subgridBytes(), cudaMemcpyDeviceToHost, streams[j%2][i]));

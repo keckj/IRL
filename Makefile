@@ -1,6 +1,6 @@
 
 #Makefile @Darkvador
-NARCH=20
+NARCH=30
 MAKE=make
 
 #Makefile @Poulpy
