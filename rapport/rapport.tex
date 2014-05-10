@@ -50,16 +50,13 @@
 
 	% NOTE: PDF hyperlink and bookmark features are not required in IEEE
 	%       papers and their use requires extra complexity and work.
-	% *** IF USING HYPERREF BE SURE AND CHANGE THE EXAMPLE PDF ***
-	% *** TITLE/SUBJECT/AUTHOR/KEYWORDS INFO BELOW!!           ***
 	\newcommand\MYhyperrefoptions{bookmarks=true,bookmarksnumbered=true,
 	pdfpagemode={UseOutlines},plainpages=false,pdfpagelabels=true,
 	colorlinks=true,linkcolor={black},citecolor={black},urlcolor={black},
 	pdftitle={Efficient 3D Isotropic Volume Reconstruction Based On 2D Tracked Ultrasound Images},
 	pdfsubject={Introduction To Lab Research},
 	pdfauthor={Keck Jean-Baptiste},
-	pdfkeywords={Computer Society, IEEEtran, journal, LaTeX, paper,
-		     template}}%<^!TODO!
+pdfkeywords={TIMC-IMAG, Introduction to Lab Research, Arthrosis, Ensimag, CUDA, GPGPU, Ultrasound Imaging, Isotropic Volume Reconstruction, Report}}
 	
 
         \acrodef{gpgpu}[GPGPU]{General Purpose Computing on Graphics Processing Unit}
@@ -83,15 +80,13 @@
 	% The paper headers
 	\markboth{Introduction to Laboratory Research, Report,~Version.~1, No.~1, May~2014}
 	{Shell \MakeLowercase{\textit{et al.}}: Bare Advanced Demo of IEEEtran.cls for Journals}
-	% The only time the second header will appear is for the odd numbered pages
-	% after the title page when using the twoside option.
 	%\IEEEspecialpapernotice{IRL Report}
 
 \IEEEtitleabstractindextext{%
 \begin{abstract}
 	A miniature 3D tracked ultrasonic probe has been developped to aquire intra-articular cartilage images under artroscopic chirurgy conditions. The aim is to detect cartilaginous lesions (arthrosis) and quantize their precise sizes and locations to help the clinician in his diagnostic and his therapeutic decision making.
 	The ultrasonic transducer is tracked by an optical locator, wich permits to find location and orientation of each 2D US images in a common 3D spacial reference. Near two thousands images are acquired when scanning a cartilage surface. An interesting tool is to rebuild a 3D isotropic volume (cubic voxels) with those images allowing further processing.
-	Conventional 3D ultrasound algorithms have low computational complexity but the huge amount of data generated makes it difficult to compute results within reasonable time on classical computers. In this paper I investigate the possibilities of regenerating a 3D isotropic volume with the help of \ac{gpgpu} (\ac{cuda}) by adaptating existing algorithms to massive parallelism provided by modern everyday GPUs.
+	Conventional 3D ultrasound algorithms have low computational complexity but the huge amount of data generated makes it difficult to compute results within reasonable time on classical computers. In this paper we investigate the possibilities of regenerating a 3D isotropic volume with the help of \ac{gpgpu} (\ac{cuda}) by adaptating existing algorithms to massive parallelism provided by modern everyday GPUs.
 \end{abstract}
 
 % Note that keywords are not normally used for peerreview papers.
@@ -108,7 +103,7 @@
 \IEEEPARstart{T}{his} demo file is intended to serve as a ``starter file''
 for IEEE Computer Society journal papers produced under \LaTeX\ using
 IEEEtran.cls version 1.8 and later.
-I wish you the best of success.
+I wish you the best of success \cite{1}.
 
 \hfill mds
  
@@ -124,31 +119,26 @@ Subsection text here.
 Subsubsection text here.
 
 
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=2.5in]{myfigure}
-%\caption{Simulation Results.}
-%\label{fig_sim}
-%\end{figure}
+\begin{figure}[!t]
+\centering
+\includegraphics[width=2.5in]{femur_2}
+\caption{Simulation Results.}
+\label{fig_sim}
+\end{figure}
 
-% An example of a double column floating figure using two subfigures.
-% (The subfig.sty package must be loaded for this to work.)
-% The subfigure \label commands are set within each subfloat command,
-% and the \label for the overall figure must come after \caption.
-% \hfil is used as a separator to get equal spacing.
-% Watch out that the combined width of all the subfigures on a 
-% line do not exceed the text width or a line break will occur.
-%
-%\begin{figure*}[!t]
-%\centering
-%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
-%\caption{Simulation results.}
-%\label{fig_sim}
-%\end{figure*}
+\begin{figure*}[!t]
+\centering
+\subfloat[Case I]{\includegraphics[width=1.5in]{data_0}%
+\label{fig_first_case}}
+\hfil
+\subfloat[Case II]{\includegraphics[width=1.5in]{data_1}%
+\label{fig_second_case}}
+\hfil
+\subfloat[Case III]{\includegraphics[width=1.5in]{femur_2}%
+\label{fig_third_case}}
+\caption{Simulation results.}
+\label{fig_sim}
+\end{figure*}
 %
 % Note that often IEEE papers with subfigures do not employ subfigure
 % captions (using the optional argument to \subfloat[]), but instead will
@@ -158,25 +148,25 @@ Subsubsection text here.
 % \caption command should come BEFORE the table. Table text will default to
 % \footnotesize as IEEE normally uses this smaller font for tables.
 % The \label must come after \caption as always.
-%
-%\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-%\renewcommand{\arraystretch}{1.3}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-%\caption{An Example of a Table}
-%\label{table_example}
-%\centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-%\begin{tabular}{|c||c|}
-%\hline
-%One & Two\\
-%\hline
-%Three & Four\\
-%\hline
-%\end{tabular}
-%\end{table}
+
+\begin{table}[!t]
+% increase table row spacing, adjust to taste
+\renewcommand{\arraystretch}{1.3}
+%if using array.sty, it might be a good idea to tweak the value of
+%\extrarowheight as needed to properly center the text within the cells
+\caption{An Example of a Table}
+\label{table_example}
+\centering
+% Some packages, such as MDW tools, offer better commands for making tables
+% than the plain LaTeX2e tabular which is used here.
+\begin{tabular}{|c||c|}
+\hline
+One & Two\\
+\hline
+Three & Four\\
+\hline
+\end{tabular}
+\end{table}
 
 
 
@@ -197,7 +187,6 @@ appendix text goes here.
 \section{Voxel Renderer}
 Appendix text goes here.
 
-
 \section*{Acknowledgments}
 I would like to thank the TIMC-IMAG laboratory for having hosted me for 4 months, especially the GMCAO team members that were always here to help when there were any problems and for the good mood. Special thanks goes to M. Chabanas for having taken the time and energy throughout the project by providing precious feedbacks and for having introduced me to the TIMC-IMAG laboratory.
 
@@ -208,36 +197,9 @@ I would like to thank the TIMC-IMAG laboratory for having hosted me for 4 months
 \fi
 
 
+\bibliographystyle{IEEEtran}
+\bibliography{master}
 
-% trigger a \newpage just before the given reference
-% number - used to balance the columns on the last page
-% adjust value as needed - may need to be readjusted if
-% the document is modified later
-%\IEEEtriggeratref{8}
-% The "triggered" command can be changed if desired:
-%\IEEEtriggercmd{\enlargethispage{-5in}}
-
-% references section
-
-% can use a bibliography generated by BibTeX as a .bbl file
-% BibTeX documentation can be easily obtained at:
-% http://www.ctan.org/tex-archive/biblio/bibtex/contrib/doc/
-% The IEEEtran BibTeX style support page is at:
-% http://www.michaelshell.org/tex/ieeetran/bibtex/
-%\bibliographystyle{IEEEtran}
-% argument is your BibTeX string definitions and bibliography database(s)
-%\bibliography{IEEEabrv,../bib/paper}
-%
-% <OR> manually copy in the resultant .bbl file
-% set second argument of \begin to the number of references
-% (used to reserve space for the reference number labels box)
-\begin{thebibliography}{1}
-
-\bibitem{IEEEhowto:kopka}
-H.~Kopka and P.~W. Daly, \emph{A Guide to {\LaTeX}}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
-
-\end{thebibliography}
 
 % biography section
 % 
