@@ -1,16 +1,4 @@
-	% IEEEtran V1.7 and later provides for these CLASSINPUT macros to allow the
-	% user to reprogram some IEEEtran.cls defaults if needed. These settings
-	% override the internal defaults of IEEEtran.cls regardless of which class
-	% options are used. Do not use these unless you have good reason to do so as
-	% they can result in nonIEEE compliant documents. User beware. ;)
-	%
-	%\newcommand{\CLASSINPUTbaselinestretch}{1.0} % baselinestretch
-	%\newcommand{\CLASSINPUTinnersidemargin}{1in} % inner side margin
-	%\newcommand{\CLASSINPUToutersidemargin}{1in} % outer side margin
-	%\newcommand{\CLASSINPUTtoptextmargin}{1in}   % top text margin
-	%\newcommand{\CLASSINPUTbottomtextmargin}{1in}% bottom text margin
-
-
+	
 	\documentclass[12pt,journal,compsoc]{IEEEtran}
 	\usepackage[utf8]{inputenc}
 
@@ -45,11 +33,7 @@
 
 	% *** PDF, URL AND HYPERLINK PACKAGES ***
 	\usepackage{url}
-	% Basically, \url{my_url_here}.
 
-
-	% NOTE: PDF hyperlink and bookmark features are not required in IEEE
-	%       papers and their use requires extra complexity and work.
 	\newcommand\MYhyperrefoptions{bookmarks=true,bookmarksnumbered=true,
 	pdfpagemode={UseOutlines},plainpages=false,pdfpagelabels=true,
 	colorlinks=true,linkcolor={black},citecolor={black},urlcolor={black},
@@ -103,7 +87,7 @@ pdfkeywords={TIMC-IMAG, Introduction to Lab Research, Arthrosis, Ensimag, CUDA, 
 \IEEEPARstart{T}{his} demo file is intended to serve as a ``starter file''
 for IEEE Computer Society journal papers produced under \LaTeX\ using
 IEEEtran.cls version 1.8 and later.
-I wish you the best of success \cite{1}\cite{2}\cite{3}.
+I wish you the best of success \cite{1}\cite{2}\cite{3}\cite{4}\cite{5}\cite{6}\cite{7}.
 
 \hfill mds
  
@@ -137,7 +121,7 @@ Subsubsection text here.
 \subfloat[Case III]{\includegraphics[width=1.5in]{femur_2}%
 \label{fig_third_case}}
 \caption{Simulation results.}
-\label{fig_sim}
+\label{fig_sim2}
 \end{figure*}
 %
 % Note that often IEEE papers with subfigures do not employ subfigure
@@ -179,7 +163,7 @@ The conclusion goes here.
 \section{Images Coordinate System}
 appendix text goes here.
 
-\section{Existing Algorithms}
+\section{Existing Hole Filling Algorithms}
 appendix text goes here.
 
 % you can choose not to have a title for an appendix
