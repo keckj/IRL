@@ -8,6 +8,7 @@
 
 	% *** GRAPHICS RELATED PACKAGES ***
 	\usepackage[pdftex]{graphicx}
+	\usepackage{framed}
 	\graphicspath{{img/}}
 	\DeclareGraphicsExtensions{.pdf,.jpeg,.jpg,.png}
 
@@ -57,7 +58,7 @@ pdfkeywords={TIMC-IMAG, Introduction to Lab Research, Arthrosis, Ensimag, CUDA, 
 
 	\IEEEcompsocitemizethanks{
 	\IEEEcompsocthanksitem M. ~Keck is a student at Ensimag, Grenoble, France.
-	\IEEEcompsocthanksitem M. ~Chabanas is in the team Gestes Médico-Chirurgicaux Assistés par Ordinateur in the TIMC-IMAG Laboratory, University of Grenoble, France. He was my supervisor for this project.}
+	\IEEEcompsocthanksitem M. ~Chabanas is in the team Gestes Médico-Chirurgicaux Assistés par Ordinateur in the TIMC-IMAG Laboratory, University of Grenoble, France.}
 	}
 
 
@@ -118,18 +119,83 @@ Since the ultrasound probe and the spacial sensor are independent, the temporal 
 
 \subsection{Data acquisition}
 
-After signal processing 2D slices of 64x1296 pixels are generated. As the transducers are $\epsilon_x=205\mu m$ wide, the images have a width of $64\;\epsilon_x=19.12mm$. The precision on the other axe is $\epsilon_y=18\mu m$ 
+After signal processing 2D slices of logical size $L_x$ x $L_y = 64$x$1296$ pixels are generated. 
+As the transducers are $\epsilon_x=205\mu m$ wide, the images have a physical size of $P_x = 64\;\epsilon_x=19.12mm$. 
+The precision on the other axe is $\epsilon_y=18\mu m$, and thus the images have a physical height of $P_y = 1296\;\epsilon_y=23.328mm$.
+For the images we will use this convention : we place the origin at the top-left with the x-axis oriented towards the right and the y-axis oriented towards the bottom. 
+We define $X_p=(x_p,y_p,0,1)^T$ the homogenous vector that describes logical position of each pixel $(x_p,y_p)$ in an image whose origin is at $(O_x,O_y)$. 
+$S_x$ and $S_y$ are the pixel spacing on each axis and are defined as $S_x = \frac{P_x}{L_x}$ and $S_y = \frac{P_y}{L_y}$. 
+
+\begin{equation}
+	M_{model} = \left(
+	\begin{IEEEeqnarraybox*}[][c]{,c/c/c/c,}
+		$$
+		S_x&0&0&O_x\\
+		0&S_y&0&O_y\\
+		0&0&0&0\\
+		0&0&0&1%
+		$$
+	\end{IEEEeqnarraybox*}
+\right)
+\end{equation}
+
+The physical position of each pixel in its local physical coordinate system can be calculated as the following : 
+\begin{IEEEeqnarray}{rCl}
+X_m = M_{model}\;X_p 
+\end{IEEEeqnarray}
 
 \begin{figure}[!h]
 \centering
 \includegraphics[width=40mm, height=50mm]{scan}
-\caption{Typical 2D ultrasound image of intra articular cartilage. Image size : 64x1296 pixels, real size : 19.12x23.41mm}
+\caption{A typical 2D ultrasound image of intra articular cartilage.}
 \label{fig_2}
 \end{figure}
 
+$M_{RP}$ is the transformation matrix from the optical position sensor reflector (R) to origin of the scanned image plane (P), $M_{ER}$ is the transformation matrix from the optical emitter (E) to (R) and $M_{VE}$ is the transformation matrix from the voxel coordinate of the reconstructed volume (V) to (E). Note that all those matrices are 4x4 homogeneous matrices.
 
-\section{Reconstruction algorithms}
+$M_{RP}$ is initially unknown and must be obtained through a calibration process TODO.
 
+With those matrices and (1), the whole forward transformation can be written as : 
+
+\begin{IEEEeqnarray}{rCl}
+	X_v = M_{VE}M_{ER}M_{RP}\;X_m = M\;M_{model}\;X_p
+\end{IEEEeqnarray}
+
+The specially designed sofware used to acquire data can export each image data in a raw file which includes single precision float image data, and a mhd file which include a path to the corresponding raw file and the transformation matrix M.
+
+\section{Volume Reconstruction}
+
+\subsection{Reconstruction steps}
+
+After the 2D images and positions are exported as raw and mhd files, the next procedure is to reconstruct a 3D volume data. 
+The sampled images are denoted \{$I_i$\} and the transformations matrices \{$M_i$\}.
+
+Flow diagram of freehand 3D ultrasound volume reconstruction
+\begin{framed}
+\noindent\textbf{Step 1 : Data loading}
+\begin{itemize}
+	\item Parse mhd files
+	\item Load raw images
+	\item Load transformations
+\end{itemize}
+\textbf{Step 2 : Data preprocessing}
+\begin{itemize}
+	\item Position filtering
+	\item Image filtering
+	\item Image cropping
+\end{itemize}
+\textbf{Step 3 : Grid construction}
+\begin{itemize}
+	\item Determinate grid size
+\end{itemize}
+\textbf{Step 4 : Volume Filling}
+\begin{itemize}
+	\item Bin-filling
+	\item Hole-filling
+\end{itemize}
+\end{framed}
+
+\subsection{Existing algorithms}
 
 
 %\begin{figure*}[!t]
