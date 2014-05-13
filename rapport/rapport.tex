@@ -17,7 +17,8 @@
 
 	% *** SPECIALIZED LIST PACKAGES ***
 	\usepackage[footnote]{acronym}
-	\usepackage{algorithmic}
+	\usepackage{algorithm2e}
+	\usepackage{alltt}
 
 	% *** ALIGNMENT PACKAGES ***
 	\usepackage{array}
@@ -41,47 +42,46 @@
 	pdftitle={Efficient 3D Isotropic Volume Reconstruction Based On 2D Localized Ultrasound Images},
 	pdfsubject={Introduction To Lab Research},
 	pdfauthor={Keck Jean-Baptiste},
-pdfkeywords={TIMC-IMAG, Introduction to Lab Research, Arthrosis, Ensimag, CUDA, GPGPU, Ultrasound Imaging, Isotropic Volume Reconstruction, Report}}
-	
+	pdfkeywords={Introduction to Lab Research, Arthrosis, GPGPU, Ultrasound Imaging, Isotropic Volume Reconstruction}}
 
         \acrodef{gpgpu}[GPGPU]{General Purpose Computing on Graphics Processing Unit}
         \acrodef{cuda}[CUDA]{Compute Unified Device Architecture}
         \acrodef{timcimag}[TIMC-IMAG]{Techniques de l’Ingénierie Médicale et de la Complexité - Informatique, Mathématiques et Applications, Grenoble}
         \acrodef{gmcao}[GMCAO]{Gestes Médico-Chirurgicaux Assistés par Ordinateur}
+	\acrodef{ssd}[SSD]{Solid-State Drive}
+	\acrodef{hdd}[HDD]{Hard Disk Drive}
+	\acrodef{simd}[SIMD]{Single Instruction, Multiple Data}
 
 	\begin{document}
 
 	\title{Efficient 3D Isotropic Volume Reconstruction Based On 2D Localized Ultrasound Images}
+	
 
 	\author{Jean-Baptiste Keck,~\IEEEmembership{Student,~Ensimag}\\
 		Matthieu Chabanas,~\IEEEmembership{Supervisor,~TIMC-IMAG Laboratory}
 
+
 	\IEEEcompsocitemizethanks{
 	\IEEEcompsocthanksitem M. ~Keck is a student at Ensimag, Grenoble, France.
 	\IEEEcompsocthanksitem M. ~Chabanas is in the team Gestes Médico-Chirurgicaux Assistés par Ordinateur in the TIMC-IMAG Laboratory, University of Grenoble, France.}
-	}
+	
+	\IEEEspecialpapernotice{TIMC-IMAG}
+	\IEEEtitleabstractindextext{%
+	\begin{abstract}
+		A miniature 3D tracked ultrasonic probe has been developped to aquire intra-articular cartilage images under artroscopic chirurgy conditions. The aim is to detect cartilaginous lesions (arthrosis) and quantize their precise sizes and locations to help the clinician in his diagnostic and his therapeutic decision making.
+		The ultrasonic transducer is tracked by an optical sensor, wich permits to find location and orientation of each 2D US images in a common 3D spacial reference. Near two thousands images are acquired when scanning a cartilage surface. An interesting tool is to rebuild a 3D isotropic volume (cubic voxels) with those images, allowing further processing.
+		Conventional 3D ultrasound algorithms have low computational complexity but the huge amount of data generated makes it difficult to compute results within reasonable time on classical computers. In this paper we investigate the possibilities of regenerating a 3D isotropic volume with the help of \ac{gpgpu} (\ac{cuda}) by adaptating existing algorithms to massive parallelism provided by modern everyday GPUs.
+	\end{abstract}
 
-
-	% The paper headers
-	\markboth{Introduction to Laboratory Research, Report,~Version.~1, No.~1, May~2014}
-	{Shell \MakeLowercase{\textit{et al.}}: Bare Advanced Demo of IEEEtran.cls for Journals}
-	%\IEEEspecialpapernotice{IRL Report}
-
-\IEEEtitleabstractindextext{%
-\begin{abstract}
-	A miniature 3D tracked ultrasonic probe has been developped to aquire intra-articular cartilage images under artroscopic chirurgy conditions. The aim is to detect cartilaginous lesions (arthrosis) and quantize their precise sizes and locations to help the clinician in his diagnostic and his therapeutic decision making.
-	The ultrasonic transducer is tracked by an optical sensor, wich permits to find location and orientation of each 2D US images in a common 3D spacial reference. Near two thousands images are acquired when scanning a cartilage surface. An interesting tool is to rebuild a 3D isotropic volume (cubic voxels) with those images, allowing further processing.
-	Conventional 3D ultrasound algorithms have low computational complexity but the huge amount of data generated makes it difficult to compute results within reasonable time on classical computers. In this paper we investigate the possibilities of regenerating a 3D isotropic volume with the help of \ac{gpgpu} (\ac{cuda}) by adaptating existing algorithms to massive parallelism provided by modern everyday GPUs.
-\end{abstract}
-
-% Note that keywords are not normally used for peerreview papers.
-\begin{IEEEkeywords}
-	TIMC-IMAG, Introduction to Lab Research, Arthrosis, Ensimag, \acl{cuda}, \acl{gpgpu}, Ultrasound Imaging, Isotropic Volume Reconstruction, Report.
-\end{IEEEkeywords}}
-
+	\begin{IEEEkeywords}
+		Introduction to Lab Research, Arthrosis, \acl{gpgpu}, Ultrasound Imaging, Isotropic Volume Reconstruction.
+	\end{IEEEkeywords}
+	}}	
+	
+\maketitle
+\markboth{Introduction to Laboratory Research, Report,~Version.~1, No.~1, May~2014}
 
 % make the title area
-\maketitle
 
 \section{Introduction}
 
@@ -97,7 +97,7 @@ TODO\\
 Even if conventional 3D reconstruction algorithms have low computational complexity, the huge amount of data generated by a single scan (thousands of 2D images) makes it difficult to compute volume data in reasonable clinical time on classical computers.
 This paper aims to speed up 3D volume processing by adapting existing reconstruction algorithms to the massive parallelism provided by nowadays affordable GPUs. This is achieved throught \acl{gpgpu} (\ac{gpgpu}), a concept that has been well developped and widely adopted during the last decade and that continues its growth.
 The Open Computing Language (OpenCL) is the currently dominant open general-purpose GPU computing language. The dominant proprietary framework is the \acl{cuda} (\ac{cuda}).
-Althought \ac{cuda} requires a Nvidia CUDA compatible graphic card, we choose it because of its more mature status (performance and debugging tools) but algorithms are easily adaptable to OpenCL as well.
+Althought \ac{cuda} requires a Nvidia CUDA compatible graphic card, we choose it because of its more mature status (performance and debugging tools) but algorithms are easily adaptable to OpenCL as well, allowing executions on Nvidia's and AMD's graphic cards, and even Integrated Graphics Processors (IGPs).
 
 \section{System overview}
 
@@ -147,7 +147,7 @@ X_m = M_{model}\;X_p
 \begin{figure}[!h]
 \centering
 \includegraphics[width=40mm, height=50mm]{scan}
-\caption{A typical 2D ultrasound image of intra articular cartilage.}
+\caption{A typical 2D ultrasound image of intra articular cartilage. The white band is the cartilage itself.}
 \label{fig_2}
 \end{figure}
 
@@ -170,7 +170,8 @@ The specially designed sofware used to acquire data can export each image data i
 After the 2D images and positions are exported as raw and mhd files, the next procedure is to reconstruct a 3D volume data. 
 The sampled images are denoted \{$I_i$\} and the transformations matrices \{$M_i$\}.
 
-Flow diagram of freehand 3D ultrasound volume reconstruction
+\newpage
+Here is the flow diagram of freehand 3D ultrasound volume reconstruction :
 \begin{framed}
 \noindent\textbf{Step 1 : Data loading}
 \begin{itemize}
@@ -183,6 +184,7 @@ Flow diagram of freehand 3D ultrasound volume reconstruction
 	\item Position filtering
 	\item Image filtering
 	\item Image cropping
+	\item Image data conversion
 \end{itemize}
 \textbf{Step 3 : Grid construction}
 \begin{itemize}
@@ -195,7 +197,150 @@ Flow diagram of freehand 3D ultrasound volume reconstruction
 \end{itemize}
 \end{framed}
 
-\subsection{Existing algorithms}
+\subsubsection{Data loading}
+
+Loading data is not as easy as one might think and can rapidly become a serious bottleneck compared to what GPGPU can provide in terms of speedup. 
+As each US scan is exported in its own mhd and raw file, thousands of mhd files have to be parsed to get each transformation matrix \{$M_i$\} and get the path to the corresponding image data and load the raw image \{$I_i$\}.  
+With two thousands images this operation can easily take 2 minutes on regular \ac{hdd} and even half a minute on a \ac{ssd}.
+One easy fix would be to merge all the image data into a single raw file, and the transformation matrices in another raw file as well, or simply keep the generated data in the computer memory when doing on the fly or immediate postprocessing.
+Data locality is something we do not only want on the disk, but in the memory too. This introduces an important concept : Array of Structures (AoS) versus Structure of Arrays (SoA). In GPGPU, memory accesses are a serious bottleneck when done improperly and SoA are often the better solution than AoS. 
+
+For example, a list of 3D vectors can be represented with 3 arrays, one for each of its coordinates (SoA), or with an array of 3D vector structures (AoS) :
+
+\begin{samepage}
+\begin{alltt}
+\textbf{Structure of Arrays (SoA):}
+struct vectors \{
+    float x[100];
+    float y[100];
+    float z[100];
+\}
+
+struct vectors v;
+
+\textbf{Array of Structures (AoS):}
+struct vector \{
+    float x;
+    float y;
+    float z;
+\}
+
+struct vector v[100]
+\end{alltt}
+\end{samepage}
+
+When using a structure of arrays we have memory spacial locality between each of the vector coordinates. When a memory read occur in the global memory of a GPU, a large chunk of data is read (most of the time 256 bytes memory segments aligned on 256-byte adress). This is because the GPU is a massive parralel architecture.
+In \ac{cuda}, threads are grouped into thread blocks, which are assigned to multiprocessors on the device. During execution there is a finer grouping of threads into warps. Multiprocessors on the GPU execute instructions for each warp in \acl{simd} fashion. The warp size of current CUDA-capable GPUs is 32 threads. 
+The device coalesces global memory loads and stores issued by threads of a warp into as few transactions as possible to minimize memory bandwidth.
+Any misaligned access by a half warp of threads results in 16 separate 32-byte transactions. If only 4 bytes are requested per 32-byte transaction (a simple integer or float), we should expect the effective bandwidth to be reduced by a factor of eight.
+For strided global memory access things get even worse, and get worser when the stride get bigger.
+That is not surprising because when concurrent threads simultaneously access memory addresses that are very far apart in physical memory, then there is no chance for the hardware to combine the accesses.
+Strides entailed by Array of Structures is the reason why we want to use Structure of Arrays, where data is nicely arranged to be accessed in a parallel manner.
+
+Taking this into account, we decompose the 4x4 homogeneous transformation matrices \{$M_i$\} into a structure of 12 arrays, the 3x3 inner transformation matrix coefficients $r^1$ through $r^9$, and the 3D offset vector coefficients $(x,y,z)$ :
+
+\begin{equation}
+	M_i = \left(
+	\begin{IEEEeqnarraybox*}[][c]{,c/c/c/c,}
+		$$
+		r_i^1&r_i^2&r_i^3&x_i\\
+		r_i^4&r_i^3&r_i^5&y_i\\
+		r_i^5&r_i^6&r_i^7&z_i\\
+		0&0&0&1%
+		$$
+	\end{IEEEeqnarraybox*}
+\right)
+\end{equation}
+
+The matrix is initially stored in a row-major manner, this is why we use such indexing convention for $r_i$.
+
+\begin{samepage}
+\begin{alltt}
+\textbf{The resulting struct is :}
+struct transformations \{
+    //offsets
+    float *x;
+    float *y;
+    float *z;
+
+    //3x3 matrix coefficients
+    float *r1;
+    float *r2;
+    ...
+    float *r9;
+\}
+
+\end{alltt}
+\end{samepage}
+
+Image data do not recquire such memory reorganization as it is already stored and loaded as a row-major matrix of black and white pixels represented by simple precision floats. We just pay a special care to load the images in a big contiguous memory space and not to load them at random locations into the memory.
+Of course if the images were color images, we would have separated the red, green and blue channels into three separate arrays in a SoA manner. \par
+
+This is not the only thing to take into account when loading data into memory when using GPGPU.
+When allocating CPU memory (RAM) that will be used to transfer data to the GPU memory (VRAM) for computing purpose, there are two types of memory to choose from : pinned and non-pinned memory. 
+Pinned memory is memory specially allocated with a GPGPU dedicated malloc function (cudaMallocHost in CUDA), which prevents the memory from being swapped out and provides improved transfer speeds. 
+Non-pinned memory is memory allocated using the classical malloc function in C, or using the new operator in C++. 
+Pinned memory is much more expensive to allocate and deallocate but provides higher transfer throughput for large memory transfers.
+Empirically, using pinned memory only makes sense when the amount of memory transferred each way is larger than 16 MB (TODO). 
+In our case with 2000 US scans, we have 664MB of float images, and 96Ko of transformations data so we just go for the pinned memory for the images. \par
+
+At the end of this step, we have 12 arrays of transformation coefficients stored contiguously in the CPU memory in a non pinned manner, and one big contiguous array of floats representing the images that is pinned in the CPU memory. 
+
+\subsubsection{Data preprocessing}
+
+
+Data preprocessing include image cropping, position filtering and image filtering.\par
+
+Sometimes it is needed to crop the ultrasound images to select a region of interest. When doing this, we must not forget to keep or update image offset in local image coordinates for further processing. 
+
+Position filtering is needed because the position sensor device is susceptible to interferences and because our minitature probe was prone to bending. Thus the variation of probe position between consecutive slices can not be avoided. TODO\par
+
+Volume reconstruction algorithms recquire accurate edge maps for good performance, howewer highly signal dependant nature of ultrasound speckle makes these difficult to obtain. Various filtering techniques have been developped to suppress speckles in order to improve the quality of images. 
+Among them, the nonlinear filters have recently received an increasing interest, due to some of their important capabilities over linear filters. For example, A. Babakhani \textit{et al.}\cite{1} proposed in 2006 an extensive comparisson of such non linear filters applied to ultrasound imaging and 3D volume reconstruction, including non linear gaussian diffusion filters (NLG), anisotropic filters with level set (ANL), offset filters with level set (OFS) and pure morphological filters (PUM).\par
+
+Due to a lack of time on this project, neither signal filtering nor image filtering have been considered here even if such filtering is possible on modern GPUs.
+
+Most of current and past years GPUs have 512MB to 2GB embedded memory (VRAM). Thus a high volume of image data can be problematic when doing volume reconstruction on GPU because the grid needed to reconstruct the volume has to be stored too and memory should be kept for the GPU program execution stack. In addition to that, memory is already taken by the system through the graphic card driver when using a graphical desktop environment. 
+One simple solution is to execute the algorithm on the GPU with smaller group of images each after another but transferring data from CPU memory to GPU memory is rather time-consuming. 
+Typical transfer rates are 3Gbps for non-pinned memory and 6Gbps for pinned memory.
+We chose an even simpler method for reducing images impact on memory : For now our image were represented as an array of floats between 0.0 and 255.0 but we don't need such precision. Thus we decided to convert our 4 bytes floats into 1 byte unsigned chars, letting the initial 664MB images memory footprint fall down to only 166MB. This is done in a simple CUDA kernel, as it is a trivially parallelizable operation. To do this, we just have to allocate two arrays, a 166MB pinned memory array on the CPU and a 166MB memory array on the GPU, transfer initial float data to GPU memory, execute the kernel, transfer back the casted data to the CPU memory and finally free the old float datas on CPU and GPU. 
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.5in]{simple_kernel}
+\caption{A simple CUDA kernel example performing image data conversion from float to unsigned char.}
+\label{kernel}
+\end{figure}
+
+Fig.\ref{kernel} shows a simple kernel performing this operation. Note the \ac{simd} coding style : there are simultaneous parallel computations, but only a single instruction at a given moment. Lets say $N_i$ is the number of images we loaded at the first step. 
+The $dataSize$ variable counts the total number of pixels ($dataSize=N_i$x$L_x$x$L_y$ assuming we did not crop anything) and the $id$ is a variable designating the current thread, starting at 0. Since the max $id$ can exceed the number of pixels $dataSize$, a simple if statement prevent the program to access prohibited memory. 
+
+\subsubsection{Grid construction}
+	
+The third step in the reconstruction procedure is the establishment of coordinate system configuration for the reconstruction including its origin, its dimension and volume grid spacing. As our system has no need to predefine a volume before data acquisition we can use a simple bounding box technique as proposed by T. Wen \textit{et al.} \cite{2}.
+
+A bounding box can be represented with two points only, $X_{min} = (x_{min},y_{min},z_{min})^T$ and $X_{max} = (x_{max}, y_{max}, z_{max})^T$.
+
+With the notations of Eq.2 and Eq.3, the algorithm to find the bounding box is pretty simple :
+
+\begin{algorithm}
+	\KwData{$X_{min} = (+\infty,+\infty, +\infty)$
+		$X_{max} = (-\infty,-\infty, -\infty)$}
+	\For{each image $I_i$}{
+		\For{each of the four corner vertice $v_j$ of $I_i$}{
+			$X_v^j = M_i\;M_{model}\;X_p^j$\;
+			\If{point $X_v^j$ outside of the bounding box}{Update $X_{min}$ and $X_{max}$\;}
+		}
+	}
+\end{algorithm}
+	
+The test to know wether the point is in the bounding box or not concists of 6 scalar comparisons, and thus this algorithm can be executed safely on CPU without any performance drawbacks.
+The origin of the volume is then placed at $X_min$.
+
+
+\subsubsection{Volume Filling}
+
+\subsection{Existing hole and bin-filling algorithms}
 
 
 %\begin{figure*}[!t]
@@ -236,14 +381,6 @@ Flow diagram of freehand 3D ultrasound volume reconstruction
 The conclusion goes here.
 
 \appendices
-\section{Images Coordinate System}
-appendix text goes here.
-
-\section{Existing Hole Filling Algorithms}
-appendix text goes here.
-
-% you can choose not to have a title for an appendix
-% if you want by leaving the argument blank
 \section{Voxel Renderer}
 Appendix text goes here.
 
@@ -254,7 +391,6 @@ I would like to thank the TIMC-IMAG laboratory for having hosted me for 4 months
 
 \bibliographystyle{IEEEtran}
 \bibliography{master}
-
 
 %\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{mshell}}]{Michael Shell}
 %\begin{IEEEbiography}{Michael Shell}

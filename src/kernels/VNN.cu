@@ -9,8 +9,8 @@ namespace kernel {
 	__global__ void 
 	__launch_bounds__(512)
 	cast(const long dataSize, float *float_data, unsigned char *char_data) {
-
-		unsigned int id = blockIdx.y*65535*512 + blockIdx.x*512 + threadIdx.x;
+		unsigned int id = blockIdx.y*65535*512 
+			+ blockIdx.x*512 + threadIdx.x;
 
 		if(id > dataSize)
 			return;
