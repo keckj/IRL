@@ -51,6 +51,9 @@
 	\acrodef{ssd}[SSD]{Solid-State Drive}
 	\acrodef{hdd}[HDD]{Hard Disk Drive}
 	\acrodef{simd}[SIMD]{Single Instruction, Multiple Data}
+	\acrodef{vnn}[VNN]{Voxel Nearest Neightbor}
+	\acrodef{pnn}[PNN]{Pixel Nearest Neightbor}
+	\acrodef{dw}[VNN]{Distance Weighted}
 
 	\begin{document}
 
@@ -139,10 +142,12 @@ $S_x$ and $S_y$ are the pixel spacing on each axis and are defined as $S_x = \fr
 \right)
 \end{equation}
 
+\begin{samepage}
 The physical position of each pixel in its local physical coordinate system can be calculated as the following : 
 \begin{IEEEeqnarray}{rCl}
-X_m = M_{model}\;X_p 
+$X_m = M_{model}\;X_p$
 \end{IEEEeqnarray}
+\end{samepage}
 
 \begin{figure}[!h]
 \centering
@@ -158,7 +163,7 @@ $M_{RP}$ is initially unknown and must be obtained through a calibration process
 With those matrices and (1), the whole forward transformation can be written as : 
 
 \begin{IEEEeqnarray}{rCl}
-	X_v = M_{VE}M_{ER}M_{RP}\;X_m = M\;M_{model}\;X_p
+$	X_v = M_{VE}M_{ER}M_{RP}\;X_m = M\;M_{model}\;X_p$
 \end{IEEEeqnarray}
 
 The specially designed sofware used to acquire data can export each image data in a raw file which includes single precision float image data, and a mhd file which include a path to the corresponding raw file and the transformation matrix M.
@@ -325,15 +330,16 @@ A bounding box can be represented with two points only, $X_{min} = (x_{min},y_{m
 With the notations of Eq.2 and Eq.3, the algorithm to find the bounding box is pretty simple :
 
 \begin{algorithm}
-	\KwData{$X_{min} = (+\infty,+\infty, +\infty)$
-		$X_{max} = (-\infty,-\infty, -\infty)$}
+	\KwData{$X_{min} \gets (+\infty,+\infty, +\infty)$
+		$X_{max} \gets (-\infty,-\infty, -\infty)$}
 	\For{each image $I_i$}{
 		\For{each of the four corner vertice $v_j$ of $I_i$}{
-			$X_p^j$ = image coordinate of $v_j$;
-			$X_v^j = M_i\;M_{model}\;X_p^j$\;
-			\If{point $X_v^j$ outside of the bounding box}{Update $X_{min}$ and $X_{max}$\;}
+			$X_p^j$ \gets \text{image coordinate of } $v_j$;
+			$X_v^j \gets M_i\;M_{model}\;X_p^j$\;
+			\If{point $X_v^j$ outside of the bounding box}{\State Update $X_{min}$ and $X_{max}$\;}
 		}
 	}
+\caption{Bounding box algorithm}
 \end{algorithm}
 	
 The test to know wether the point is in the bounding box or not concists of 6 scalar comparisons, and thus this algorithm can be executed safely on CPU without any performance drawbacks.
@@ -385,20 +391,114 @@ In fact, as it is explained later in this paper, even simple volume reconstructi
 \centering
 \includegraphics[width=2.5in]{grid}
 \caption{A cubic bounding box split with $N_s=8$}
-\label{fig_2}
+\label{grid}
 \end{figure}
 
 For example to perform an average in a \acl{simd} manner, we need at least two unsigned int grid and two unsigned char grids witch multiply the table \ref{memory_table} grid memory footprint by 10 when assuming unsigned int are 4 bytes and unsigned char 1 byte.
 That means that $\delta_v=0.05mm$ entails at least $10.70GB$ memory consumption just for the grids on the GPU memory.
 Adding to that the size of the images, the system graphical environment load and the execution stack and our 12GB professional graphic card wont survive under such memory load.
 
-The only solution is to split the grid into subgrids on the GPU side, and keep the whole voxel grid on the CPU side. The amount of spliting depends of the graphic card free runtime memory and the reconstruction algorithm used.
+The only solution is to split the grid into subgrids on the GPU side, and keep the whole voxel grid on the CPU side. The amount of splitting depends of the graphic card runtime available emory and the reconstruction algorithm used.
+
+\subsubsection{Splitting the grid}
+To ease grid splitting we round each grid side voxel size $W_g$, $H_g$, and $L_g$ to upper power of two to get a grid surrounding our bounding box :
+
+\begin{eqnarray}
+	W_G = 2^{\lceil log_2(W_g) \rceil}\\
+	H_G = 2^{\lceil log_2(H_g) \rceil}\\
+	L_G = 2^{\lceil log_2(L_g) \rceil}
+\end{eqnarray}
+
+This is far from being an optimal splitting method as a simple layer of voxel in each directions can enlarge the grid by a factor of 8 and thus multiply by 8 memory footprint and computation time. 
+If execution time is still critical after having ported volume reconstruction algorithms to GPGPU, adapting the code to handle different grid sizes is worth the investment.
+
+One of the greatest benefit of having computed the upper power of two grid is that we can divide the grid in power of two subgrids and all the subgrids will have the same dimension, simplifying the implementation. Moreover this could be used for further optimisation when using multi-resolution grids to reduce global grid memory footprint. 
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=2.5in]{subgrid}
+\caption{The same cubic grid split in subgrids with $S_x = 4$, $S_y=2$ and $S_z=2$. One of the 16 subgrids is represented in grey.}
+\label{subgrids}
+\end{figure}
+
+Fig.\ref{subgrids} shows the same grid as before. Because $W_g$, $H_g$ and $L_g$ were already powers of two, the surrouding power of two grid is the same. The grid is split with three parameters, $S_x$, $S_y$ and $S_z$ wich represent the splitting amount along the x, y and z-axis (width, height, and length). Those parameters are powers of two. The resulting subgrid is like the original grid, a power of two grid. 
+\begin{samepage}
+The numbers of subgrids is given by the simple equation :
+\begin{equation}
+	N_{SG} = S_x\;S_y\;S_z
+\end{equation}
+\end{samepage}
+
+\begin{samepage}
+The size of those subgrids is given by :
+\begin{eqnarray}
+	W_{SG} = \dfrac{W_G}{S_x}\\
+	H_{SG} = \dfrac{H_G}{S_y}\\
+	L_{SG} = \dfrac{L_G}{S_z}
+\end{eqnarray}
+\end{samepage}
+
+\subsubsection{Splitting algorithm}
+
+The grid is, like the images, stored in a contiguous array in the CPU memory. Accessing the voxel (i,j,k) is done by accessing the voxel at position $k\text{x}W_G\text{x}H_G + j\text{x}W_G + i$ in the array.
+Because we want to keep data locality within the grid, we give splitting priority on the z-axis, the y-axis and finally the x-axis.
+
+Once we have choosen a volume reconstruction algorithm, we know exactly how much space we will need for a given voxel size $\delta_v$. After fetching GPU available memory, we can compute a minimum grid splitting ratio $Sr$. As we can only divide by a power of two, we take the upper power of two of this ratio,  $S_R = 2^{\lceil log_2(S_r) \rceil}$.
+
+\begin{samepage}
+\begin{algorithm}
+\KwData{The size of the grid $W_G=2^p$, $H_G=2^q$ and $L_G=2^r$\\
+\hspace{1.15cm}The minimum upper power of two\\
+\hspace{1.15cm}splitting ratio $S_R=2^s$}
+\KwResult{The splitting ratio on each axis $S_x=2^i$, $S_y=2^j$ and $S_z=2^k$}\\
+\vspace{0.5cm} $i\gets0;$ $j\gets0;$ $k\gets0;$\\
+\While{$s>0$}{
+	\eIf{$p \textgreater q \And p \textgreater r$}{
+		$i\gets i+1$;\\
+		$p\gets p-1$;
+	}{
+		\eIf{$q \textgreater r$}{
+			$j\gets j+1$;\\
+			$q\gets q-1$;
+		}{
+			$k\gets k+1$;\\
+			$r\gets r-1$;
+		}
+	}
+	\State s\gets s-1;\\
+}
+\caption{Splitting algorithm}
+\label{splitting}
+\end{algorithm}
+\end{samepage}
+
+After algorithm \ref{splitting} we just need to allocate a grid of the size of one subgrid on the GPU and execute volume reconstruction algorithm on each of the subgrids one after another.
 
 \section{Volume Filling}
-\subsection{Existing methods overview}
-\subsection{Existing bin and hole-filling algorithms}
 
-\section{Adapting volume filling to Cuda}
+Volume filling is the key procedure in the freehand 3D ultrasound systems. Various types of reconstruction algorithms have been reported and evaluated in TODO. These algorithms can be grouped into three categories : \acl{vnn} (VNN), \acl{pnn} (PNN) and \acl{dw} (DW) interpolation algorithms. 
+More elaborated algorithms methods are based on radial basis functions, such as spline interpolation functions TODO, or statistical Bayesian model with Rayleigh distribution TODO, but they are not suited for isotropic volume reconstructions (voxels).\par
+
+\subsection{Existing algorithms}
+
+PNN is the most intuitive method. It traverses each voxels, finds its nearest pixel by computing the shortest distance between the voxel and the sampled US images and inserts the nearest pixel value to the voxel TODO.
+Altought this algorithms can preserve the most original texture, ultrasonic echo with speckle noise, it also trends to generate large artifacts when the minimum distance to pixel becomes large.\par
+
+VNN interpolation method is the most popular reconstruction algorithm, which traverses on each pixel in the US images and assigns the pixel value to the nearest voxel.
+The algorithm is done in two stages :
+\begin{itemize}
+	\item \textbf{Bin-filling:} In the bin-filling stage each pixel is traversed and its pixelvlue is assigned to its nearest voxel. For a given voxel, multiple pixel contributions are generally handled by averaging pixel intensities.  
+	\item \textbf{Hole-filling:} In the hole-filling stage, the algorithm traverses on each voxel and fills each empty voxels by local neighborhood averaging. Most hole filling algorithms depend on the interpolation gaps, and there can still be few holes if the the distance among sampled US images is to far apart, greater than the interpolation radius. 
+\end{itemize}
+With the VNN method, obvious artrifacts can observed on the boundaries between the highly detailed bin-filled regions and the smothed hole-filling regions.\par
+
+Similar to the PNN interpolation method, DW interpolation proceeds voxel by voxel but instead of using the nearest pixel, each voxel value is assigned with a weighted average of pixel situated nearby. The parameters to choose are the weighting function, and the size and shape of the neighborhood. The simplest approach employs a spherical neighborhood. All the pixels in the sphere are weighted by the inverse distance to the voxel and are then averaged. If the radius is too large, the reconstructed volume will be highly smoothed.
+
+For the interpolation stage (hole-filling), we can use the Fast Marching Method (FMM), proposed by T. Wen \textit{et al.}\ref{2}. The proposed marching process ensures that the direction of information propagation is the normal direction of the evolving boundary, improving edge presevation in the hole-filled areas.
+
+According to T. Wen \textit{et al.}\ref{2}, average interpolation error in gray level for various datasets and for various amount of data removed, is the best for the FMM method, followed by the PNN method, the classical DW method and finally the VNN method. 
+
+\section{Adapting volume filling algorithms to Cuda}
 
 
 %\begin{figure*}[!t]
