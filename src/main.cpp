@@ -30,7 +30,7 @@
 #include "memoryManager/sharedResource.hpp"
 
 #ifndef _SPLITS
-#define _SPLITS 1
+#define _SPLITS 3 
 #endif
 
 
