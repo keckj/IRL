@@ -26,7 +26,7 @@
 	\usepackage{mdwtab}
 	\usepackage{eqparbox}
 
-	% *** SUBFIGURE PACKAGES ***
+	% *** SUB FIGURE PACKAGES ***
 	\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
 	%\usepackage[caption=false,font=footnotesize]{subfig}
 
@@ -75,13 +75,13 @@
 
 	\IEEEtitleabstractindextext{%
 	\begin{abstract}
-		A miniature 3D tracked ultrasonic probe has been developed to acquire intra-articular cartilage images under arthroscopic surgical conditions. The aim is to detect cartilaginous lesions (arthrosis) and quantify their precise sizes and locations to help the clinician in his diagnostic and his therapeutic decision making.
+		A miniature 3D tracked ultrasonic probe has been developed to acquire intra-articular cartilage images under arthroscopic surgical conditions. The aim is to detect cartilaginous lesions (arthritis) and quantify their precise sizes and locations to help the clinician in his diagnostic and his therapeutic decision making.
 		The ultrasonic transducer is tracked by an optical sensor, which permits to find location and orientation of each 2D US images in a common 3D spacial reference. Near two thousands images are acquired when scanning a cartilage surface. An interesting tool is to rebuild a 3D isotropic volume (cubic voxels) with those images, allowing further processing.
-		Conventional 3D ultrasound algorithms have low computational complexity but the huge amount of data generated makes it difficult to compute results within reasonable time on classical computers. In this paper we investigate the possibilities of regenerating a 3D isotropic volume with the help of \ac{gpgpu} (CUDA) by adaptating existing algorithms to massive parallelism provided by modern everyday GPUs.
+		Conventional 3D ultrasound algorithms have low computational complexity but the huge amount of data generated makes it difficult to compute results within reasonable time on classical computers. In this paper we investigate the possibilities of regenerating a 3D isotropic volume with the help of \ac{gpgpu} (CUDA) by adapting existing algorithms to massive parallelism provided by modern everyday GPUs.
 	\end{abstract}
 
 	\begin{IEEEkeywords}
-		Introduction to Lab Research, Arthrosis, \acl{gpgpu}, Ultrasound Imaging, Isotropic Volume Reconstruction.
+		Introduction to Lab Research, Arthritis, \acl{gpgpu}, Ultrasound Imaging, Isotropic Volume Reconstruction.
 	\end{IEEEkeywords}%
 	}	
 	
@@ -92,51 +92,58 @@
 
 \section{Introduction}
 
-\IEEEPARstart{F}{reehand} three-dimentional ultrasound imaging is a highly attractive research area because it is capable of volumetric visualization and analysis of tissue and organs. Conventional two-dimentional ultrasound imaging has been widely used for many clinical applications such as medical diagnosis and image-guided surgery. In comparison with Computed Tomography (CT) and Magnetic Resonance Imaging (MRI), ultrasound imaging is non invasive, real time, portable and low cost. However, 2D ultrasound imaging fails to offer clinicians whole volume data for visualization and analysis. Thus three-dimensional ultrasound imaging systems has been developed to overcome those limitations by constructing various 3D datasets. Several approaches for constructing 3D ultrasound volume data have been reported. These approaches can be classified into three categories : dedicated 3D probes, mechanical scanning approach, and freehand scanning approach. 
+\IEEEPARstart{F}{reehand} three-dimensional ultrasound imaging is a highly attractive research area because it is capable of volumetric visualization and analysis of tissue and organs. Conventional two-dimensional ultrasound imaging has been widely used for many clinical applications such as medical diagnosis and image-guided surgery. In comparison with Computed Tomography (CT) and Magnetic Resonance Imaging (MRI), ultrasound imaging is non invasive, real time, portable and low cost. However, 2D ultrasound imaging fails to offer clinicians whole volume data for visualization and analysis. Thus three-dimensional ultrasound imaging systems has been developed to overcome those limitations by constructing various 3D datasets. Several approaches for constructing 3D ultrasound volume data have been reported. These approaches can be classified into three categories : dedicated 3D probes, mechanical scanning approach, and freehand scanning approach. 
 Dedicated 3D probes can provide 3D data in real time but they are expensive and have limitations in scanning large volume organs.
 The mechanical scanning approaches usually use conventional 2D transducers which are translated and rotated with stepping motors. This design creates limitations in term of their scanning range. 
 Finally, freehand ultrasound use conventional 2D transducers in pair with a positioning sensor to save position and orientation of each acquired image.
-Freehand 3D ultrasound has received increasing attention for it's low-cost and flexibility, as it allows the user to manipulate and view the desired anatomical section freely.
-During scanning a sequence of US images are captured along with their positions and orientations, asynchronously. Those data are then used to reconstruct a 3D volume by using various interpolation or approximation algorithms. The reconstruction algorithm plays a key role in the construction of three-dimentional ultrasound volume data with higher image quality and faster reconstruction speed.\\
+Freehand 3D ultrasound has received increasing attention for it's low cost and flexibility, as it allows the user to manipulate and view the desired anatomical section freely.
 
-TODO contexte de recherche\\
+Cartilage diseases represent a major Public Health problem that will worsen due to the ageing of the population and the obesity epidemic.
+The development of new diagnostic and therapeutic strategies therefore appears to be essential to address this issue.
+The research project “Computer Assisted Measures and Interventions for Innovative Therapeutic of Cartilage Diseases” led to the development of a new medical device dedicated to the therapy of the cartilaginous tissue: a navigated multimodal arthroscopic environment.
+It combines MRI or arthro-CT with video and ultrasound. 
+A special probe was specially designed to acquire intra-articular cartilage images under arthroscopic surgical conditions with the aim of reconstructing the cartilage surface.
+
+During scanning a sequence of US images are captured along with their positions and orientations, synchronously. Those data are then used to reconstruct a 3D volume by using various interpolation or approximation algorithms. The reconstruction algorithm plays a key role in the construction of three-dimensional ultrasound volume data with higher image quality and faster reconstruction speed.\par
 
 Even if conventional 3D reconstruction algorithms have low computational complexity, the huge amount of data generated by a single scan (thousands of 2D images) makes it difficult to compute volume data in reasonable clinical time on classical computers.
-This paper aims to speed up 3D volume processing by adapting existing reconstruction algorithms to the massive parallelism provided by nowadays affordable GPUs. This is achieved through \acl{gpgpu} (\ac{gpgpu}), a concept that has been well developped and widely adopted during the last decade and that continues its growth.
-The Open Computing Language (OpenCL) is the currently dominant open general-purpose GPU computing language. The dominant proprietary framework is the \acl{cuda} (\ac{cuda}).
-Althought \ac{cuda} requires a Nvidia \texttt{CUDA} compatible graphic card, we choose it because of its more mature status (performance and debugging tools) but algorithms are easily adaptable to OpenCL as well, allowing executions on Nvidia's and AMD's graphic cards, and even Integrated Graphics Processors (IGPs).
+This paper aims to speed up 3D volume processing by adapting existing reconstruction algorithms to the massive parallelism provided by nowadays affordable GPUs. This is achieved through \acl{gpgpu} (\ac{gpgpu}), a concept that has been well developed and widely adopted during the last decade and that continues its growth.
+The Open Computing Language (OpenCL) is the currently dominant open general-purpose GPU computing language. The dominant proprietary framework is the \acl{cuda} (CUDA).
+Although \texttt{cuda} requires a Nvidia \texttt{CUDA} compatible graphic card, we choose it because of its more mature status (performance and debugging tools) but algorithms are easily adaptable to OpenCL as well, allowing executions on Nvidia's and AMD's graphic cards, and even Integrated Graphics Processors (IGPs).
 
 
 \section{System overview}
 
-\subsection{System setup}
-
-The freehand 3D ultrasound imaging system consists of three modules : a 2D ultrasound scanner specially designed to acquire intra-articular cartilage US images under artroscopic surgical conditions, an optical position and orientation sensor and a work station with custom-designed software for data-aquisition. The volume reconstruction is for the moment done as a post-process in another specially-designed piece of software.
-The portable ultrasound scanner concists of 64 axis-aligned transducers. Althought it is a freehand system, the axe is slightly rotated by a stepper motor to achieve a greater scanning area. The transformation due to the rotation of the motor is taken in account.
-
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=2.5in]{freehand}
 \caption{A classical freehand ultrasound imaging system setup. Image taken from T. Wen \textit{et al.}\cite{2}.}
 \label{fig_1}
 \end{figure}
 
-The receiver of the spacial sensing device is attached to the hand-help probe of the ultrasound scanner. Another receiver is attached to the head of the femur. This allow us to record the position and orientation of the scanned US images with regard to the femur. 
-During data acquisition, spacial data and digitalized 2D scans are simulteanously recorded and collected. Images wich attack rate is too high are discarded as there is too much distorsion in the ultrasound signal that is sent back to the probe. Fig.\ref{system1} and fig.\ref{system2} show our probe in action and a more detailled schematic of the system.
+
+\subsection{System setup}
+
+The freehand 3D ultrasound imaging system consists of three modules : a 2D ultrasound scanner specially designed to acquire intra-articular cartilage US images under arthroscopic surgical conditions, an optical position and orientation sensor and a work station with custom designed software for data acquisition. The volume reconstruction is for the moment done as a post-process in another specially designed piece of software.
+The portable ultrasound scanner consists of 64 axis-aligned transducers. Although it is a freehand system, the axe is slightly rotated by a stepper motor to achieve a greater scanning area. The transformation due to the rotation of the motor is taken in account.
+
+\begin{figure}[hb!]
+\centering
+\includegraphics[width=2.5in]{miticao}
+\caption{The freehand ultrasound system acquiring intra-articular cartilage images under arthroscopic surgery conditions.}
+\label{system1}
+\end{figure}
+
+
+The receiver of the spacial sensing device is attached to the hand-held probe of the ultrasound scanner. Another receiver is attached to the head of the femur. This allow us to record the position and orientation of the scanned US images with regard to the femur. 
+During data acquisition, spacial data and digitalized 2D scans are simultaneously recorded and collected. Images which attack rate is too high are discarded as there is too much distorsion in the ultrasound signal that is sent back to the probe. \textbf{Fig.\ref{system1}} and \textbf{fig.\ref{system2}} show the probe in action and a more detailed schematic of the system.
 %Since the ultrasound probe and the spacial sensor are independent, the temporal delay between two data streams can not be avoided. 
 
 
 \begin{figure}[ht!]
 \centering
-\includegraphics[width=2.5in]{miticao}
-\caption{The freehand ultrasound system acquiring intra-articular cartilage images under artroscopic chirurgy conditions.}
-\label{system1}
-\end{figure}
-
-\begin{figure}[ht!]
-\centering
 \includegraphics[width=3.5in]{system}
-\caption{The freehand ultrasound imaging system setup, including the optical position sensor, two rigid bodies (reflectors), the motorized freehand arthroscope and the scanning range of the 64 tranducers. The two scans on the right are discarded.}
+\caption{The freehand ultrasound imaging system setup, including the optical position sensor, two rigid bodies (reflectors), the motorized freehand arthroscope and the scanning range of the 64 transducers. The two scans on the right are discarded.}
 \label{system2}
 \end{figure}
 
@@ -147,7 +154,7 @@ After signal processing 2D slices of logical size $L_x$ x $L_y = 64\times 1296$ 
 As the transducers are $\epsilon_x=205\mu m$ wide, the images have a physical size of $P_x = 64\;\epsilon_x=19.12mm$. 
 The precision on the other axe is $\epsilon_y=18\mu m$, and thus the images have a physical height of $P_y = 1296\;\epsilon_y=23.328mm$.
 For the images we will use this convention : we place the origin at the top-left with the x-axis oriented towards the right and the y-axis oriented towards the bottom. 
-We define $X_p=(x_p,y_p,0,1)^T$ the homogenous vector that describes logical position of each pixel $(x_p,y_p)$ in an image whose origin is at $(O_x,O_y)$. 
+We define $X_p=(x_p,y_p,0,1)^T$ the homogeneous vector that describes logical position of each pixel $(x_p,y_p)$ in an image whose origin is at $(O_x,O_y)$. 
 $S_x$ and $S_y$ are the pixel spacing on each axis and are defined as $S_x = \frac{P_x}{L_x}$ and $S_y = \frac{P_y}{L_y}$. 
 
 \begin{equation}
@@ -170,16 +177,9 @@ X_m = M_{model}\;X_p
 \end{IEEEeqnarray}
 \end{samepage}
 
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=40mm, height=50mm]{scan}
-\caption{A typical 2D ultrasound image of intra articular cartilage. The white band is the cartilage interface.}
-\label{fig_2}
-\end{figure}
-
 $M_{RP}$ is the transformation matrix from the optical position sensor reflector (R) to origin of the scanned image plane (P), $M_{ER}$ is the transformation matrix from the optical emitter (E) to (R) and $M_{VE}$ is the transformation matrix from the voxel coordinate of the reconstructed volume (V) to (E). Note that all those matrices are 4x4 homogeneous matrices.
 
-$M_{RP}$ is initially unknown and must be obtained through a calibration process TODO.
+$M_{RP}$ is initially unknown and must be obtained through a calibration process. For a detailed discussion for this issue, one can refer to Mercier \textit{et al.}\cite{8}.
 
 With those matrices and (1), the whole forward transformation can be written as : 
 
@@ -187,7 +187,15 @@ With those matrices and (1), the whole forward transformation can be written as 
 X_v = M_{VE}M_{ER}M_{RP}\;X_m = M\;M_{model}\;X_p
 \end{IEEEeqnarray}
 
-The specially designed sofware used to acquire data can export each image in a mhd file format (Metaimage Format in ITK). Mhd files contain header informations, including transformation matrix M and size, and raw image data.
+The specially designed software used to acquire data can export each image in a MHD file format (MetaImage Format in ITK). Mhd files contain header informations, including transformation matrix M and size, and raw image data.
+
+\begin{figure}[!hb]
+\centering
+\includegraphics[width=40mm, height=50mm]{scan}
+\caption{A typical 2D ultrasound image of intra articular cartilage. The white band is the cartilage interface.}
+\label{fig_2}
+\end{figure}
+
 
 \begin{figure}[ht!]
 \centering
@@ -205,8 +213,9 @@ The specially designed sofware used to acquire data can export each image in a m
 Here is were my work began.
 Given the sampled images from first step \{$I_i$\} and the transformation matrices \{$M_i$\}, the aim was to reconstruct 3D volume data.
 
-\newpage
+\vspace{0.5cm}
 Here is the flow diagram of freehand 3D ultrasound volume reconstruction :
+\vspace{0.5cm}
 \begin{framed}
 \noindent\textbf{Step 1 : Data loading}
 \begin{itemize}
@@ -232,12 +241,13 @@ Here is the flow diagram of freehand 3D ultrasound volume reconstruction :
 \end{itemize}
 \end{framed}
 
+\newpage
 \subsection{Data loading}
 
 Loading data is not as easy as one might think and can rapidly become a serious bottleneck compared to what GPGPU can provide in terms of speedup. 
 As each US scan is exported in its own mhd and raw file, thousands of mhd files have to be parsed to get each transformation matrix \{$M_i$\} and get the path to the corresponding image data and load the raw image \{$I_i$\}.  
 With two thousands images this operation can easily take 2 minutes on regular \ac{hdd} and even half a minute on a \ac{ssd}.
-One easy fix would be to merge all the image data into a single raw file, and the transformation matrices in another raw file as well, or simply keep the generated data in the computer memory when doing on the fly or immediate postprocessing.
+One easy fix would be to merge all the image data into a single raw file, and the transformation matrices in another raw file as well, or simply keep the generated data in the computer memory when doing on the fly or immediate post-processing.
 Data locality is something we do not only want on the disk, but in the memory too. This introduces an important concept : Array of Structures (AoS) versus Structure of Arrays (SoA). In GPGPU, memory access are a serious bottleneck when done improperly and SoA are often the better solution than AoS. 
 
 For example, a list of 3D vectors can be represented with 3 arrays, one for each of its coordinates (SoA), or with an array of 3D vector structures (AoS) :
@@ -264,8 +274,9 @@ struct vector v[100]
 \end{alltt}
 \end{samepage}
 
-When using a structure of arrays we have memory spacial locality between each of the vector coordinates. When a memory read occur in the global memory of a GPU, a large chunk of data is read (most of the time 256 bytes memory segments aligned on 256-byte adress). This is because the GPU is a massive parralel architecture.
-In \ac{cuda}, threads are grouped into thread blocks, which are assigned to multiprocessors on the device. During execution there is a finer grouping of threads into warps. Multiprocessors on the GPU execute instructions for each warp in \acl{simd} fashion. The warp size of current \texttt{CUDA}-capable GPUs is 32 threads. 
+\newpage
+When using a structure of arrays we have memory spacial locality between each of the vector coordinates. When a memory read occur in the global memory of a GPU, a large chunk of data is read (most of the time 256 bytes memory segments aligned on 256-byte address). This is because the GPU is a massive parallel architecture.
+In \texttt{CUDA}, threads are grouped into thread blocks, which are assigned to multiprocessors on the device. During execution there is a finer grouping of threads into warps. Multiprocessors on the GPU execute instructions for each warp in \acl{simd} fashion. The warp size of current \texttt{CUDA}-capable GPUs is 32 threads. 
 The device coalesces global memory loads and stores issued by threads of a warp into as few transactions as possible to minimize memory bandwidth.
 Any misaligned access by a half warp of threads results in 16 separate 32-byte transactions. If only 4 bytes are requested per 32-byte transaction (a simple integer or float), we should expect the effective bandwidth to be reduced by a factor of eight.
 For strided global memory access things get even worse, and get worser when the stride get bigger.
@@ -308,7 +319,7 @@ struct transformations \{
 \end{alltt}
 \end{samepage}
 
-\begin{figure*}[!hb]
+\begin{figure*}[!ht]
 \centering
 \subfloat[Original image]{\includegraphics[width=1.0in, height=1.5in]{image_filtering_orig}%
 \label{image_filtering_orig}}
@@ -319,15 +330,15 @@ struct transformations \{
 \label{comparisson_smoothing}
 \end{figure*}
 
-Image data do not recquire such memory reorganization as it is already stored and loaded as a row-major matrix of black and white pixels represented by simple precision floats. We just pay a special care to load the images in a big contiguous memory space and not to load them at random locations into the memory.
+Image data do not require such memory reorganization as it is already stored and loaded as a row-major matrix of black and white pixels represented by simple precision floats. We just pay a special care to load the images in a big contiguous memory space and not to load them at random locations into the memory.
 Of course if the images were color images, we would have separated the red, green and blue channels into three separate arrays in a SoA manner. \par
 
 This is not the only thing to take into account when loading data into memory when using GPGPU.
-When allocating CPU memory (RAM) that will be used to transfer data to the GPU memory (VRAM) for computing purpose, there are two types of memory to choose from : pinned and non-pinned memory. 
+When allocating CPU memory (RAM) that will be used to transfer data to the GPU memory (VRAM) for computing purpose, there are two types of memory to choose from : pinned (page-locked) and non-pinned memory. 
 Pinned memory is memory specially allocated with a GPGPU dedicated malloc function (cudaMallocHost in \texttt{CUDA}), which prevents the memory from being swapped out and provides improved transfer speeds. 
 Non-pinned memory is memory allocated using the classical malloc function in C, or using the new operator in \texttt{C++}. 
 Pinned memory is much more expensive to allocate and deallocate but provides higher transfer throughput for large memory transfers.
-Empirically, using pinned memory only makes sense when the amount of memory transferred each way is larger than 16 MB (TODO). 
+Empirically, using pinned memory only makes sense when the amount of memory transferred each way is larger than 16 MB. 
 In our case with 2000 US scans, we have 664MB of float images, and 96Ko of transformations data so we just go for the pinned memory for the images. \par
 
 At the end of this step, we have 12 arrays of transformation coefficients stored contiguously in the CPU memory in a non pinned manner, and one big contiguous array of floats representing the images that is pinned in the CPU memory. 
@@ -340,11 +351,11 @@ Data preprocessing can include image cropping, position filtering, image filteri
 Sometimes it is needed to crop the ultrasound images to select a region of interest. When doing this, we must not forget to keep or update image offset in local image coordinates for further processing. 
 
 \subsubsection{Position filtering}
-Position filtering is needed because the position sensor device is susceptible to interferences and because our minitature probe was prone to bending. Thus the variation of probe position between consecutive slices can not be avoided. TODO\par
+Position filtering is needed because the position sensor device is susceptible to interferences and because our miniature probe was prone to bending. Thus the variation of probe position between consecutive slices can not be avoided. Filtering can be done with the method proposed by Raul \textit{et al.}\cite{9}\par
 
 \subsubsection{Image smoothing}
-Volume reconstruction algorithms recquire accurate edge maps for good performance, howewer highly signal dependant nature of ultrasound speckle makes these difficult to obtain. Various filtering techniques have been developped to suppress speckles in order to improve the quality of images. 
-Among them, the nonlinear filters have recently received an increasing interest, due to some of their important capabilities over linear filters. For example, A. Babakhani \textit{et al.}\cite{1} proposed in 2006 an extensive comparison of such non linear filters applied to ultrasound imaging and 3D volume reconstruction, including non linear gaussian diffusion filters (NLG), anisotropic filters with level set (ANL), offset filters with level set (OFS) and pure morphological filters (PUM). Fig.\ref{comparisson_smoothing} shows results of such filtering techniques.\par
+Volume reconstruction algorithms require accurate edge maps for good performance, however highly signal dependant nature of ultrasound speckle makes these difficult to obtain. Various filtering techniques have been developed to suppress speckles in order to improve the quality of images. 
+Among them, the nonlinear filters have recently received an increasing interest, due to some of their important capabilities over linear filters. For example, A. Babakhani \textit{et al.}\cite{1} proposed in 2006 an extensive comparison of such non linear filters applied to ultrasound imaging and 3D volume reconstruction, including non linear Gaussian diffusion filters (NLG), anisotropic filters with level set (ANL), offset filters with level set (OFS) and pure morphological filters (PUM). \textbf{Fig.\ref{comparisson_smoothing}} shows results of such filtering techniques.\par
 
 \subsubsection{Data conversion}
 
@@ -353,9 +364,6 @@ One simple solution is to execute the algorithm on the GPU with smaller group of
 Typical transfer rates are 3Gbps for non-pinned memory and 6Gbps for pinned memory.
 We chose an even simpler method for reducing images impact on memory : For now our image were represented as an array of floats between 0.0 and 255.0 but we don't need such precision. Thus we decided to convert our 4 bytes floats into 1 byte unsigned chars, letting the initial 664MB images memory footprint fall down to only 166MB. This is done in a simple \texttt{CUDA} kernel, as it is a trivially parallelizable operation. To do this, we just have to allocate two arrays, a 166MB pinned memory array on the CPU and a 166MB memory array on the GPU, transfer initial float data to GPU memory, execute the kernel, transfer back the casted data to the CPU memory and finally free the old float datas on CPU and GPU.\par
 In this step, other operations are possible, like applying a band-pass filter on the histogram region of interest and then histogram equalization.
-	
-\subsubsection{Our implementation}
-Due to a lack of time on this project, neither signal filtering nor image filtering have been considered here even if such filtering is possible on modern GPUs. Image cropping was not necessary.
 
 \begin{figure}[!ht]
 \centering
@@ -363,8 +371,11 @@ Due to a lack of time on this project, neither signal filtering nor image filter
 \caption{A simple \texttt{CUDA} kernel example performing image data conversion from float to unsigned char.}
 \label{kernel}
 \end{figure}
+	
+\subsubsection{Our implementation}
+Due to a lack of time on this project, neither signal filtering nor image filtering have been considered here even if such filtering is possible on modern GPUs. Image cropping was not necessary.
 
-Fig.\ref{kernel} shows a simple kernel performing the data conversion operation. Note the \ac{simd} coding style : there are simultaneous parallel computations, but only a single instruction at a given moment. Lets say $N_i$ is the number of images we loaded at the first step. 
+\textbf{Fig.\ref{kernel}} shows a simple kernel performing the data conversion operation. Note the \ac{simd} coding style : there are simultaneous parallel computations, but only a single instruction at a given moment. Lets say $N_i$ is the number of images we loaded at the first step. 
 The $dataSize$ variable counts the total number of pixels ($dataSize=N_i\times L_x\times L_y$ assuming we did not crop anything) and the $id$ is a variable designating the current thread, starting at 0. Since the max $id$ can exceed the number of pixels $dataSize$, a simple if statement prevent the program to access prohibited memory. 
 
 \subsection{Grid construction}
@@ -373,8 +384,14 @@ The $dataSize$ variable counts the total number of pixels ($dataSize=N_i\times L
 
 The third step in the reconstruction procedure is the establishment of coordinate system configuration for the reconstruction including its origin, its dimension and volume grid spacing. 
 As our system has no need to predefine a volume before data acquisition we can use a simple bounding box technique as proposed by T. Wen \textit{et al.} \cite{2}.
+A bounding box can be represented with two points only, $X_{min} = (x_{min},y_{min},z_{min})^T$ and $X_{max} = (x_{max}, y_{max}, z_{max})^T$ as showed in \textbf{figure \ref{bounding_box}}.
 
-A bounding box can be represented with two points only, $X_{min} = (x_{min},y_{min},z_{min})^T$ and $X_{max} = (x_{max}, y_{max}, z_{max})^T$.
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=3.2in]{bounding_box}
+\caption{The resulting bounding box defined by $X_{min}$ and $X_{max}$. Image adapted and modified from T. Wen \textit{et al.} \cite{2}}
+\label{bounding_box}
+\end{figure}
 
 With the notations of Eq.2 and Eq.3, the algorithm to find the bounding box is pretty straightforward :
 
@@ -383,29 +400,22 @@ With the notations of Eq.2 and Eq.3, the algorithm to find the bounding box is p
 	\KwData{$X_{min} \gets (+\infty,+\infty, +\infty)$
 		$X_{max} \gets (-\infty,-\infty, -\infty)$}
 	\For{each image $I_i$}{
-		\For{each of the four corner vertice $v_j$ of $I_i$}{
+		\For{each of the four corner vertices $v_j$ of $I_i$}{
 			$X_p^j \gets \text{image coordinate of } v_j$;
 			$X_v^j \gets M_i\;M_{model}\;X_p^j$\;
 			\If{point $X_v^j$ outside of the bounding box}{Update $X_{min}$ and $X_{max}$\;}
 		}
 	}
 \caption{Bounding box algorithm}
-\label{}
+\label{bbox_algo}
 \end{algorithm}
 \end{samepage}
 
-The test to know wether the point is in the bounding box or not concists of 6 scalar comparisons, and thus this algorithm can be executed safely on CPU without any performance drawbacks.
+\newpage
+The test to know whether the point is in the bounding box or not consists of 6 scalar comparisons, and thus this algorithm can be executed safely on CPU without any performance drawbacks.
 The origin of the volume is then placed at $X_{min}$.
 
-At the end of this algorithm, all US images are contained in this bounding box and $X_{min}$ and $X_{max}$ are atteigned by one ultrasound image corner at least once.
-
-
-\begin{figure}[ht!]
-\centering
-\includegraphics[width=3.5in]{bounding_box}
-\caption{The resulting bounding box defined by $X_{min}$ and $X_{max}$. Image adapted and modified from T. Wen \textit{et al.} \cite{2}}
-\label{fig_2}
-\end{figure}
+At the end of this algorithm, all US images are contained in this bounding box and $X_{min}$ and $X_{max}$ are reached by one ultrasound image corner at least once.
 
 The next step is to choose a voxel size. This is a critical parameter because the memory footprint of the grid is what hinders GPGPU volume reconstruction. 
 
@@ -416,10 +426,9 @@ Lets assume $W_b\times H_b\times L_b$ are the width, height and length of the ge
 \vspace{0.2cm}
 Thus, memory cost is cubical with the number of subdivisions $N_s$. Each time we want to double precision, we have to pay eight times more memory.
 
-\begin{table}[!t]
+\begin{table}[!hb]
 \renewcommand{\arraystretch}{1.3}
 \caption{Memory footprint for a $50\times 50\times 50$mm bounding box and unsigned char voxels}
-\label{memory_table}
 \centering
 \begin{tabular}{|c|c||c|c||c|}
 \hline
@@ -432,11 +441,12 @@ $log_2(N_s)$ & $N_s$ & $\delta_v (\mu m)$ & $N_v$ & Grid memory \\
 8 & 256 & 195 & $2^{24}$ & 16.8MB\\\hline
 7 & 128 & 390 & $2^{21}$ & 2.1MB\\\hline
 \end{tabular}
+\label{memory_table}
 \end{table}
-Table \ref{memory_table} shows grid memory consumption for a bounding box which is approximately the size of the bounding box obtained when scanning our intra-articular cartilage.
+\textbf{Table \ref{memory_table}} shows grid memory consumption for a bounding box which is approximately the size of the bounding box obtained when scanning our intra-articular cartilage.
 We see that when the voxel size $\delta_v$ goes under $100\mu m$ the memory begins to cause some problems to our GPU memory.
 Even if some professional graphic cards can have up to 12GB of memory, a simple $\delta_v$ set to $50\mu m$ can cause trouble.
-In fact, as it is explained later in this paper, even simple volume reconstruction algorithm will recquire at least four such grids in the bin-filling stage.
+In fact, as it is explained later in this paper, even simple volume reconstruction algorithm will require at least three such grids in the bin-filling stage.
 
 \begin{figure}[!ht]
 \centering
@@ -445,7 +455,7 @@ In fact, as it is explained later in this paper, even simple volume reconstructi
 \label{grid}
 \end{figure}
 
-For example to perform an average in a \acl{simd} manner, we need at least two unsigned int grid and two unsigned char grids witch multiply the table \ref{memory_table} grid memory footprint by 10 when assuming unsigned int are 4 bytes and unsigned char 1 byte.
+For example to perform an average in a \acl{simd} manner, we need at least two unsigned int grid and one unsigned char grids which almost multiply the \textbf{table \ref{memory_table}} grid memory footprint by 10 when assuming unsigned int are 4 bytes and unsigned char 1 byte.
 That means that $\delta_v=0.05mm$ entails at least $10.70GB$ memory consumption just for the grids on the GPU memory.
 Adding to that the size of the images, the system graphical environment load and the execution stack and our 12GB professional graphic card wont survive under such memory load.
 
@@ -464,7 +474,7 @@ To ease grid splitting we round each grid side voxel size $W_g$, $H_g$, and $L_g
 This is far from being an optimal splitting method as a simple layer of voxel in each directions can enlarge the grid by a factor of 8 and thus multiply by 8 memory footprint and computation time. 
 If execution time is still critical after having ported volume reconstruction algorithms to GPGPU, adapting the code to handle different grid sizes is worth the investment.
 
-One of the greatest benefit of having computed the upper power of two grid is that we can divide the grid in power of two subgrids and all the subgrids will have the same dimension, simplifying the implementation. Moreover this could be used for further optimisation when using multi-resolution grids to reduce global grid memory footprint. 
+One of the greatest benefit of having computed the upper power of two grid is that we can divide the grid in power of two subgrids and all the subgrids will have the same dimension, simplifying the implementation. Moreover this could be used for further optimisation when using multiresolution grids to reduce global grid memory footprint. 
 
 \begin{figure}[!ht]
 \centering
@@ -473,7 +483,7 @@ One of the greatest benefit of having computed the upper power of two grid is th
 \label{subgrids}
 \end{figure}
 
-Fig.\ref{subgrids} shows the same grid as before. Because $W_g$, $H_g$ and $L_g$ were already powers of two, the surrouding power of two grid is the same. The grid is split with three parameters, $S_x$, $S_y$ and $S_z$ wich represent the splitting amount along the x, y and z-axis (width, height, and length). Those parameters are powers of two. The resulting subgrid is like the original grid, a power of two grid. 
+\textbf{Fig.\ref{subgrids}} shows the same grid as before. Because $W_g$, $H_g$ and $L_g$ were already powers of two, the upper power of two grid is the same. The grid is split with three parameters, $S_x$, $S_y$ and $S_z$ which represent the splitting amount along the x, y and z-axis (width, height, and length). Those parameters are powers of two. The resulting subgrid is like the original grid, a power of two grid. 
 \begin{samepage}
 The numbers of subgrids is given by the simple equation :
 \begin{equation}
@@ -493,7 +503,7 @@ The size of those subgrids is given by :
 The grid is, like the images, stored in a contiguous array in the CPU memory. Accessing the voxel (i,j,k) is done by accessing the voxel at position $k\text{x}W_G\text{x}H_G + j\text{x}W_G + i$ in the array.
 Because we want to keep data locality within the grid, we give splitting priority on the z-axis, the y-axis and finally the x-axis.
 
-Once we have choosen a volume reconstruction algorithm, we know exactly how much space we will need for a given voxel size $\delta_v$. After fetching GPU available memory, we can compute a minimum grid splitting ratio $Sr$. As we can only divide by a power of two, we take the upper power of two of this ratio,  $S_R = 2^{\lceil log_2(S_r) \rceil}$.
+Once we have chosen a volume reconstruction algorithm, we know exactly how much space we will need for a given voxel size $\delta_v$. After fetching GPU available memory, we can compute a minimum grid splitting ratio $Sr$. As we can only divide by a power of two, we take the upper power of two of this ratio,  $S_R = 2^{\lceil log_2(S_r) \rceil}$.
 
 \begin{samepage}
 \begin{algorithm}
@@ -518,7 +528,7 @@ Once we have choosen a volume reconstruction algorithm, we know exactly how much
 	$s\gets s-1$;\\
 }
 \caption{Splitting algorithm}
-\label{splitting}
+\label{split_algorithm}
 \end{algorithm}
 \end{samepage}
 
@@ -542,40 +552,40 @@ Once we have choosen a volume reconstruction algorithm, we know exactly how much
 \end{figure*}
 
 
-After algorithm \ref{splitting} we just need to allocate a grid of the size of one subgrid on the GPU and execute volume reconstruction algorithm on each of the subgrids one after another.
+After \textbf{algorithm \ref{split_algorithm}} we just need to allocate a grid of the size of one subgrid on the GPU and execute volume reconstruction algorithm on each of the subgrids one after another.
 
 \section{Volume Filling}
 
-Volume filling is the key procedure in the freehand 3D ultrasound systems. Various types of reconstruction algorithms have been reported and evaluated in TODO. These algorithms can be grouped into three categories : \acl{vnn} (VNN), \acl{pnn} (PNN) and \acl{dw} (DW) interpolation algorithms. 
-More elaborated algorithms methods are based on radial basis functions, such as spline interpolation functions TODO, or statistical Bayesian model with Rayleigh distribution TODO, but they are not suited for isotropic volume reconstructions (voxels).\par
+Volume filling is the key procedure in the freehand 3D ultrasound systems \cite{3,4,6}. Various types of reconstruction algorithms have been reported and evaluated in \cite{10}. These algorithms can be grouped into three categories : \acl{vnn} (VNN), \acl{pnn} (PNN) and \acl{dw} (DW) interpolation algorithms. 
+More elaborated algorithms methods are based on radial basis functions, such as spline interpolation functions \cite{11}, or statistical Bayesian model with Rayleigh distribution \cite{12}, but they are not suited for isotropic volume reconstruction (voxels).\par
 
 \subsection{Existing algorithms}
 
-VNN is the most intuitive method. It traverses each voxels, finds its nearest pixel by computing the shortest distance between the voxel and the sampled US images and inserts the nearest pixel value to the voxel TODO.
-Altought this algorithms can preserve the most original texture, ultrasonic echo with speckle noise, it also trends to generate large artifacts when the minimum distance to pixel becomes large.\par
+VNN is the most intuitive method. It traverses each voxels, finds its nearest pixel by computing the shortest distance between the voxel and the sampled US images and inserts the nearest pixel value to the voxel \cite{13}.
+Although this algorithms can preserve the most original texture, ultrasonic echo with speckle noise, it also trends to generate large artifacts when the minimum distance to pixel becomes large.\par
 
 PNN interpolation method is the most popular reconstruction algorithm, which traverses on each pixel in the US images and assigns the pixel value to the nearest voxel.
 The algorithm is done in two stages :
 \begin{itemize}
 	\item \textbf{Bin-filling:} In the bin-filling stage each pixel is traversed and its pixel value is assigned to its nearest voxel. For a given voxel, multiple pixel contributions are generally handled by averaging pixel intensities.  
-	\item \textbf{Hole-filling:} In the hole-filling stage, the algorithm traverses on each voxel and fills each empty voxels by local neighborhood averaging. Most hole filling algorithms depend on the interpolation gaps, and there can still be few holes if the the distance among sampled US images is to far apart, greater than the interpolation radius. 
+	\item \textbf{Hole-filling:} In the hole-filling stage, the algorithm traverses on each voxel and fills each empty voxels by local neighborhood averaging. Most hole filling algorithms depend on the interpolation gaps, and there can still be few holes if the distance among sampled US images is to far apart, greater than the interpolation radius. 
 \end{itemize}
-With the PNN method, obvious artrifacts can observed on the boundaries between the highly detailed bin-filled regions and the smothed hole-filling regions.\par
+With the PNN method, obvious artefacts can observed on the boundaries between the highly detailed bin-filled regions and the smoothed hole-filling regions.\par
 
 Similar to the VNN interpolation method, DW interpolation proceeds voxel by voxel but instead of using the nearest pixel, each voxel value is assigned with a weighted average of pixel situated nearby. The parameters to choose are the weighting function, and the size and shape of the neighborhood. The simplest approach employs a spherical neighborhood. All the pixels in the sphere are weighted by the inverse distance to the voxel and are then averaged. If the radius is too large, the reconstructed volume will be highly smoothed.
 
-For the interpolation stage (hole-filling), we can use the Fast Marching Method (FMM), proposed by T. Wen \textit{et al.}\cite{2}. The proposed marching process ensures that the direction of information propagation is the normal direction of the evolving boundary, improving edge presevation in the hole-filled areas.
-Fig.\ref{algo_comparison} shows an example of reconstructed slice generated by those algorithms.
+For the interpolation stage (hole-filling), we can use the Fast Marching Method (FMM), proposed by T. Wen \textit{et al.}\cite{2}. The proposed marching process ensures that the direction of information propagation is the normal direction of the evolving boundary, improving edge preservation in the hole-filled areas.
+\textbf{Fig.\ref{algo_comparison}} shows an example of reconstructed slice generated by those algorithms.
 
 According to T. Wen \textit{et al.}\cite{2} typical execution time for a $421\times425\times131$ grid and 138 images is 8849s for VNN, 94s for PNN, 15523s for DW, and 134s for FMM.
-We observe that it is highly time demanding for the VNN and conventional DW interpolation algorithm to find the shortest distance for each voxel among hundreds of sampled US images. Several hours are needed to complete the reconstruction. Such expensive computation time is usually unbearable in most clinical applications. In our case, the grid is approximatly 1 to 10 times bigger, and we have 10 to 20 times more images. Thus, only PNN and FMM are good candidates for further GPGPU optimisations.
+We observe that it is highly time demanding for the VNN and conventional DW interpolation algorithm to find the shortest distance for each voxel among hundreds of sampled US images. Several hours are needed to complete the reconstruction. Such expensive computation time is usually unbearable in most clinical applications. In our case, the grid is approximately 1 to 10 times bigger, and we have 10 to 20 times more images. Thus, only PNN and FMM are good candidates for further GPGPU optimisations.
 
-\section{Adapting PNN to Cuda}
+\section{Adapting PNN to CUDA}
 
 PNN was the simplest algorithm and thus was chosen in first place. 
 In the bin-filling stage each pixel is traversed and its pixel value is assigned to its nearest voxel. 
 For a given voxel, multiple pixel contributions are handled by averaging pixel intensities.  
-In the hole-filling stage, the algorithm traverses on each voxel and fills each empty voxels by local neighborhood averaging. The pattern choosen here is a sphere with $R_k$ interpolation radius (in voxels). 
+In the hole-filling stage, the algorithm traverses on each voxel and fills each empty voxels by local neighborhood averaging. The pattern chosen here is a sphere with $R_k$ interpolation radius (in voxels). 
 
 
 \begin{figure}[ht!]
@@ -599,7 +609,7 @@ This function is only allowed in conditional code if the conditional is uniform 
 Global memory is large (usually 512MB to 2GB), has high latency and is not cached, but it is accessible by all threads.
 Shared memory is stored in on-chip shared memory which has very low latency and is accessible by all threads in the same thread block.
 It has the lifetime of a thread block.
-Scalars and built-in vector types are stored in registers. What doesn’t fit in registers spills to local memory.
+Scalars and built-in vector types are stored in registers. What does not fit in registers spills to local memory.
 
 The main problem when adapting an algorithm to GPGPU is memory and thread concurrency. 
 
@@ -614,10 +624,10 @@ The main problem when adapting an algorithm to GPGPU is memory and thread concur
 \end{figure*}
 
 
-We already solved the problem of the GPU memory size by spliting the grid into subgrids by a certain ratio, but doing so raises other problems.
+We already solved the problem of the GPU memory size by splitting the grid into subgrids by a certain ratio, but doing so raises other problems.
 Memory transfers are expensive, especially when the kernel workload is low.
 In fact, transfers between the host and device are the slowest link of data movement involved in GPU computing.
-Sending data from host to device or from device to host is limited by the memory link (8GB/s on PCIe x16 Gen2) and the GPU memory clock rate (usually 6GB/s peak bandwich on regular Nvidia GPUs).
+Sending data from host to device or from device to host is limited by the memory link (8GB/s on PCIe x16 Gen2) and the GPU memory clock rate (usually 6GB/s peak bandwidth on regular Nvidia GPUs).
 Higher bandwidth is achieved between the host and the device only when using large chunk of pinned (page-locked) memory.
 The thing you need to know is that data transfers between the host and device can sometimes be overlapped with kernel execution and other data transfers.
 This can be done by using \texttt{CUDA} \textbf{streams}.\par
@@ -632,20 +642,13 @@ We call these arrays the \textbf{mean subgrid} and the \textbf{hit subgrid}.
 If we want to apply our stream strategy, we need an additional array which stores the last computed result.
 We simply name it the \textbf{voxel subgrid}. 
 In addition to these arrays, we need memory for the images and transformations.
-Fig.\ref{bin_filling_memory} shows memory blocks on host and device $GPU_i$.
-
+\textbf{Fig.\ref{bin_filling_memory}} shows memory blocks on host and device $GPU_i$.
+\vspace{0.5cm}
 \begin{figure}[hb!]
 \centering
 \includegraphics[width=3.5in]{bin_filling_memory}
 \caption{Memory layout for the PNN bin-filling. Memory transfers are represented with white arrows.}
 \label{bin_filling_memory}
-\end{figure}
-
-\begin{figure}[ht!]
-\centering
-\includegraphics[width=2.0in]{split1}%
-\caption{Exaggerated grid splitting of a single reconstructed slice}
-\label{mega_grid_splitting}
 \end{figure}
 
 \begin{algorithm}
@@ -664,28 +667,24 @@ Atomically add current voxel intensity to mean subgrid;\\
 \label{bin_filling_kernel}
 \end{algorithm}
 
-\textbf{Appendix 1} shows the whole host side volume reconstruction process, including memory allocations and memory transfers. 
+\newpage
+\textbf{Appendix A} shows the whole host side volume reconstruction process, including memory allocations and memory transfers. 
 \textbf{Algorithm \ref{bin_filling_kernel} and \ref{compute_mean_kernel}} shows the bin-filling \texttt{CUDA} implementation.
 
 We use one thread per pixel with $32\times 32$ thread-blocks.
 That means that our images are processed in $32\times 32$ blocks on each multiprocessor, executing 1024 threads at once.
-Memory transactions are close to optimal as each warp (32 threads) will request 32 bytes (32 unsigned pixel values) of contiguous memory aligned on a 32 byte adress, each representing a line of our 32x32 sub-image.
+Memory transactions are close to optimal as each warp (32 threads) will request 32 bytes (32 unsigned pixel values) of contiguous memory aligned on a 32 byte address, each representing a line of our 32x32 sub-image.
 We can get four times more performance for images memory transactions by processing 4 pixels per thread and fetching 128 bytes (32 integers, 4 pixels per integer) representing 64x64 sub-images at once, maximizing device memory throughput.
-Because images are $64\times 1296$ and $1296 \mod{32} = 16$, we need to check wether the current pixel array position is not out of bound in the kernel.
+Because images are $64\times 1296$ and $1296 \mod{32} = 16$, we need to check whether the current pixel array position is not out of bound in the kernel.
 
-\begin{figure}[hb!]
-\centering
-\includegraphics[width=2.0in]{pnn_slice}%
-\caption{An extracted 2D slice from reconstructed 3D volume after the bin-filling stage.}
-\label{extracted_pnn_slice}
-\end{figure}
 
 Accessing forbidden memory results in undefined behaviours on the device, and can corrupt data or crash the kernel.
-An interresting tool to detect such bad accesses is \textit{cuda-memcheck} and \textit{cuda-gdb}.
-Another interesting tool is the Nvidia Visual Profiler \textit{nvvp}, wich allows to visualize the execution of streams on multiple devices.
-After having computed pixel and voxel positions, we need to check wether the current voxel where the pixel would contribute is in the current computed subgrid. 
+An interesting tool to detect such bad accesses is \textit{cuda-memcheck} and \textit{cuda-gdb}.
+Another interesting tool is the Nvidia Visual Profiler \textit{nvvp}, which allows to visualize the execution of streams on multiple devices.\par
+After having computed pixel and voxel positions, we need to check whether the current voxel where the pixel would contribute is in the current computed subgrid. 
 If so, because multiple threads can write to the same voxel location at the same time, hit and mean grid modifications must be done atomically.\par
-Finally, another dedicated kernel (alg.\ref{compute_mean_kernel}) computes the real mean, by dividing the mean subgrid by the hit subgrid and storing the result in the voxel subgrid which is then moved back to the host.
+Finally, another dedicated kernel (\textbf{algorithm \ref{compute_mean_kernel}}) computes the real mean, by dividing the mean subgrid by the hit subgrid and storing the result in the voxel subgrid which is then moved back to the host.
+
 
 \begin{algorithm}
 \KwData{Thread Id, source hit and mean subgrid, target voxel subgrid.}
@@ -701,13 +700,38 @@ Compute current voxel position in subgrid;\\
 \label{compute_mean_kernel}
 \end{algorithm}
 
+\begin{figure*}
+\centering
+\subfloat[Exaggerated grid splitting of a single reconstructed slice]{\includegraphics[width=2.75in]{split1}}%
+\label{mega_grid_splitting}
+\hfill
+\subfloat[An extracted 2D slice from reconstructed 3D volume after the bin-filling stage.]{\includegraphics[width=3.0in]{pnn_slice}}%
+\label{extracted_pnn_slice}
+\hfill
+\subfloat[Reconstructed volume in its grid. Note the memory waste when taking the surrounding power of two voxel grid.]{\includegraphics[width=3.0in]{split2}}
+\label{reconstructed_pnn_volume2}
+\hfill
+\subfloat[Top view of the same reconstructed volume as (c).]{\includegraphics[width=3.0in]{bad_grid}}
+\label{bad_grid}
+\hfill
+\subfloat[Reconstructed 3D isotropic volume. No position filtering.]{\includegraphics[width=3.0in]{data_1}}
+\label{reconstructed_pnn_volume}
+\hfill
+\subfloat[Thresholded volume. The white voxels represent the cartilage interface.]{\includegraphics[width=3.0in]{results1}}
+\label{cartilage_volume}
+\hfill
+\caption{Results after bin-filling stage}
+\label{pnn_image_group}
+\end{figure*}
+
+
 If the hit subgrid voxel value is 0, that means that the voxel is a hole and the resulting value is in voxel subgrid is set to 0.
 This kernel can only be executed when the last memory transfer to the host has finished, but during bin-filling kernel computation, the other stream might already have finished to copy back the last voxel subgrid to the host.\par
-Fig.\ref{mega_grid_splitting} shows a single reconstructed slice after the bin-filling stage. Fig.\ref{extracted_pnn_slice} shows a extracted 2D slice of a reconstructed volume from multiple images after bin-filling.
+\textbf{Fig.\ref{pnn_image_group}a} shows a single reconstructed slice after the bin-filling stage. \textbf{Fig.\ref{pnn_image_group}b} shows a extracted 2D slice of a reconstructed volume from multiple images after bin-filling. \textbf{Fig.\ref{pnn_image_group}e} shows the source bin-filled volume.
 
 \subsection{Hole-filling}
 
-In order to compute hole-filling, we need a source subgrid, the \textbf{hole-filled subgrid}, and a destination subgrid, the \textbf{bin-filled subgrid}. Fig.\ref{hole_filling_memory} shows the new memory layout.
+In order to compute hole-filling, we need a source subgrid, the \textbf{hole-filled subgrid}, and a destination subgrid, the \textbf{bin-filled subgrid}. \textbf{Fig.\ref{hole_filling_memory}} shows the new memory layout.
 
 \begin{figure}[ht!]
 \centering
@@ -715,9 +739,11 @@ In order to compute hole-filling, we need a source subgrid, the \textbf{hole-fil
 \caption{Memory layout for the PNN hole-filling. Memory transfers are represented with white arrows.}
 \label{hole_filling_memory}
 \end{figure}
+ 
 
-Because we do not need image data and three grids of various size anymore, we gained much space on the device memory. Thus we can resplit the whole host grid in bigger subgrids to improve hole filling performance. The choosen thread blocks are 1024 consecutives voxels, resulting in one thread per subgrid voxel.
+Because we do not need image data and three grids of various size anymore, we gained much space on the device memory. Thus we can resplit the whole host grid in bigger subgrids to improve hole filling performance. The chosen thread blocks are 1024 consecutive voxels, resulting in one thread per subgrid voxel.
 As we are using local neighborhood averaging in a spherical shape, the implementation of hole filling is pretty straightforward. \textbf{Algorithm \ref{hole_filling_algorithm}} shows a simple hole-filling kernel.
+
 
 \begin{algorithm}
 \KwData{Thread Id, $R_k$, source bin-filled subgrid and destination hole-filled subgrid.}
@@ -729,7 +755,7 @@ Compute current voxel position in subgrid;\\
 \textcolor{OliveGreen}{//This will be handled on host side}\\
 return;}
 $k\gets0$; $s\gets0$;\\
-\For{each voxel $i$ in spherical neighboorhood of radius $R_k$}%
+\For{each voxel $i$ in spherical neighborhood of radius $R_k$}%
 {\If{voxel $i$ is not a hole}%
 {$s\gets s + \text{voxel }i\text{ intensity}$;\\
 $k\gets k + 1$;}}
@@ -739,97 +765,116 @@ $k\gets k + 1$;}}
 \label{hole_filling_algorithm}
 \end{algorithm}
 
-The problem when splitting the grid is that we can not reconstruct the voxel located near the borders of the subgrid because neighborhood information is lost. One solution is to send a slightly bigger subgrid to the device wich includes this information. Another much simpler solution is to compute hole-filling in such area direcly on the host CPU, during the execution of the kernels. The kernels will still be in charge of most of the subgrid inner volume, which is where the heavy workload is.
+The problem when splitting the grid is that we can not reconstruct the voxel located near the borders of the subgrid because neighborhood information is lost. One solution is to send a slightly bigger subgrid to the device which includes this information. Another much simpler solution is to compute hole-filling in such area directly on the host CPU, during the execution of the kernels. The kernels will still be in charge of most of the subgrid inner volume, which is where the heavy workload is.
 
 To improve this hole-filling we can take advantage of shared memory.
-Here each voxel will try to acces to all its neighbors within a given range and these memory accesses are strided resulting in too many memory transactions.
+Here each voxel will try to access to all its neighbors within a given range and these memory accesses are strided resulting in too many memory transactions.
 A simple way to fix this is to copy the per warp (32 voxels) neighborhood in the shared memory so that the high latency expensive global memory accesses are done just once and following accesses are done on the much faster cached local memory (roughly 100 times faster).
 But due to its small size (usually $64kB$ per multiprocessor) it is not always possible to store the whole thread block voxel neighborhood in shared memory, especially when the radius $R_k$ is large.
 For such case we can attach a 3D texture to the bin-filled source subgrid.
 Cuda texture are read-only and memory space is cached.
 Therefore, a texture fetch costs one device memory read only on a cache miss, otherwise, it just costs one read from the texture cache.
-The texture cache is optimized for 2D or 3D spatial locality, so threads of the same warp that read texture addresses that are close together will achieve best performance and that is exaclty our scenario.
+The texture cache is optimized for 2D or 3D spatial locality, so threads of the same warp that read texture addresses that are close together will achieve best performance and that is exactly our scenario.
 
 \subsection{Results}
 
-The whole volume reconstruction process has been developped in \texttt{C++}.
+The whole volume reconstruction process has been developed in \texttt{C++}.
 For the \texttt{CUDA} part, we used the \texttt{CUDA} Toolkit 5.5.
-A basic Graphical User Interface (GUI) has been developped to visualize the reconstructed volume with different threshholds and to easily generate 2D slices.
+A basic Graphical User Interface (GUI) has been developed to visualize the reconstructed volume with different thresholds and to easily generate 2D slices.
 This GUI was made with $Qt4$ and the $QGLviewer$, and the voxel renderer was done with $OpenGL$ with the help of $\texttt{CUDA}$ for the heavy computations (millions of voxels).
 
-\textbf{Fig. \ref{reconstructed_pnn_volume}, \ref{split2}} and \textbf{\ref{results1}} show some reconstructed isotropic volumes.
-
-\begin{figure}[ht!]
-\centering
-\includegraphics[width=2.0in]{data_1}
-\caption{Reconstructed 3D isotropic volume. No position filtering.}
-\label{reconstructed_pnn_volume}
-\end{figure}
-
-\begin{figure}[ht!]
-\centering
-\includegraphics[width=2.0in]{split2}
-\caption{Reconstructed volume in its grid. Note the memory waste when taking the surrounding power of two voxel grid.}
-\label{split2}
-\end{figure}
-
-\begin{figure}[ht!]
-\centering
-\includegraphics[width=2.0in]{results1}
-\caption{Threshholded volume. The white voxels represents the cartilage interface.}
-\label{results1}
-\end{figure}
+\textbf{Fig.\ref{pnn_image_group}c and \ref{pnn_image_group}d} shows a reconstructed isotropic volume. \textbf{Fig.\ref{pnn_image_group}f} shows the cartilage interface.
 
 \subsubsection{Execution times}
 
-\begin{table}[!hb]
+\begin{table*}[!ht]
 \renewcommand{\arraystretch}{1.3}
-\caption{Executions times on two GTX670 with 4Go embded memory each with $R_k=5$}
-\label{memory_table}
+\caption{Executions times on a GTX590 (dual GPU card) with $2\times1.5$GB embed memory and 8GB CPU memory}
+\label{results_gtx590}
 \centering
 \begin{tabular}{|c|c|c||c|c||c|c|c|c||c|}
 \hline
-$W_G$ & $H_G$ & $L_H$ & $\delta_v$ & $N_{SG}$ & DL & BB & BF & HF & Tot. \\
+$W_G$ & $H_G$ & $L_H$ & $\delta_v$ & $N_{SG}$ & Data Loading & Bounding Box & Bin-Filling & Hole-Filling & Total \\
       &&&$(\mu m)$&&(ms)&(ms)&(ms)&(ms)&(ms)\\
 \hline
 \multicolumn{10}{|l|}{\textbf{Dataset 1 :} Single US image}\\
 \hline
-64&32&8&500&64&-&-&-&-&-\\
+64&32&8&500&-&-&-&-&-&-\\
 \hline
-128&128&16&200&64&-&-&-&-&-\\
+128&128&16&200&-&-&-&-&-&-\\
 \hline
-256&256&32&100&64&-&-&-&-&-\\
+256&256&32&100&-&-&-&-&-&-\\
 \hline
 \hline
 \multicolumn{10}{|l|}{\textbf{Dataset 2 :} Half tibia plateau (1610 images)}\\
 \hline
-128&256&128&500&64&-&-&-&-&-\\
+128&256&128&500&-&-&-&-&-&-\\
 \hline
-256&512&512&200&64&-&-&-&-&-\\
+256&512&512&200&-&-&-&-&-&-\\
 \hline
-512&1024&1024&100&64&-&-&-&-&-\\
+512&1024&1024&100&-&-&-&-&-&-\\
 \hline
 \hline
 \multicolumn{10}{|l|}{\textbf{Dataset 3 :} Full femur neck (3770 images)}\\
 \hline
-256&128&256&500&64&-&-&-&-&-\\
+256&128&256&500&-&-&-&-&-&-\\
 \hline
-1024&512&1024&200&64&-&-&-&-&-\\
+1024&512&1024&200&-&-&-&-&-&-\\
 \hline
-2048&1024&2048&100&64&-&-&-&-&-\\
+2048&1024&2048&100&-&-&-&-&-&-\\
 \hline
 \end{tabular}
-\end{table}
+\end{table*}
 
-The hole-filling step has not been implemented yet.
+\begin{table*}[!ht]
+\renewcommand{\arraystretch}{1.3}
+\caption{Executions times on two GTX670 with 4GB embed memory each and 16GB CPU memory}
+\label{results_gtx670}
+\centering
+\begin{tabular}{|c|c|c||c|c||c|c|c|c||c|}
+\hline
+$W_G$ & $H_G$ & $L_H$ & $\delta_v$ & $N_{SG}$ & Data Loading & Bounding Box & Bin-Filling & Hole-Filling & Total \\
+      &&&$(\mu m)$&&(ms)&(ms)&(ms)&(ms)&(ms)\\
+\hline
+\multicolumn{10}{|l|}{\textbf{Dataset 1 :} Single US image}\\
+\hline
+64&32&8&500&1&0&0&0&-&-\\
+\hline
+128&128&16&200&1&0&0&0&-&-\\
+\hline
+256&256&32&100&1&0&0&0&-&-\\
+\hline
+\hline
+\multicolumn{10}{|l|}{\textbf{Dataset 2 :} Half tibia plateau (1610 images)}\\
+\hline
+128&256&128&500&1&290&0&70&-&-\\
+\hline
+256&512&512&200&1&280&0&100&-&-\\
+\hline
+512&1024&1024&100&1&270&0&180&-&-\\
+\hline
+\hline
+\multicolumn{10}{|l|}{\textbf{Dataset 3 :} Full femur neck (3770 images)}\\
+\hline
+256&128&256&500&1&680&0&140&-&-\\
+\hline
+1024&512&1024&200&1&680&0&260&-&-\\
+\hline
+2048&1024&2048&100&8&680&0&480&-&-\\
+\hline
+\end{tabular}
+\end{table*}
+
+\textbf{Table \ref{results_gtx590}} and \textbf{table \ref{results_gtx670}} show typical execution times for various datasets on two different computers.
+\textbf{The hole-filling step has not been implemented yet.} The bin-filling step is done in less than 1 second, even for massive data amount (3770 images and 2048x1024x2048 voxel grid).
 
 \newpage
 \section{Conclusion}
 In this paper, we showed that reconstructing a isotropic volume from 2D localized ultrasound images was possible on GPU.
 This was done by adapting an existing volume reconstruction algorithm knows as Pixel Nearest Neighbor (PNN) and using the massive parallelism provided by our every day GPUs.
-This method offers huge speedup to volume reconstruction, even when not fully optimized, allowing to reduce drasticly reconstruction time that would be otherwise unebearable for such clinical applications.
+This method offers huge speedup to volume reconstruction, even when not fully optimized, allowing to reduce drastically reconstruction time that would be otherwise unbearable for such clinical applications.
 Nearly all desktop computers and professional laptops include a dedicated Graphic Processing Unit, which means that all this speedup comes for free, and that there is no extra cost.
-Howewer, PNN is not the best algorithm for such isotropic volume reconstruction. Adapting the Fast Marching Method proposed by T. Wen \textit{et al.} \cite{2} to \texttt{CUDA} is the next step to get rapid and more precise volume recontruction.
+However, PNN is not the best algorithm for such isotropic volume reconstruction. Adapting the Fast Marching Method proposed by T. Wen \textit{et al.} \cite{2} to \texttt{CUDA} is the next step to get rapid and more precise volume reconstruction.
 
 
 \section*{Acknowledgments}
@@ -837,7 +882,7 @@ I would like to thank the TIMC-IMAG laboratory for having hosted me for 4 months
 
 \appendices
 
-\section{Adapted PNN algorithm pseudo-code}
+\section{Adapted PNN algorithm pseudo code}
 
 \begin{algorithm}
 \KwData{The SoA filtered transformations and the cropped, smoothed and converted images.}
@@ -855,7 +900,7 @@ Allocate new grid on host in pinned memory;\\
 	Fetch available device memory $m_i$;\\
 	Compute min grid split ratio $r_i$ with $m_i$;\\
 }
-Split grid with $max(r_i)$ with algorithm \ref{split_algo};\\
+Split grid with $max(r_i)$ with algorithm \ref{split_algorithm};\\
 
 \textcolor{OliveGreen}{//Allocate data and send initial data to devices}\\
 \For{each GPU i}{
@@ -888,7 +933,7 @@ $N_{gpu}\gets \text{number of GPUs}$;\\
 }
 Split grid with $max(r_i)$;\\
 
-with algorithm \ref{split_algo}\\
+with algorithm \ref{split_algorithm}\\
 \For{each GPU $i$}{
 	Allocate 2 voxel subgrids;\\
 }
@@ -907,7 +952,7 @@ $i \gets 0$;$j\gets 0$;\\
 \textcolor{Blue}{Synchronize devices with host;}\\
 \textcolor{OliveGreen}{//Display 2D slices, 3D voxel grid or do further processing}\\
 
-\caption{Reconstruction algorithm pseudo-code}
+\caption{Reconstruction algorithm pseudo code}
 \label{reconstruction_algorithm}
 \end{algorithm}
 
