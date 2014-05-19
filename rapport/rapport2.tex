@@ -246,7 +246,7 @@ Here is the flow diagram of freehand 3D ultrasound volume reconstruction :
 
 Loading data is not as easy as one might think and can rapidly become a serious bottleneck compared to what GPGPU can provide in terms of speedup. 
 As each US scan is exported in its own mhd and raw file, thousands of mhd files have to be parsed to get each transformation matrix \{$M_i$\} and get the path to the corresponding image data and load the raw image \{$I_i$\}.  
-With two thousands images this operation can easily take 2 minutes on regular \ac{hdd} and even half a minute on a \ac{ssd}.
+With two thousands images this operation can easily take 1 to 2 minutes on regular \ac{hdd}.
 One easy fix would be to merge all the image data into a single raw file, and the transformation matrices in another raw file as well, or simply keep the generated data in the computer memory when doing on the fly or immediate post-processing.
 Data locality is something we do not only want on the disk, but in the memory too. This introduces an important concept : Array of Structures (AoS) versus Structure of Arrays (SoA). In GPGPU, memory access are a serious bottleneck when done improperly and SoA are often a better solution than AoS. 
 
@@ -851,25 +851,25 @@ $W_G$ & $H_G$ & $L_H$ & $\delta_v$ & $N_{SG}$ & Data Loading & Bounding Box & Bi
 \hline
 256&512&512&200&1&280&0&100&-&-\\
 \hline
-512&1024&1024&100&1&270&0&180&-&-\\
+512&1024&1024&100&1&290&0&180&-&-\\
 \hline
 \hline
 \multicolumn{10}{|l|}{\textbf{Dataset 3 :} Full femur neck (3770 images)}\\
 \hline
-256&128&256&500&1&680&0&140&-&-\\
+256&128&256&500&1&1220&0&140&-&-\\
 \hline
-1024&512&1024&200&1&680&0&260&-&-\\
+1024&512&1024&200&1&1240&0&260&-&-\\
 \hline
-2048&1024&2048&100&8&680&0&480&-&-\\
+2048&1024&2048&100&8&1240&0&480&-&-\\
 \hline
 \end{tabular}
 \end{table*}
 
 \textbf{Table \ref{results_gtx670}} shows typical execution times for various datasets.
-\textbf{The hole-filling step has not been implemented yet.} The PNN bin-filling step is done in less than 1 second, even for massive data amount (3770 images and $2048\times1024\times2048$ voxel grid) overtaking T. Wen \textit{et al.}\textbf{\cite{2}} 94s result even if we have a 180 times bigger grid and 27 times more input data (US images). For the moment hole filling computation time has not been included in the results so the comparison in not fair. A proper CPU implementation should be implemented in \texttt{C++} to obtain a proper comparison between the two methods.\par
+\textbf{The hole-filling step has not been implemented yet.} The PNN bin-filling step is done in less than 2 seconds, even for massive data amount (3770 images and $2048\times1024\times2048$ voxel grid) overtaking T. Wen \textit{et al.}\textbf{\cite{2}} 94s result even if we have a 180 times bigger grid and 27 times more input data (pixels). For the moment hole filling computation time has not been included in the results so the comparison in not fair. A proper CPU implementation should be implemented in \texttt{C++} to obtain a proper comparison between the two methods and to validate the proposed parallel volume reconstruction method.\par
 
 Because the two \texttt{GTX670} graphic cards have huge amounts of memory (4GB each), we can not really say whether the stream strategy adopted pays off or not because the grid is only split for a very large grid ($2048\times1024\times2048$ here). 
-The other configuration including a dual GPU card (\texttt{GTX590}) have less memory ($2\times1.5GB$). This dataset should show if the grid strategy counterbalance huge memory transfers entailed by grid splitting, because the reduced memory space involves much more grid splitting. Unfortunately, these results are not available yet, but grid-splitting has been tested and is fully working on this machine.
+The other configuration including a dual GPU card (\texttt{GTX590}) has less memory ($2\times1.5GB$). This dataset should show if the stream strategy counterbalances huge memory transfers entailed by grid splitting, because the reduced memory space involves much more grid splitting. Unfortunately, these results are not available yet, but grid splitting has been tested and is fully working on this machine.
 
 \newpage
 \section{Conclusion}
