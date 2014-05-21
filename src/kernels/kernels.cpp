@@ -163,11 +163,9 @@ namespace kernel {
 
 			//switch to next subgrid
 			nGrid++;
-			gridIdx = (gridIdx + 1) % cpuGrid->nGridX();
-			if(gridIdx == 0)
-				gridIdy = (gridIdy + 1) % cpuGrid->nGridY();
-			if(gridIdx == 0 && gridIdy == 0)
-				gridIdz = (gridIdz + 1) % cpuGrid->nGridZ();
+			gridIdz = nGrid / (cpuGrid->nGridX() * cpuGrid->nGridY());
+			gridIdy = (nGrid % (cpuGrid->nGridX() * cpuGrid->nGridY())) / cpuGrid->nGridX();
+			gridIdx = nGrid % cpuGrid->nGridX();
 		}
 
 		log_console.debugStream() << "Nquads après génération " << totalQuads2;

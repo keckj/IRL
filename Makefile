@@ -15,7 +15,7 @@ OPENCV_LIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui
 
 CUDA_INCLUDEPATH = -I/usr/local/cuda-5.5/include
 CUDA_LIBPATH = -L/usr/local/cuda-5.5/lib64 
-CUDA_LIBS = -lcuda -lcudart
+CUDA_LIBS = -lcuda -lcudart -lnvToolsExt
 
 OPENCL_INCLUDEPATH = -I/opt/AMDAPP/include
 OPENCL_LIBPATH = -L/opt/AMDAPP/lib/x86

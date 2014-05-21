@@ -7,6 +7,9 @@
 #include <opencv2/opencv.hpp>
 #include <thread>
 
+#include <nvToolsExt.h>
+#include <nvToolsExtCuda.h>
+
 #include "cuda.h"
 #include "cuda_runtime.h"
 
@@ -28,6 +31,7 @@
 #include "memoryManager/GPUMemory.hpp"
 #include "memoryManager/CPUMemory.hpp"
 #include "memoryManager/sharedResource.hpp"
+
 
 #ifndef _SPLITS
 #define _SPLITS 3 
@@ -132,7 +136,6 @@ int main( int argc, char** argv)
 	log_console.infoStream() << "\tImages real size : " << imgRealWidth << " x " << imgRealHeight << " (mm)";
 
 
-
 	//compute bounding box
 	float posX, posY, posZ;
 	float offsetX, offsetY, offsetZ;
@@ -170,7 +173,6 @@ int main( int argc, char** argv)
 			zMax = (posZ > zMax ? posZ : zMax);
 
 			//printf("\nCPU %f\t%f\t%f\n", posX, posY, posZ);
-
 		}
 	}
 
@@ -200,8 +202,8 @@ int main( int argc, char** argv)
 
 
 
-	unsigned long maxBytes = GPUMemory::getMinAvailableMemoryOnDevices()/1.5f;
-	unsigned int passes = ceil((float)(imageSize*5)/maxBytes);
+	unsigned long maxBytes = GPUMemory::getMinAvailableMemoryOnDevices()/1.5f; //security ratio
+	unsigned int passes = ceil((float)(imageSize*5)/maxBytes); // float + uchars = 4 + 1 bytes
 
 	unsigned int subSize= maxBytes/5;
 	unsigned int lastSize = imageSize % subSize; 
@@ -217,6 +219,7 @@ int main( int argc, char** argv)
 	PinnedCPUResource<unsigned char> images_char_h(totSize);
 	images_char_h.allocate();
 
+	//new block for memory management
 	{
 		PinnedCPUResource<float> image_float_h(float_data_h, subSize, true); //will be freed at the end of the block
 		
@@ -299,8 +302,10 @@ int main( int argc, char** argv)
 	for (int i = 0; i < maxCudaDevices; i++) {
 		if(i < (int)cudaDevicesNeeded)
 			subgridsToComputePerDevice[i] = meanSubgridsToComputePerDevice;
-		else	
+		else if(i == (int)cudaDevicesNeeded)	
 			subgridsToComputePerDevice[i] = voxelGrid.nChilds() % meanSubgridsToComputePerDevice;
+		else
+			subgridsToComputePerDevice[i] = 0;
 	}
 
 	log_console.infoStream() << "Number of subgrids : " 
@@ -332,6 +337,16 @@ int main( int argc, char** argv)
 		for (int j = 0; j < maxCudaDevices; j++) {
 			CHECK_CUDA_ERRORS(cudaSetDevice(j));
 			CHECK_CUDA_ERRORS(cudaStreamCreate(&streams[i][j]));
+		}
+	}
+	
+	//create events
+	cudaEvent_t **events = new cudaEvent_t*[meanSubgridsToComputePerDevice-1];
+	for(int i=0; i<((int)(meanSubgridsToComputePerDevice)) - 1; i++) {
+		events[i] = new cudaEvent_t[maxCudaDevices];
+		for(int j = 0; j < maxCudaDevices; j++) {
+			CHECK_CUDA_ERRORS(cudaSetDevice(j));
+			CHECK_CUDA_ERRORS(cudaEventCreate(&events[i][j], cudaEventDisableTiming));
 		}
 	}
 
@@ -392,52 +407,69 @@ int main( int argc, char** argv)
 	GPUMemory::display(cout);
 
 	//bin filling
-	unsigned int nGrid = 0;
+	nvtxRangeId_t id0 = nvtxRangeStart("Bin filling");
 	unsigned int gridIdx = 0, gridIdy = 0,  gridIdz = 0;
-	for (int i = 0; i < (int)cudaDevicesNeeded; i++) {
-		CHECK_CUDA_ERRORS(cudaSetDevice(i));
 
-		for (int j = 0; j < (int)subgridsToComputePerDevice[i]; j++) {
+	unsigned int idDevice = 0;
+	unsigned int *idWork = new unsigned int[cudaDevicesNeeded];
+	for (unsigned int i = 0; i < cudaDevicesNeeded; i++) {
+		idWork[i] = 0;
+	}
+	
+	unsigned int gridId = 0;
+	while(gridId < voxelGrid.nChilds()) {
 
-			//printf(">GRID %i <=> (%i,%i,%i) ", nGrid, gridIdx, gridIdy, gridIdz);
+		CHECK_CUDA_ERRORS(cudaSetDevice(idDevice));
 
-			//put zeroes
-			CHECK_CUDA_ERRORS(cudaMemsetAsync(grid_d[j%2][i], 0, voxelGrid.subgridSize()*sizeof(unsigned char), streams[j%2][i]));
-			CHECK_CUDA_ERRORS(cudaMemsetAsync(hitgrid_d[i], 0, voxelGrid.subgridSize()*sizeof(unsigned char), streams[j%2][i]));
-			CHECK_CUDA_ERRORS(cudaMemsetAsync(meangrid_d[i], 0, voxelGrid.subgridSize()*sizeof(unsigned short), streams[j%2][i]));
+		printf(">GRID %i <=> (%i,%i,%i) \n", gridId, gridIdz, gridIdy, gridIdx);
+		printf(">DEVICE %i  WORK %i  STREAM %i\n\n", idDevice, idWork[idDevice], idWork[idDevice]%2);
 
-			//compute subgrid
-			VNNKernel(nImages, imgWidth, imgHeight, 
-					deltaGrid, deltaX, deltaY,
-					xMin, yMin, zMin,
-					gridIdx, gridIdy, gridIdz,
-					voxelGrid.subwidth(), voxelGrid.subheight(), voxelGrid.sublength(),
-					offsets_d[i],
-					rotations_d[i],
-					images_d[i],
-					grid_d[j%2][i], meangrid_d[i], hitgrid_d[i],
-					streams[j%2][i]);
+		//begin if only last kernels finished
+		if(idWork[idDevice]>0)
+			CHECK_CUDA_ERRORS(cudaEventSynchronize(events[(int)idWork[idDevice]-1u][idDevice]));
 
-			//compute mean
-			computeMeanKernel(grid_d[j%2][i], hitgrid_d[i], meangrid_d[i], voxelGrid.subgridSize(), streams[j%2][i]);
+		//put zeroes
+		CHECK_CUDA_ERRORS(cudaMemsetAsync(grid_d[idWork[idDevice]%2][idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned char), streams[idWork[idDevice]%2][idDevice]));
+		CHECK_CUDA_ERRORS(cudaMemsetAsync(hitgrid_d[idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned char), streams[idWork[idDevice]%2][idDevice]));
+		CHECK_CUDA_ERRORS(cudaMemsetAsync(meangrid_d[idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned short), streams[idWork[idDevice]%2][idDevice]));
 
-			//copy back subgrid
-			CHECK_CUDA_ERRORS(cudaMemcpyAsync(voxelGrid(nGrid)->hostData(), grid_d[j%2][i], voxelGrid.subgridBytes(), cudaMemcpyDeviceToHost, streams[j%2][i]));
+		//compute subgrid
+		VNNKernel(nImages, imgWidth, imgHeight, 
+				deltaGrid, deltaX, deltaY,
+				xMin, yMin, zMin,
+				gridIdx, gridIdy, gridIdz,
+				voxelGrid.subwidth(), voxelGrid.subheight(), voxelGrid.sublength(),
+				offsets_d[idDevice],
+				rotations_d[idDevice],
+				images_d[idDevice],
+				grid_d[idWork[idDevice]%2][idDevice], meangrid_d[idDevice], hitgrid_d[idDevice],
+				streams[idWork[idDevice]%2][idDevice]);
 
-			//switch to next subgrid
-			nGrid++;
-			gridIdx = (gridIdx + 1) % voxelGrid.nGridX();
-			if(gridIdx == 0)
-				gridIdy = (gridIdy + 1) % voxelGrid.nGridY();
-			if(gridIdx == 0 && gridIdy == 0)
-				gridIdz = (gridIdz + 1) % voxelGrid.nGridZ();
+		//compute mean
+		computeMeanKernel(grid_d[idWork[idDevice]%2][idDevice], hitgrid_d[idDevice], meangrid_d[idDevice], voxelGrid.subgridSize(), streams[idWork[idDevice]%2][idDevice]);
 
-		}
+		//kernels finished, record event
+		if(idWork[idDevice]<meanSubgridsToComputePerDevice - 1)
+			CHECK_CUDA_ERRORS(cudaEventRecord(events[idWork[idDevice]][idDevice], streams[idWork[idDevice]%2][idDevice]))
 
+		//copy back subgrid
+		CHECK_CUDA_ERRORS(cudaMemcpyAsync(voxelGrid(gridId)->hostData(), grid_d[idWork[idDevice]%2][idDevice], voxelGrid.subgridBytes(), cudaMemcpyDeviceToHost, streams[idWork[idDevice]%2][idDevice]));
+
+		//switch to next subgrid
+		gridId++;
+		gridIdz = gridId / (voxelGrid.nGridX() * voxelGrid.nGridY());
+		gridIdy = (gridId % (voxelGrid.nGridX() * voxelGrid.nGridY())) / voxelGrid.nGridX();
+		gridIdx = gridId % voxelGrid.nGridX();
+
+		//increment work and switch to next device
+		idWork[idDevice]++;
+		idDevice++;
+		idDevice%=cudaDevicesNeeded;
 	}
 
 	cudaDeviceSynchronize();
 	checkKernelExecution();
+	nvtxRangeEnd(id0);
 
 	//free memory
 	log_console.infoStream() << "Freeing all remaining device memory !";

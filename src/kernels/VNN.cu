@@ -26,7 +26,7 @@ namespace kernel {
 	}
 
 
-	__device__ char _atomicAddShort(unsigned short* address, unsigned short val) {
+	__device__ unsigned short _atomicAddShort(unsigned short* address, unsigned short val) {
 		unsigned int *base_address = (unsigned int *)((size_t)address & ~2);
 		unsigned int old, assumed, sum, new_;
 
@@ -41,7 +41,7 @@ namespace kernel {
 		return old;
 	}
 
-	__device__ char _atomicAddChar(unsigned char* address, unsigned char val) {
+	__device__ unsigned char _atomicAddChar(unsigned char* address, unsigned char val) {
 
 		unsigned int *base_address = (unsigned int *)((size_t)address & ~3);
 		unsigned int selectors[] = {0x3214, 0x3240, 0x3410, 0x4210};
@@ -68,10 +68,18 @@ namespace kernel {
 				return;
 			
 			if(hit_counter[id] == 0)
-				return;
-
-			grid[id] = sum[id]/hit_counter[id];
+				grid[id] = 0;
+			else
+				grid[id] = sum[id]/hit_counter[id];
 		}
+	
+	void computeMeanKernel(unsigned char *grid, unsigned char *hit_counter, unsigned short *sum, 
+			const unsigned long nData, cudaStream_t stream) {
+		dim3 dimBlock(512);
+		dim3 dimGrid(((unsigned int)ceil(nData/512.0))%65535, ceil(nData/(512*65535.0f)));
+
+		computeMean<<<dimGrid,dimBlock,0,stream>>>(grid, hit_counter, sum, nData);
+	}
 
 
 	__global__ void 
@@ -160,12 +168,5 @@ namespace kernel {
 		checkKernelExecution();
 	}
 
-	void computeMeanKernel(unsigned char *grid, unsigned char *hit_counter, unsigned short *sum, 
-			const unsigned long nData, cudaStream_t stream) {
-		dim3 dimBlock(512);
-		dim3 dimGrid(((unsigned int)ceil(nData/512.0))%65535, ceil(nData/(512*65535.0f)));
-
-		computeMean<<<dimGrid,dimBlock,0,stream>>>(grid, hit_counter, sum, nData);
-	}
 }
 
