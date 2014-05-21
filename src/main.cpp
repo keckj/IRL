@@ -34,7 +34,7 @@
 
 
 #ifndef _SPLITS
-#define _SPLITS 5 
+#define _SPLITS 0 
 #endif
 
 
@@ -278,7 +278,7 @@ int main( int argc, char** argv)
 	// needed memory on each GPU 
 	unsigned long gridBytes = 2*grid.dataSize()*sizeof(unsigned char); //two grids to allow compute & mem transfers
 	unsigned long meanGridBytes = grid.dataSize()*sizeof(unsigned int); //one grid for the mean
-	unsigned long hitBytes = grid.dataSize()*sizeof(unsigned short); //the hitgrid is shared between the two device voxel grids
+	unsigned long hitBytes = grid.dataSize()*sizeof(unsigned int); //the hitgrid is shared between the two device voxel grids
 	unsigned long sharedBytes = gridBytes + hitBytes + meanGridBytes;
 	float oneGridToNeededMemoryRatio = (float)grid.dataBytes()/sharedBytes;
 
@@ -298,7 +298,7 @@ int main( int argc, char** argv)
 	cudaDevicesNeeded++;
 
 	//compute how many grids should be computed on each device
-	unsigned int *subgridsToComputePerDevice = new unsigned int[cudaDevicesNeeded];
+	unsigned int *subgridsToComputePerDevice = new unsigned int[maxCudaDevices];
 	for (int i = 0; i < maxCudaDevices; i++) {
 		if(i < (int)cudaDevicesNeeded)
 			subgridsToComputePerDevice[i] = meanSubgridsToComputePerDevice;
@@ -364,7 +364,7 @@ int main( int argc, char** argv)
 	for (int i = 0; i < 2; i++) {
 		grid_d[i] = new unsigned char *[cudaDevicesNeeded];
 	}
-	unsigned short **hitgrid_d = new unsigned short *[cudaDevicesNeeded];
+	unsigned int **hitgrid_d = new unsigned int *[cudaDevicesNeeded];
 	unsigned int **meangrid_d = new unsigned int *[cudaDevicesNeeded];
 
 	unsigned char **images_d = new unsigned char*[cudaDevicesNeeded]; 
@@ -381,7 +381,7 @@ int main( int argc, char** argv)
 		rotations_d[i] = new float*[9];
 		for (int j = 0; j < 9; j++) rotations_d[i][j] = GPUMemory::malloc<float>(nImages, i);
 
-		hitgrid_d[i] = GPUMemory::malloc<unsigned short>(voxelGrid.subgridSize(), i);
+		hitgrid_d[i] = GPUMemory::malloc<unsigned int>(voxelGrid.subgridSize(), i);
 		meangrid_d[i] = GPUMemory::malloc<unsigned int>(voxelGrid.subgridSize(), i);
 		grid_d[0][i] = GPUMemory::malloc<unsigned char>(voxelGrid.subgridSize(), i);
 		grid_d[1][i] = GPUMemory::malloc<unsigned char>(voxelGrid.subgridSize(), i);
@@ -419,18 +419,18 @@ int main( int argc, char** argv)
 	unsigned int gridId = 0;
 	while(gridId < voxelGrid.nChilds()) {
 
+		//printf(">GRID %i <=> (%i,%i,%i) \n", gridId, gridIdz, gridIdy, gridIdx);
+		//printf(">DEVICE %i  WORK %i  STREAM %i\n\n", idDevice, idWork[idDevice], idWork[idDevice]%2);
+		
 		CHECK_CUDA_ERRORS(cudaSetDevice(idDevice));
 
-		printf(">GRID %i <=> (%i,%i,%i) \n", gridId, gridIdz, gridIdy, gridIdx);
-		printf(">DEVICE %i  WORK %i  STREAM %i\n\n", idDevice, idWork[idDevice], idWork[idDevice]%2);
-
-		//begin if only last kernels finished
+		//begin if only last kernels on other stream finished (for GPUs whith multi-kernel support)
 		if(idWork[idDevice]>0)
 			CHECK_CUDA_ERRORS(cudaEventSynchronize(events[(int)idWork[idDevice]-1u][idDevice]));
 
 		//put zeroes
 		CHECK_CUDA_ERRORS(cudaMemsetAsync(grid_d[idWork[idDevice]%2][idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned char), streams[idWork[idDevice]%2][idDevice]));
-		CHECK_CUDA_ERRORS(cudaMemsetAsync(hitgrid_d[idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned short), streams[idWork[idDevice]%2][idDevice]));
+		CHECK_CUDA_ERRORS(cudaMemsetAsync(hitgrid_d[idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned int), streams[idWork[idDevice]%2][idDevice]));
 		CHECK_CUDA_ERRORS(cudaMemsetAsync(meangrid_d[idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned int), streams[idWork[idDevice]%2][idDevice]));
 
 		//compute subgrid
@@ -479,7 +479,7 @@ int main( int argc, char** argv)
 		GPUMemory::free<unsigned char>(images_d[i], imageSize, i);
 		GPUMemory::free<unsigned char>(grid_d[0][i], voxelGrid.subgridSize(), i);
 		GPUMemory::free<unsigned char>(grid_d[1][i], voxelGrid.subgridSize(), i);
-		GPUMemory::free<unsigned short>(hitgrid_d[i], voxelGrid.subgridSize(), i);
+		GPUMemory::free<unsigned int>(hitgrid_d[i], voxelGrid.subgridSize(), i);
 		GPUMemory::free<unsigned int>(meangrid_d[i], voxelGrid.subgridSize(), i);
 	}
 

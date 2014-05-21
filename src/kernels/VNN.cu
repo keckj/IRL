@@ -61,11 +61,13 @@ namespace kernel {
 
 	__global__ void 
 	__launch_bounds__(512)
-	computeMean(unsigned char *grid, unsigned short *hit_counter, unsigned int *sum, unsigned long nData) {
-			unsigned int id = 512*65535*blockIdx.y + 512*blockIdx.x + threadIdx.x;  
-
-			if(id >= nData)
+	computeMean(unsigned char *grid, unsigned int *hit_counter, unsigned int *sum, unsigned long long int nData, unsigned long long int offset) {
+			unsigned int localId = 65535u*512u*blockIdx.y + 512u*blockIdx.x + threadIdx.x;  
+			unsigned long long int id = offset + localId;
+				
+			if(id >= nData) {
 				return;
+			}
 			
 			if(hit_counter[id] == 0u)
 				grid[id] = 0u;
@@ -73,17 +75,84 @@ namespace kernel {
 				grid[id] = sum[id]/hit_counter[id];
 		}
 	
-	void computeMeanKernel(unsigned char *grid, unsigned short *hit_counter, unsigned int *sum, 
+	void computeMeanKernel(unsigned char *grid, unsigned int *hit_counter, unsigned int *sum, 
 			const unsigned long nData, cudaStream_t stream) {
+		
+		/*Découpe en plusieurs kernels car on ne peux 'que' 
+		  lancer 65535x65535 threads à la fois en compute capability 1.x*/
+		unsigned long maxThreads = 512ul*65535ul;
 		dim3 dimBlock(512);
-		dim3 dimGrid(((unsigned int)ceil(nData/512.0))%65535, ceil(nData/(512*65535.0f)));
+		dim3 dimGrid(ceil(nData/512.0), ceil(nData/(512.0*65535.0)));
+		
+		unsigned int nPass = (nData+maxThreads-1ul)/maxThreads;
 
-		computeMean<<<dimGrid,dimBlock,0,stream>>>(grid, hit_counter, sum, nData);
+		for(unsigned int i=0; i < nPass; i++) {
+			computeMean<<<dimGrid,dimBlock,0,stream>>>(grid, hit_counter, sum, nData, i*maxThreads);
+		}
 	}
 
+	__global__ void
+	__launch_bounds__(512)
+	HoleFilling(const unsigned char interpolationRadius, 
+			const unsigned int gridIdx, const unsigned int gridIdy, const unsigned int gridIdz,
+			const unsigned int voxelGridWidth, const unsigned int voxelGridHeight, const unsigned int voxelGridLength,
+			const unsigned long long int nData,
+			const unsigned long long int offset,
+			unsigned char *srcGrid, unsigned char *dstGrid)
+	{
+		
+		unsigned int iid = 65535u*512u*blockIdx.y + 512u*blockIdx.x + threadIdx.x;  
+		unsigned long long int id = offset + iid;
+
+		if(id >= nData)
+			return;
+	
+		//cas ou il n'y a pas de trou
+		if(srcGrid[id] != 0)
+			dstGrid[id] = srcGrid[id];
+
+		unsigned long long int idz = id / (voxelGridHeight*voxelGridWidth);
+		unsigned long long int idy = (id % (voxelGridHeight*voxelGridWidth))/voxelGridWidth;
+		unsigned long long int idx = id % voxelGridWidth;
+		
+
+		//gestion des bords effectué sur CPU
+		if(        idx < interpolationRadius - 1u 
+			|| idy < interpolationRadius - 1u
+			|| idz < interpolationRadius - 1u
+			|| idx > (voxelGridWidth - interpolationRadius)
+			|| idy > (voxelGridWidth - interpolationRadius)
+			|| idz > (voxelGridWidth - interpolationRadius)) {
+			return;
+		}
+
+
+		unsigned char localValue;
+		unsigned short localHit;
+		unsigned int localSum;
+
+		unsigned long long int localId;
+		for(int i = -interpolationRadius+1; i <= interpolationRadius-1; i++) {
+			for(int j = -interpolationRadius+1; j <= interpolationRadius-1; j++) {
+				for(int k = -interpolationRadius+1; k<= interpolationRadius-1; k++) {
+					localId = id + i*voxelGridHeight*voxelGridWidth + j*voxelGridWidth + k;
+					localValue = srcGrid[localId]; 
+
+					if(localValue!=0) {
+						localHit++;
+						localSum += localValue;
+					}
+				}
+			}
+		}
+
+		if(localHit != 0) 
+			dstGrid[id] = localSum/localHit;	
+	}
+		
 
 	__global__ void 
-	__launch_bounds__(1024)
+	__launch_bounds__(512)
 		VNN(const int nImages, const int imgWidth, const int imgHeight, 
 				const float deltaGrid, const float deltaX, const float deltaY,
 				const float xMin, const float yMin, const float zMin,
@@ -94,7 +163,7 @@ namespace kernel {
 				unsigned char *char_image_data, 
 				unsigned char *voxel_data, 
 				unsigned int *mean_grid,
-				unsigned short *hit_counter) {
+				unsigned int *hit_counter) {
 
 			unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;  
 			unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y; 
@@ -116,21 +185,32 @@ namespace kernel {
 			unsigned int iz = __float2uint_rd(pz/deltaGrid);
 
 			//check if the pixel is in the subgrid
-			if(! (ix/voxelGridWidth == gridIdx 
-						&& iy/voxelGridHeight == gridIdy
-						&& iz/voxelGridLength == gridIdz)) {
+			if(! 
+				(ix/voxelGridWidth == gridIdx 
+				&& iy/voxelGridHeight == gridIdy
+				&& iz/voxelGridLength == gridIdz)) {
 				return;
 			}
 
 			ix %= voxelGridWidth;
 			iy %= voxelGridHeight;
 			iz %= voxelGridLength;
-			unsigned long i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;
+			unsigned long long int i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;
 
 			unsigned char value = char_image_data[id];
-
-			_atomicAddShort(hit_counter + i, 1);	
-			atomicAdd(mean_grid + i, (unsigned short)value);
+		
+			//Ancien code pour les hit_grid unsigned char ou unsigned short
+			//à cause du risque d'overflow si trop de pixel dans le même voxel
+			/*unsigned short current, old;*/
+			/*do {*/
+				/*old = hit_counter[i];*/
+				/*if(old == 65536)*/
+					/*return;*/
+				/*current = _atomicCASShort(hit_counter + i, old, old+1u);*/
+			/*} while(current != old);*/
+			
+			atomicAdd(hit_counter + i, 1);
+			atomicAdd(mean_grid + i, (unsigned int)value);
 		}
 
 	void VNNKernel(const int nImages, const int imgWidth, const int imgHeight, 
@@ -143,7 +223,7 @@ namespace kernel {
 			unsigned char *char_image_data, 
 			unsigned char *voxel_data, 
 			unsigned int *mean_grid,
-			unsigned short *hit_counter,
+			unsigned int *hit_counter,
 			cudaStream_t stream) {
 
 		dim3 dimBlock(32, 32, 1);
