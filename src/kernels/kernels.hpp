@@ -14,8 +14,8 @@ namespace kernel {
 void castKernel(unsigned long dataSize, float *float_data, unsigned char *char_data);
 
 extern void computeMeanKernel(unsigned char *grid, 
-		unsigned char *hit_counter, 
-		unsigned short *sum, 
+		unsigned short *hit_counter, 
+		unsigned int *sum, 
 		const unsigned long nData, 
 		cudaStream_t stream);
 
@@ -29,8 +29,8 @@ void VNNKernel(
 		float **rotations_d,
 		unsigned char *char_image_data, 
 		unsigned char *voxel_data, 
-		unsigned short *mean_grid,
-		unsigned char *hit_counter, 
+		unsigned int *mean_grid,
+		unsigned short *hit_counter, 
 		cudaStream_t stream);
 
 enum NormalType { NORMAL_PER_QUAD, NORMAL_PER_VERTEX};

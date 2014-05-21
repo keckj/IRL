@@ -61,19 +61,19 @@ namespace kernel {
 
 	__global__ void 
 	__launch_bounds__(512)
-	computeMean(unsigned char *grid, unsigned char *hit_counter, unsigned short *sum, unsigned long nData) {
+	computeMean(unsigned char *grid, unsigned short *hit_counter, unsigned int *sum, unsigned long nData) {
 			unsigned int id = 512*65535*blockIdx.y + 512*blockIdx.x + threadIdx.x;  
 
 			if(id >= nData)
 				return;
 			
-			if(hit_counter[id] == 0)
-				grid[id] = 0;
+			if(hit_counter[id] == 0u)
+				grid[id] = 0u;
 			else
 				grid[id] = sum[id]/hit_counter[id];
 		}
 	
-	void computeMeanKernel(unsigned char *grid, unsigned char *hit_counter, unsigned short *sum, 
+	void computeMeanKernel(unsigned char *grid, unsigned short *hit_counter, unsigned int *sum, 
 			const unsigned long nData, cudaStream_t stream) {
 		dim3 dimBlock(512);
 		dim3 dimGrid(((unsigned int)ceil(nData/512.0))%65535, ceil(nData/(512*65535.0f)));
@@ -93,8 +93,8 @@ namespace kernel {
 				float *r1, float *r2, float *r3, float *r4, float *r5, float *r6, float *r7, float *r8, float *r9,
 				unsigned char *char_image_data, 
 				unsigned char *voxel_data, 
-				unsigned short *mean_grid,
-				unsigned char *hit_counter) {
+				unsigned int *mean_grid,
+				unsigned short *hit_counter) {
 
 			unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;  
 			unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y; 
@@ -127,13 +127,10 @@ namespace kernel {
 			iz %= voxelGridLength;
 			unsigned long i = iz*voxelGridHeight*voxelGridWidth + iy*voxelGridWidth + ix;
 
-			if(hit_counter[i] > 255)
-				return;
-
 			unsigned char value = char_image_data[id];
 
-			_atomicAddChar(hit_counter + i, 1);	
-			_atomicAddShort(mean_grid + i, (unsigned short)value);
+			_atomicAddShort(hit_counter + i, 1);	
+			atomicAdd(mean_grid + i, (unsigned short)value);
 		}
 
 	void VNNKernel(const int nImages, const int imgWidth, const int imgHeight, 
@@ -145,8 +142,8 @@ namespace kernel {
 			float **rotations_d,
 			unsigned char *char_image_data, 
 			unsigned char *voxel_data, 
-			unsigned short *mean_grid,
-			unsigned char *hit_counter,
+			unsigned int *mean_grid,
+			unsigned short *hit_counter,
 			cudaStream_t stream) {
 
 		dim3 dimBlock(32, 32, 1);
