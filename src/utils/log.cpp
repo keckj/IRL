@@ -19,8 +19,8 @@ Category& log_file = Category::getInstance(std::string("log_file"));
 
 void initLogs() {
 
-	log_console.setPriority(Priority::WARN);
-	log_file.setPriority(Priority::WARN);
+	log_console.setPriority(Priority::INFO);
+	log_file.setPriority(Priority::INFO);
 	
 	log4cpp::Appender *appender_console = new log4cpp::OstreamAppender("console", &std::cout);
 	appender_console->setLayout(new log4cpp::BasicLayout());

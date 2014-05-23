@@ -34,7 +34,11 @@
 
 
 #ifndef _SPLITS
-#define _SPLITS 0 
+#define _SPLITS 4 
+#endif
+
+#ifndef _INTERPOLATION_RADIUS
+#define _INTERPOLATION_RADIUS 2
 #endif
 
 
@@ -432,7 +436,7 @@ int main( int argc, char** argv)
 		CHECK_CUDA_ERRORS(cudaMemsetAsync(grid_d[idWork[idDevice]%2][idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned char), streams[idWork[idDevice]%2][idDevice]));
 		CHECK_CUDA_ERRORS(cudaMemsetAsync(hitgrid_d[idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned int), streams[idWork[idDevice]%2][idDevice]));
 		CHECK_CUDA_ERRORS(cudaMemsetAsync(meangrid_d[idDevice], 0, voxelGrid.subgridSize()*sizeof(unsigned int), streams[idWork[idDevice]%2][idDevice]));
-
+		
 		//compute subgrid
 		VNNKernel(nImages, imgWidth, imgHeight, 
 				deltaGrid, deltaX, deltaY,
@@ -444,7 +448,7 @@ int main( int argc, char** argv)
 				images_d[idDevice],
 				grid_d[idWork[idDevice]%2][idDevice], meangrid_d[idDevice], hitgrid_d[idDevice],
 				streams[idWork[idDevice]%2][idDevice]);
-
+	
 		//compute mean
 		computeMeanKernel(grid_d[idWork[idDevice]%2][idDevice], hitgrid_d[idDevice], meangrid_d[idDevice], voxelGrid.subgridSize(), streams[idWork[idDevice]%2][idDevice]);
 
@@ -471,7 +475,7 @@ int main( int argc, char** argv)
 	checkKernelExecution();
 	nvtxRangeEnd(id0);
 
-	//free memory
+	//free GPU memory
 	log_console.infoStream() << "Freeing all remaining device memory !";
 	for (int i = 0; i < (int)cudaDevicesNeeded; i++) {
 		for (int j = 0; j < 3; j++) GPUMemory::free<float>(offsets_d[i][j], nImages, i);
@@ -486,11 +490,96 @@ int main( int argc, char** argv)
 	CPUMemory::display(cout);
 	GPUMemory::display(cout);
 
+
+	//#####################//
+	//    hole filling     //
+	// with same grid size //
+	//#####################//
+	
+	log_console.infoStream() << "\n\tHOLE-FILLING\n";
+	nvtxRangeId_t id1 = nvtxRangeStart("Hole filling");
+
+	VoxelGridTree<unsigned char,PinnedCPUResource,GPUResource> holeFilledGrid_s = grid.splitGridWithMaxMemory(
+			0xfffffffful,log2(voxelGrid.nChilds()));
+	assert(holeFilledGrid_s.nChilds() == voxelGrid.nChilds());
+	{
+		
+		for(unsigned int i = 0; i < holeFilledGrid_s.nChilds(); i++) {
+			holeFilledGrid_s(i)->allocateOnHost();
+		}
+	
+		unsigned char **binFilledGrids_data_d;
+		binFilledGrids_data_d = new unsigned char*[cudaDevicesNeeded];
+
+		unsigned char ***holeFilledGrids_data_d;
+		holeFilledGrids_data_d = new unsigned char**[2];
+		for(unsigned int i = 0; i < 2; i++) holeFilledGrids_data_d[i] = new unsigned char*[cudaDevicesNeeded];
+
+		for (unsigned int i = 0; i < cudaDevicesNeeded; i++) {
+			cudaSetDevice(i);
+			binFilledGrids_data_d[i] = GPUMemory::malloc<unsigned char>(voxelGrid.subgridSize(),i);
+				
+			for (unsigned int j = 0; j < 2; j++) {
+				holeFilledGrids_data_d[j][i] = GPUMemory::malloc<unsigned char>(holeFilledGrid_s.subgridSize(),i);
+			}
+		}
+
+		unsigned int idDevice = 0;
+		unsigned int idGrid = 0;
+		unsigned int idGridx=0, idGridy=0, idGridz=0;
+		unsigned int *idWork = new unsigned int[cudaDevicesNeeded];
+		for (unsigned int i = 0; i < cudaDevicesNeeded; i++) idWork[i] = 0; 
+		
+		while (idGrid < voxelGrid.nChilds()) {
+			
+			holeFilledGrid_s(idGrid)->GPUResource::setData(holeFilledGrids_data_d[idWork[idDevice]%2][idDevice], idDevice, 
+					voxelGrid.subgridSize(), idGrid<cudaDevicesNeeded);
+			voxelGrid(idGrid)->GPUResource::setData(binFilledGrids_data_d[idDevice], idDevice, 
+					voxelGrid.subgridSize(), idGrid<cudaDevicesNeeded);
+
+
+			cudaSetDevice(idDevice);
+			voxelGrid(idGrid)->copyToDevice(streams[idWork[idDevice]%2][idDevice]);
+
+			HoleFillingKernel(_INTERPOLATION_RADIUS,
+					idGridx, idGridy, idGridz,
+					voxelGrid.subwidth(), voxelGrid.subheight(), voxelGrid.sublength(),
+					voxelGrid.subgridSize(), 
+					binFilledGrids_data_d[idDevice],
+					holeFilledGrids_data_d[idWork[idDevice]%2][idDevice],
+					streams[idDevice[idWork]%2][idDevice]
+					);
+
+			holeFilledGrid_s(idGrid)->copyToHost(streams[idWork[idDevice]%2][idDevice]);
+		
+			idGrid++;
+			idGridz = idGrid / (voxelGrid.nGridX() * voxelGrid.nGridY());
+			idGridy = (idGrid % (voxelGrid.nGridX() * voxelGrid.nGridY())) / voxelGrid.nGridX();
+			idGridx = idGrid % voxelGrid.nGridX();
+		
+			idWork[idDevice]++;
+			idDevice++;
+			idDevice%=cudaDevicesNeeded;
+		}
+	}		
+	
+	cudaDeviceSynchronize();
+	checkKernelExecution();
+
+	nvtxRangeEnd(id1);
+	
+	for(unsigned int i = 0; i < voxelGrid.nChilds(); i++)
+		voxelGrid(i)->PinnedCPUResource::free();
+	
+	CPUMemory::display(cout);
+	GPUMemory::display(cout);
+
 	CPUMemory::setVerbose(false);
 	GPUMemory::setVerbose(false);
 
 	log_console.info("Launching gui...");
-	MainApplication mainApplication(&voxelGrid,true,viewerThreshold);	
+	MainApplication mainApplication(&holeFilledGrid_s,true,viewerThreshold);	
+	//MainApplication mainApplication(&voxelGrid,true,viewerThreshold);	
 
 	return mainApplication.exec();
 }

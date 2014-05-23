@@ -39,8 +39,6 @@ namespace kernel {
 			const NormalType nt, const ColorType ct) {
 
 		
-		GPUMemory::setVerbose(1);
-
 		cudaSetDevice(0);
 		dim3 dimBlock(32, 32, 1);
 		dim3 dimGrid(ceil(cpuGrid->subwidth()/32.0f), ceil(cpuGrid->subheight()/32.0f), cpuGrid->sublength());
@@ -112,8 +110,6 @@ namespace kernel {
 		unsigned int nGrid = 0;
 		unsigned int gridIdx = 0, gridIdy = 0,  gridIdz = 0;
 		for (auto it = cpuGrid->begin(); it != cpuGrid->end(); ++it) {
-
-			log_console.infoStream() << counts[nGrid];
 
 			if(counts[nGrid] != 0) {
 

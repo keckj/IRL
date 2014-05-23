@@ -16,8 +16,16 @@ void castKernel(unsigned long dataSize, float *float_data, unsigned char *char_d
 extern void computeMeanKernel(unsigned char *grid, 
 		unsigned int *hit_counter, 
 		unsigned int *sum, 
-		const unsigned long nData, 
+		unsigned long long int nData, 
 		cudaStream_t stream);
+
+extern void HoleFillingKernel(unsigned char interpolationRadius,
+			unsigned int gridIdx, unsigned int gridIdy, unsigned int gridIdz,
+			unsigned int subgridWidth, unsigned int subgridHeight, unsigned int subgridLength,
+			unsigned long long int nData,
+			unsigned char *srcGrid, 
+			unsigned char *dstGrid, 
+			cudaStream_t stream);
 
 void VNNKernel(
 		int nImages, int imgWidth, int imgHeight, 

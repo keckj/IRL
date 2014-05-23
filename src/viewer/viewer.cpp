@@ -31,12 +31,9 @@ void Viewer::init()
 	toogleWireframe = false;  // filled faces
 	toogleLight = false;       // light on
 
-	if (toogleLight == true)
-		glEnable(GL_LIGHTING);
-	else
-		glDisable(GL_LIGHTING);
-	
+	glDisable(GL_LIGHTING);
 	setSceneRadius(5.0f);
+	//setAxisIsDrawn(true);
 
 	list<Renderable *>::iterator it;
 	for (it = renderableList.begin(); it != renderableList.end(); ++it) {

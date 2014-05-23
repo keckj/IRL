@@ -138,7 +138,7 @@ void VoxelRenderer::computeGeometry() {
 				threshold,
 				kernel::NORMAL_PER_VERTEX, kernel::COLOR_PER_VERTEX);
 
-		log_console.infoStream() << "Computed " << nQuads << " quads !";
+		log_console.debugStream() << "Computed " << nQuads << " quads !";
 
 		//CPU based quad generation
 		//#else
