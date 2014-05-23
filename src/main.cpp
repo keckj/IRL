@@ -34,7 +34,7 @@
 
 
 #ifndef _SPLITS
-#define _SPLITS 4 
+#define _SPLITS 6 
 #endif
 
 #ifndef _INTERPOLATION_RADIUS
@@ -579,7 +579,6 @@ int main( int argc, char** argv)
 
 	log_console.info("Launching gui...");
 	MainApplication mainApplication(&holeFilledGrid_s,true,viewerThreshold);	
-	//MainApplication mainApplication(&voxelGrid,true,viewerThreshold);	
 
 	return mainApplication.exec();
 }

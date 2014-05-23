@@ -89,7 +89,7 @@ namespace kernel {
 			     min((nData+32ull*65504ull-1ull)/(32ull*65504ull),65504ull));
 		
 		unsigned int nPass = (nData+maxThreads-1ull)/maxThreads;
-
+		
 		for(unsigned int i=0; i < nPass-1; i++) {
 			computeMean<<<dimGrid,dimBlock,0,stream>>>(grid, hit_counter, sum, nData, i*maxThreads);
 		}
@@ -106,34 +106,69 @@ namespace kernel {
 			unsigned char *srcGrid, unsigned char *dstGrid)
 	{
 		
-		unsigned long long int iid = (32ull*blockIdx.y + threadIdx.y) * 65504ull 
+
+		unsigned long long int threadId = offset 
+						+ (32ull*blockIdx.y + threadIdx.y) * 65504ull 
 						+ 32ull*blockIdx.x + threadIdx.x;  
-		const unsigned long long int id = offset + iid;
+		unsigned long long int threadIdZ = threadId / (subgridHeight*subgridWidth);
+		unsigned long long int threadIdY = (threadId % (subgridHeight*subgridWidth))/subgridWidth;
+		unsigned long long int threadIdX = threadId % subgridWidth;
+		
+		unsigned long long int blockId = offset + (65504ull*blockIdx.y + blockIdx.x)*32ull;
+		unsigned long long int blockIdZ = blockId / (subgridHeight*subgridWidth);
+		unsigned long long int blockIdY = (blockId % (subgridHeight*subgridWidth))/subgridWidth;
+		unsigned long long int blockIdX = blockId % subgridWidth;
+		
+		extern __shared__ unsigned char locValues[];
+		unsigned int locGridWidth, locGridHeight, locGridLength;
+		locGridWidth = 32ul+2ul*interpolationRadius;
+		locGridHeight = 32ul+2ul*interpolationRadius;
+		locGridLength = 1ul+2ul*interpolationRadius;
 
-		if(id >= nData)
+		unsigned int nNeighbors = locGridWidth * locGridHeight * locGridLength;
+
+		unsigned int locGridIdx, locGridIdy, locGridIdz, locGridId;
+		locGridIdx = interpolationRadius + threadIdx.x;
+		locGridIdy = interpolationRadius + threadIdx.y;
+		locGridIdz = interpolationRadius;
+		locGridId = locGridIdz*locGridWidth*locGridHeight + locGridIdy*locGridWidth + locGridIdx;
+	
+		for(int i = 0; i < (nNeighbors+1023)/1024; i++) {
+			unsigned int locPos = 1024*i + 32*threadIdx.y + threadIdx.x;
+			unsigned int locPosIdz = locPos/(locGridHeight*locGridWidth);
+			unsigned int locPosIdy = (locPos%(locGridHeight*locGridWidth))/locGridWidth;
+			unsigned int locPosIdx = locPos%locGridWidth;
+
+			unsigned long long int globalPos = (blockIdZ-interpolationRadius+locPosIdz)*subgridWidth*subgridHeight
+							+ (blockIdY-interpolationRadius+locPosIdy)*subgridWidth
+							+ blockIdX-interpolationRadius+locPosIdx;
+
+			if(locPos < nNeighbors && globalPos < nData)
+				locValues[locPos] = srcGrid[globalPos];
+		}
+
+		__syncthreads();
+		
+		if(threadId >= nData)
 			return;
-
-		unsigned long long int idz = id / (subgridHeight*subgridWidth);
-		unsigned long long int idy = (id % (subgridHeight*subgridWidth))/subgridWidth;
-		unsigned long long int idx = id % subgridWidth;
 		
 		//cas ou il n'y a pas de trou
-		if(srcGrid[id] != 0u) {
-			dstGrid[id] = srcGrid[id];
+		if(srcGrid[threadId] != 0u) {
+			dstGrid[threadId] = srcGrid[threadId];
 			return;
 		}
-		
 		
 		//gestion des bords effectué sur CPU
-		if(        idx < interpolationRadius 
-			|| idy < interpolationRadius
-			|| idz < interpolationRadius
-			|| idx >= (subgridWidth - interpolationRadius)
-			|| idy >= (subgridHeight - interpolationRadius)
-			|| idz >= (subgridLength - interpolationRadius)) {
-			dstGrid[id]=0;
+		if(        threadIdX < interpolationRadius 
+			|| threadIdY < interpolationRadius
+			|| threadIdZ < interpolationRadius
+			|| threadIdX >= (subgridWidth - interpolationRadius)
+			|| threadIdY >= (subgridHeight - interpolationRadius)
+			|| threadIdZ >= (subgridLength - interpolationRadius)) {
+			dstGrid[threadId]=0;
 			return;
 		}
+
 		
 		/*unsigned int localValue;*/
 		float localHit = 0.0f;
@@ -153,8 +188,10 @@ namespace kernel {
 					invd3 = invd*invd*invd;
 					
 					if(d3 != 0 && d3 <= r3) {
-						localId = id + i*(int)subgridHeight*(int)subgridWidth + j*(int)subgridWidth + k;
-						localValue = srcGrid[localId];
+						/*localId = id + i*(int)subgridHeight*(int)subgridWidth + j*(int)subgridWidth + k;*/
+						/*localValue = srcGrid[localId];*/
+						localId = locGridId + i*(int)locGridHeight*(int)locGridWidth + j*(int)locGridWidth+k;
+						localValue = locValues[localId];
 
 						if(localValue > 0) {
 							localHit += invd3;
@@ -166,9 +203,9 @@ namespace kernel {
 		}
 
 		if(localHit > 0.0f)
-			dstGrid[id] = __float2uint_rn(localSum/localHit);	
+			dstGrid[threadId] = __float2uint_rn(localSum/localHit);	
 		else
-			dstGrid[id] = 0;
+			dstGrid[threadId] = 0;
 	}
 		
 	void HoleFillingKernel(const unsigned char interpolationRadius,
@@ -187,17 +224,21 @@ namespace kernel {
 		
 		unsigned int nPass = (nData+maxThreads-1ull)/maxThreads;
 		
-		log_console.infoStream() << "[KERNEL::Hole Filling] <<<" << toStringDim(dimBlock) << ", " << toStringDim(dimGrid) << ", " << 0 << ", " << stream << ">>>";
+		unsigned int nNeighbors = (32ul+2*interpolationRadius)*(32ul+2*interpolationRadius)*(1ul+2*interpolationRadius);
+		unsigned int sharedMemoryBytes = nNeighbors*sizeof(unsigned char);
+
+		
+		log_console.infoStream() << "[KERNEL::Hole Filling] <<<" << toStringDim(dimBlock) << ", " << toStringDim(dimGrid) << ", " << toStringMemory(sharedMemoryBytes) << ", " << stream << ">>>";
 		
 		for(unsigned int i=0; i < nPass-1; i++) {
-			HoleFilling<<<dimGrid,dimBlock,0,stream>>>(interpolationRadius,
+			HoleFilling<<<dimGrid,dimBlock,sharedMemoryBytes,stream>>>(interpolationRadius,
 					gridIdx, gridIdy, gridIdz,
 					subgridWidth,  subgridHeight,  subgridLength,
 					maxThreads, i*maxThreads,
 					srcGrid, dstGrid);
 		}
 			
-		HoleFilling<<<dimGrid,dimBlock,0,stream>>>(interpolationRadius,
+		HoleFilling<<<dimGrid,dimBlock,sharedMemoryBytes,stream>>>(interpolationRadius,
 					gridIdx, gridIdy, gridIdz,
 					subgridWidth,  subgridHeight,  subgridLength,
 					nData%maxThreads, (nPass-1)*maxThreads,
